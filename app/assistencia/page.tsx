@@ -9,10 +9,16 @@ interface AT {
   numero_at: string
   descricao_problema: string
   status: string
+  tipo_at: string
   requer_retirada: boolean
   data_retirada_agendada: string
   endereco_retirada: string
+  data_envio_fornecedor: string
+  previsao_retorno_fornecedor: string
+  data_retorno_fornecedor: string
+  observacoes_fornecedor: string
   pedidos: { numero_pedido: string; clientes: { nome: string; cidade: string } }
+  fornecedores: { nome_fantasia: string; razao_social: string }
 }
 
 interface Pedido {
@@ -21,10 +27,17 @@ interface Pedido {
   clientes: { nome: string }
 }
 
+interface Fornecedor {
+  id: string
+  nome_fantasia: string
+  razao_social: string
+}
+
 const STATUS_COR: Record<string, { bg: string; color: string; label: string }> = {
   aberta: { bg: '#FAECE7', color: '#712B13', label: 'Aberta' },
   aguardando_retirada: { bg: '#FAEEDA', color: '#633806', label: 'Aguard. retirada' },
   em_reparo: { bg: '#E6F1FB', color: '#0C447C', label: 'Em reparo' },
+  enviado_fornecedor: { bg: '#EEEDFE', color: '#3C3489', label: 'No fornecedor' },
   aguardando_devolucao: { bg: '#FAEEDA', color: '#633806', label: 'Aguard. devolucao' },
   resolvida: { bg: '#EAF3DE', color: '#27500A', label: 'Resolvida' },
   cancelada: { bg: '#f0efe9', color: '#888', label: 'Cancelada' },
@@ -43,28 +56,42 @@ const navItems = [
 export default function AssistenciaTecnica() {
   const [ats, setAts] = useState<AT[]>([])
   const [pedidos, setPedidos] = useState<Pedido[]>([])
+  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
   const [showForm, setShowForm] = useState(false)
+  const [showFornecedorForm, setShowFornecedorForm] = useState(false)
+  const [atSelecionada, setAtSelecionada] = useState<AT | null>(null)
   const [busca, setBusca] = useState('')
   const [form, setForm] = useState({
     pedido_id: '',
+    tipo_at: 'retirada_cliente',
     descricao_problema: '',
     requer_retirada: false,
     endereco_retirada: '',
     data_retirada_agendada: '',
+    fornecedor_id: '',
+    data_envio_fornecedor: '',
+    previsao_retorno_fornecedor: '',
     observacoes: '',
+  })
+  const [fornecedorForm, setFornecedorForm] = useState({
+    fornecedor_id: '',
+    data_envio_fornecedor: '',
+    previsao_retorno_fornecedor: '',
+    observacoes_fornecedor: '',
   })
 
   useEffect(() => {
     buscarATs()
     buscarPedidos()
+    buscarFornecedores()
   }, [])
 
   async function buscarATs() {
     const { data } = await supabase
       .from('assistencias_tecnicas')
-      .select('*, pedidos(numero_pedido, clientes(nome, cidade))')
+      .select('*, pedidos(numero_pedido, clientes(nome, cidade)), fornecedores(nome_fantasia, razao_social)')
       .order('created_at', { ascending: false })
-    setAts((data as AT[]) || [])
+    setAts((data as unknown as AT[]) || [])
   }
 
   async function buscarPedidos() {
@@ -75,21 +102,59 @@ export default function AssistenciaTecnica() {
     setPedidos((data as unknown as Pedido[]) || [])
   }
 
+  async function buscarFornecedores() {
+    const { data } = await supabase
+      .from('fornecedores')
+      .select('id, nome_fantasia, razao_social')
+      .order('nome_fantasia')
+    setFornecedores((data as unknown as Fornecedor[]) || [])
+  }
+
   async function salvar() {
     if (!form.pedido_id) return alert('Selecione o pedido')
     if (!form.descricao_problema) return alert('Descricao do problema e obrigatoria')
+
+    let status = 'aberta'
+    if (form.tipo_at === 'devolucao_fornecedor') status = 'enviado_fornecedor'
+    else if (form.requer_retirada) status = 'aguardando_retirada'
+
     const { error } = await supabase.from('assistencias_tecnicas').insert([{
       pedido_id: form.pedido_id,
+      tipo_at: form.tipo_at,
       descricao_problema: form.descricao_problema,
       requer_retirada: form.requer_retirada,
       endereco_retirada: form.endereco_retirada,
       data_retirada_agendada: form.data_retirada_agendada || null,
+      fornecedor_id: form.fornecedor_id || null,
+      data_envio_fornecedor: form.data_envio_fornecedor || null,
+      previsao_retorno_fornecedor: form.previsao_retorno_fornecedor || null,
       observacoes: form.observacoes,
-      status: form.requer_retirada ? 'aguardando_retirada' : 'aberta',
+      status,
     }])
     if (error) return alert('Erro: ' + error.message)
     setShowForm(false)
-    setForm({ pedido_id: '', descricao_problema: '', requer_retirada: false, endereco_retirada: '', data_retirada_agendada: '', observacoes: '' })
+    setForm({ pedido_id: '', tipo_at: 'retirada_cliente', descricao_problema: '', requer_retirada: false, endereco_retirada: '', data_retirada_agendada: '', fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes: '' })
+    buscarATs()
+  }
+
+  async function enviarAoFornecedor() {
+    if (!atSelecionada) return
+    if (!fornecedorForm.fornecedor_id) return alert('Selecione o fornecedor')
+    if (!fornecedorForm.data_envio_fornecedor) return alert('Informe a data de envio')
+    const { error } = await supabase
+      .from('assistencias_tecnicas')
+      .update({
+        fornecedor_id: fornecedorForm.fornecedor_id,
+        data_envio_fornecedor: fornecedorForm.data_envio_fornecedor,
+        previsao_retorno_fornecedor: fornecedorForm.previsao_retorno_fornecedor || null,
+        observacoes_fornecedor: fornecedorForm.observacoes_fornecedor,
+        status: 'enviado_fornecedor',
+      })
+      .eq('id', atSelecionada.id)
+    if (error) return alert('Erro: ' + error.message)
+    setShowFornecedorForm(false)
+    setAtSelecionada(null)
+    setFornecedorForm({ fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes_fornecedor: '' })
     buscarATs()
   }
 
@@ -108,11 +173,7 @@ export default function AssistenciaTecnica() {
         </div>
         <div style={{ height: '0.5px', background: '#2d2d44', margin: '0 16px 12px' }} />
         {navItems.map(item => (
-          <a
-            key={item.href}
-            href={item.href}
-            style={{ display: 'block', padding: '9px 20px', fontSize: '13px', color: item.href === '/assistencia' ? '#C9A84C' : '#8888aa', textDecoration: 'none', margin: '0 8px', borderRadius: '8px' }}
-          >
+          <a key={item.href} href={item.href} style={{ display: 'block', padding: '9px 20px', fontSize: '13px', color: item.href === '/assistencia' ? '#C9A84C' : '#8888aa', textDecoration: 'none', margin: '0 8px', borderRadius: '8px' }}>
             {item.label}
           </a>
         ))}
@@ -121,10 +182,7 @@ export default function AssistenciaTecnica() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
           <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Assistencia Tecnica</span>
-          <button
-            onClick={() => setShowForm(true)}
-            style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '7px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}
-          >
+          <button onClick={() => setShowForm(true)} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '7px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
             + Nova AT
           </button>
         </div>
@@ -140,13 +198,13 @@ export default function AssistenciaTecnica() {
           </div>
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '90px 80px 1fr 150px 120px 100px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '90px 110px 1fr 150px 120px 110px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
               <span>Pedido</span>
-              <span>N. AT</span>
+              <span>Tipo</span>
               <span>Problema</span>
               <span>Status</span>
-              <span>Retirada agend.</span>
-              <span>Data</span>
+              <span>Fornecedor</span>
+              <span>Acoes</span>
             </div>
 
             {filtradas.length === 0 && (
@@ -156,25 +214,31 @@ export default function AssistenciaTecnica() {
             )}
 
             {filtradas.map((a, i) => (
-              <div
-                key={a.id}
-                style={{ display: 'grid', gridTemplateColumns: '90px 80px 1fr 150px 120px 100px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}
-              >
+              <div key={a.id} style={{ display: 'grid', gridTemplateColumns: '90px 110px 1fr 150px 120px 110px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{a.pedidos?.numero_pedido}</div>
                   <div style={{ fontSize: '11px', color: '#888' }}>{a.pedidos?.clientes?.nome}</div>
                 </div>
-                <span style={{ fontSize: '12px', color: '#555' }}>{a.numero_at || '-'}</span>
+                <span style={{ fontSize: '11px', color: '#555' }}>
+                  {a.tipo_at === 'devolucao_fornecedor' ? 'Devol. fornecedor' : 'Retirada cliente'}
+                </span>
                 <span style={{ fontSize: '13px', color: '#333' }}>{a.descricao_problema}</span>
                 <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', fontWeight: '500', background: STATUS_COR[a.status]?.bg || '#f0efe9', color: STATUS_COR[a.status]?.color || '#555' }}>
                   {STATUS_COR[a.status]?.label || a.status}
                 </span>
                 <span style={{ fontSize: '11px', color: '#555' }}>
-                  {a.data_retirada_agendada ? new Date(a.data_retirada_agendada).toLocaleDateString('pt-BR') : '-'}
+                  {a.fornecedores?.nome_fantasia || a.fornecedores?.razao_social || '-'}
                 </span>
-                <span style={{ fontSize: '11px', color: '#888' }}>
-                  {new Date(a.created_at).toLocaleDateString('pt-BR')}
-                </span>
+                <div>
+                  {(a.status === 'aberta' || a.status === 'em_reparo') && (
+                    <button
+                      onClick={() => { setAtSelecionada(a); setShowFornecedorForm(true) }}
+                      style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', border: '0.5px solid #3C3489', color: '#3C3489', background: '#EEEDFE', cursor: 'pointer' }}
+                    >
+                      Enviar fornecedor
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -191,83 +255,126 @@ export default function AssistenciaTecnica() {
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Pedido *</div>
-              <select
-                value={form.pedido_id}
-                onChange={e => setForm({ ...form, pedido_id: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
-              >
+              <select value={form.pedido_id} onChange={e => setForm({ ...form, pedido_id: e.target.value })} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
                 <option value="">Selecione o pedido</option>
-                {pedidos.map(p => (
-                  <option key={p.id} value={p.id}>{p.numero_pedido} - {p.clientes?.nome}</option>
-                ))}
+                {pedidos.map(p => <option key={p.id} value={p.id}>{p.numero_pedido} - {p.clientes?.nome}</option>)}
               </select>
             </div>
 
             <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Tipo da AT *</div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {[
+                  { value: 'retirada_cliente', label: 'Retirada no cliente' },
+                  { value: 'devolucao_fornecedor', label: 'Devolucao ao fornecedor' },
+                ].map(op => (
+                  <button
+                    key={op.value}
+                    onClick={() => setForm({ ...form, tipo_at: op.value })}
+                    style={{ flex: 1, padding: '8px', borderRadius: '8px', border: form.tipo_at === op.value ? '2px solid #1a1a2e' : '0.5px solid #e8e7e3', background: form.tipo_at === op.value ? '#1a1a2e' : '#fff', color: form.tipo_at === op.value ? '#C9A84C' : '#555', fontSize: '12px', cursor: 'pointer', fontWeight: form.tipo_at === op.value ? '500' : 'normal' }}
+                  >
+                    {op.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Descricao do problema *</div>
-              <textarea
-                value={form.descricao_problema}
-                onChange={e => setForm({ ...form, descricao_problema: e.target.value })}
-                rows={3}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }}
-              />
+              <textarea value={form.descricao_problema} onChange={e => setForm({ ...form, descricao_problema: e.target.value })} rows={3} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
             </div>
 
-            <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input
-                type="checkbox"
-                id="retirada"
-                checked={form.requer_retirada}
-                onChange={e => setForm({ ...form, requer_retirada: e.target.checked })}
-              />
-              <label htmlFor="retirada" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Requer retirada no cliente</label>
-            </div>
+            {form.tipo_at === 'retirada_cliente' && (
+              <div>
+                <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input type="checkbox" id="retirada" checked={form.requer_retirada} onChange={e => setForm({ ...form, requer_retirada: e.target.checked })} />
+                  <label htmlFor="retirada" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Requer retirada agendada</label>
+                </div>
+                {form.requer_retirada && (
+                  <div>
+                    <div style={{ marginBottom: '12px' }}>
+                      <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Endereco de retirada</div>
+                      <input value={form.endereco_retirada} onChange={e => setForm({ ...form, endereco_retirada: e.target.value })} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                    </div>
+                    <div style={{ marginBottom: '12px' }}>
+                      <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Data retirada agendada</div>
+                      <input type="date" value={form.data_retirada_agendada} onChange={e => setForm({ ...form, data_retirada_agendada: e.target.value })} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
-            {form.requer_retirada && (
+            {form.tipo_at === 'devolucao_fornecedor' && (
               <div>
                 <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Endereco de retirada</div>
-                  <input
-                    value={form.endereco_retirada}
-                    onChange={e => setForm({ ...form, endereco_retirada: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
-                  />
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Fornecedor</div>
+                  <select value={form.fornecedor_id} onChange={e => setForm({ ...form, fornecedor_id: e.target.value })} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
+                    <option value="">Selecione o fornecedor</option>
+                    {fornecedores.map(f => <option key={f.id} value={f.id}>{f.nome_fantasia || f.razao_social}</option>)}
+                  </select>
                 </div>
                 <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Data retirada agendada</div>
-                  <input
-                    type="date"
-                    value={form.data_retirada_agendada}
-                    onChange={e => setForm({ ...form, data_retirada_agendada: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
-                  />
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Data de envio ao fornecedor</div>
+                  <input type="date" value={form.data_envio_fornecedor} onChange={e => setForm({ ...form, data_envio_fornecedor: e.target.value })} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Previsao de retorno</div>
+                  <input type="date" value={form.previsao_retorno_fornecedor} onChange={e => setForm({ ...form, previsao_retorno_fornecedor: e.target.value })} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
               </div>
             )}
 
             <div style={{ marginBottom: '20px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observacoes</div>
-              <textarea
-                value={form.observacoes}
-                onChange={e => setForm({ ...form, observacoes: e.target.value })}
-                rows={2}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }}
-              />
+              <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={2} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
             </div>
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setShowForm(false)}
-                style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={salvar}
-                style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}
-              >
-                Salvar
-              </button>
+              <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+              <button onClick={salvar} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Salvar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showFornecedorForm && atSelecionada && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '460px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Enviar ao fornecedor</span>
+              <button onClick={() => setShowFornecedorForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>x</button>
+            </div>
+            <div style={{ fontSize: '12px', color: '#888', marginBottom: '20px' }}>
+              AT do pedido {atSelecionada.pedidos?.numero_pedido} — {atSelecionada.descricao_problema}
+            </div>
+
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Fornecedor *</div>
+              <select value={fornecedorForm.fornecedor_id} onChange={e => setFornecedorForm({ ...fornecedorForm, fornecedor_id: e.target.value })} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
+                <option value="">Selecione o fornecedor</option>
+                {fornecedores.map(f => <option key={f.id} value={f.id}>{f.nome_fantasia || f.razao_social}</option>)}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Data de envio *</div>
+              <input type="date" value={fornecedorForm.data_envio_fornecedor} onChange={e => setFornecedorForm({ ...fornecedorForm, data_envio_fornecedor: e.target.value })} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Previsao de retorno</div>
+              <input type="date" value={fornecedorForm.previsao_retorno_fornecedor} onChange={e => setFornecedorForm({ ...fornecedorForm, previsao_retorno_fornecedor: e.target.value })} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observacoes</div>
+              <textarea value={fornecedorForm.observacoes_fornecedor} onChange={e => setFornecedorForm({ ...fornecedorForm, observacoes_fornecedor: e.target.value })} rows={2} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowFornecedorForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+              <button onClick={enviarAoFornecedor} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Confirmar envio</button>
             </div>
           </div>
         </div>
