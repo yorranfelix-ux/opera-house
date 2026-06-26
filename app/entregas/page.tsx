@@ -69,7 +69,7 @@ export default function Entregas() {
       .from('pedidos')
       .select('id, numero_pedido, clientes(nome, cidade)')
       .order('numero_pedido', { ascending: false })
-    setPedidos((data as Pedido[]) || [])
+    setPedidos((data as unknown as Pedido[]) || [])
   }
 
   async function salvar() {
