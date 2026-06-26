@@ -72,7 +72,7 @@ export default function AssistenciaTecnica() {
       .from('pedidos')
       .select('id, numero_pedido, clientes(nome)')
       .order('numero_pedido', { ascending: false })
-    setPedidos((data as Pedido[]) || [])
+    setPedidos((data as unknown as Pedido[]) || [])
   }
 
   async function salvar() {
