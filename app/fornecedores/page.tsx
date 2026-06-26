@@ -1,0 +1,166 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
+
+interface Fornecedor {
+  id: string
+  razao_social: string
+  nome_fantasia: string
+  telefone: string
+  whatsapp: string
+  email: string
+  contato_comercial: string
+  prazo_medio_prometido: number
+}
+
+export default function Fornecedores() {
+  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [busca, setBusca] = useState('')
+  const [form, setForm] = useState({
+    razao_social: '', nome_fantasia: '', cnpj: '',
+    telefone: '', whatsapp: '', email: '',
+    contato_comercial: '', prazo_medio_prometido: '', observacoes: ''
+  })
+
+  useEffect(() => { buscarFornecedores() }, [])
+
+  async function buscarFornecedores() {
+    setLoading(true)
+    const { data } = await supabase.from('fornecedores').select('*').order('nome_fantasia')
+    setFornecedores(data || [])
+    setLoading(false)
+  }
+
+  async function salvarFornecedor() {
+    if (!form.razao_social) return alert('Razão social é obrigatória')
+    const { error } = await supabase.from('fornecedores').insert([{
+      ...form,
+      prazo_medio_prometido: form.prazo_medio_prometido ? parseInt(form.prazo_medio_prometido) : null
+    }])
+    if (error) return alert('Erro ao salvar: ' + error.message)
+    setShowForm(false)
+    setForm({ razao_social: '', nome_fantasia: '', cnpj: '', telefone: '', whatsapp: '', email: '', contato_comercial: '', prazo_medio_prometido: '', observacoes: '' })
+    buscarFornecedores()
+  }
+
+  const filtrados = fornecedores.filter(f =>
+    f.nome_fantasia?.toLowerCase().includes(busca.toLowerCase()) ||
+    f.razao_social?.toLowerCase().includes(busca.toLowerCase())
+  )
+
+  const sidebar = (
+    <div style={{ width: '200px', background: '#1a1a2e', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+      <div style={{ padding: '22px 20px 16px', fontSize: '18px', fontWeight: '500', color: '#fff' }}>
+        Opera <span style={{ color: '#C9A84C' }}>House</span>
+      </div>
+      <div style={{ height: '0.5px', background: '#2d2d44', margin: '0 16px 12px' }} />
+      {[
+        { label: 'Dashboard', href: '/dashboard' },
+        { label: 'Pedidos', href: '/pedidos' },
+        { label: 'Clientes', href: '/clientes' },
+        { label: 'Fornecedores', href: '/fornecedores' },
+        { label: 'Assistência Técnica', href: '/assistencia' },
+        { label: 'Ocorrências', href: '/ocorrencias' },
+        { label: 'Entregas', href: '/entregas' },
+      ].map((item) => (
+        <a key={item.href} href={item.href} style={{ display: 'block', padding: '9px 20px', fontSize: '13px', color: item.href === '/fornecedores' ? '#C9A84C' : '#8888aa', textDecoration: 'none', margin: '0 8px', borderRadius: '8px', background: item.href === '/fornecedores' ? '#C9A84C18' : 'transparent' }}>
+          {item.label}
+        </a>
+      ))}
+    </div>
+  )
+
+  return (
+    <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
+      {sidebar}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
+          <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Fornecedores</span>
+          <button onClick={() => setShowForm(true)} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
+            + Novo fornecedor
+          </button>
+        </div>
+
+        <div style={{ padding: '24px', flex: 1, overflow: 'auto' }}>
+          <input
+            placeholder="Buscar fornecedor..."
+            value={busca}
+            onChange={e => setBusca(e.target.value)}
+            style={{ width: '300px', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', marginBottom: '16px', outline: 'none' }}
+          />
+
+          <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
+              <span>Nome fantasia</span><span>Razão social</span><span>Telefone</span><span>Contato</span><span>Prazo (dias)</span>
+            </div>
+
+            {loading && <div style={{ padding: '24px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Carregando...</div>}
+
+            {!loading && filtrados.length === 0 && (
+              <div style={{ padding: '24px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhum fornecedor cadastrado ainda.</div>
+            )}
+
+            {filtrados.map((f, i) => (
+              <div key={f.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+                <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{f.nome_fantasia || f.razao_social}</span>
+                <span style={{ fontSize: '12px', color: '#555' }}>{f.razao_social}</span>
+                <span style={{ fontSize: '12px', color: '#555' }}>{f.telefone || '—'}</span>
+                <span style={{ fontSize: '12px', color: '#555' }}>{f.contato_comercial || '—'}</span>
+                <span style={{ fontSize: '12px', color: '#555', textAlign: 'center' }}>{f.prazo_medio_prometido ? `${f.prazo_medio_prometido}d` : '—'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {showForm && (
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '520px', maxHeight: '85vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Novo fornecedor</span>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+            </div>
+
+            {[
+              { label: 'Razão social *', field: 'razao_social' },
+              { label: 'Nome fantasia', field: 'nome_fantasia' },
+              { label: 'CNPJ', field: 'cnpj' },
+              { label: 'Telefone', field: 'telefone' },
+              { label: 'WhatsApp', field: 'whatsapp' },
+              { label: 'E-mail', field: 'email' },
+              { label: 'Contato comercial', field: 'contato_comercial' },
+              { label: 'Prazo médio prometido (dias)', field: 'prazo_medio_prometido' },
+            ].map(({ label, field }) => (
+              <div key={field} style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
+                <input
+                  value={form[field as keyof typeof form]}
+                  onChange={e => setForm({ ...form, [field]: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+            ))}
+
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações</div>
+              <textarea
+                value={form.observacoes}
+                onChange={e => setForm({ ...form, observacoes: e.target.value })}
+                rows={3}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+              <button onClick={salvarFornecedor} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Salvar fornecedor</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
