@@ -14,37 +14,66 @@ interface Cliente {
   created_at: string
 }
 
+const formVazio = {
+  nome: '', telefone: '', whatsapp: '', email: '',
+  endereco: '', numero: '', complemento: '', bairro: '',
+  cidade: '', estado: '', cep: '', observacoes: ''
+}
+
 export default function Clientes() {
   const [clientes, setClientes] = useState<Cliente[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [busca, setBusca] = useState('')
-  const [form, setForm] = useState({
-    nome: '', telefone: '', whatsapp: '', email: '',
-    endereco: '', numero: '', complemento: '', bairro: '',
-    cidade: '', estado: '', cep: '', observacoes: ''
-  })
+  const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [form, setForm] = useState(formVazio)
 
-  useEffect(() => {
-    buscarClientes()
-  }, [])
+  useEffect(() => { buscarClientes() }, [])
 
   async function buscarClientes() {
     setLoading(true)
-    const { data } = await supabase
-      .from('clientes')
-      .select('*')
-      .order('nome')
+    const { data } = await supabase.from('clientes').select('*').order('nome')
     setClientes(data || [])
     setLoading(false)
   }
 
+  function abrirNovo() {
+    setEditandoId(null)
+    setForm(formVazio)
+    setShowForm(true)
+  }
+
+  function abrirEdicao(c: Cliente) {
+    setEditandoId(c.id)
+    setForm({
+      nome: c.nome || '',
+      telefone: (c as any).telefone || '',
+      whatsapp: (c as any).whatsapp || '',
+      email: c.email || '',
+      endereco: (c as any).endereco || '',
+      numero: (c as any).numero || '',
+      complemento: (c as any).complemento || '',
+      bairro: (c as any).bairro || '',
+      cidade: c.cidade || '',
+      estado: c.estado || '',
+      cep: (c as any).cep || '',
+      observacoes: (c as any).observacoes || '',
+    })
+    setShowForm(true)
+  }
+
   async function salvarCliente() {
     if (!form.nome) return alert('Nome é obrigatório')
-    const { error } = await supabase.from('clientes').insert([form])
-    if (error) return alert('Erro ao salvar: ' + error.message)
+    if (editandoId) {
+      const { error } = await supabase.from('clientes').update(form).eq('id', editandoId)
+      if (error) return alert('Erro ao atualizar: ' + error.message)
+    } else {
+      const { error } = await supabase.from('clientes').insert([form])
+      if (error) return alert('Erro ao salvar: ' + error.message)
+    }
     setShowForm(false)
-    setForm({ nome: '', telefone: '', whatsapp: '', email: '', endereco: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '', cep: '', observacoes: '' })
+    setForm(formVazio)
+    setEditandoId(null)
     buscarClientes()
   }
 
@@ -81,7 +110,7 @@ export default function Clientes() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
           <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Clientes</span>
-          <button onClick={() => setShowForm(true)} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
+          <button onClick={abrirNovo} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
             + Novo cliente
           </button>
         </div>
@@ -95,8 +124,8 @@ export default function Clientes() {
           />
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px 130px 100px 80px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
-              <span>Nome</span><span>Telefone</span><span>E-mail</span><span>Cidade</span><span>UF</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 130px 180px 120px 60px 72px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
+              <span>Nome</span><span>Telefone</span><span>E-mail</span><span>Cidade</span><span>UF</span><span></span>
             </div>
 
             {loading && (
@@ -108,12 +137,18 @@ export default function Clientes() {
             )}
 
             {clientesFiltrados.map((cliente, i) => (
-              <div key={cliente.id} style={{ display: 'grid', gridTemplateColumns: '1fr 130px 130px 100px 80px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', cursor: 'pointer', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+              <div key={cliente.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 130px 180px 120px 60px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{cliente.nome}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{cliente.telefone || '—'}</span>
-                <span style={{ fontSize: '12px', color: '#555' }}>{cliente.email || '—'}</span>
+                <span style={{ fontSize: '12px', color: '#555', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cliente.email || '—'}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{cliente.cidade || '—'}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{cliente.estado || '—'}</span>
+                <button
+                  onClick={() => abrirEdicao(cliente)}
+                  style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555', whiteSpace: 'nowrap' }}
+                >
+                  Editar
+                </button>
               </div>
             ))}
           </div>
@@ -121,10 +156,10 @@ export default function Clientes() {
       </div>
 
       {showForm && (
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '520px', maxHeight: '85vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Novo cliente</span>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{editandoId ? 'Editar cliente' : 'Novo cliente'}</span>
               <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
             </div>
 
@@ -163,7 +198,9 @@ export default function Clientes() {
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-              <button onClick={salvarCliente} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Salvar cliente</button>
+              <button onClick={salvarCliente} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
+                {editandoId ? 'Salvar alterações' : 'Salvar cliente'}
+              </button>
             </div>
           </div>
         </div>

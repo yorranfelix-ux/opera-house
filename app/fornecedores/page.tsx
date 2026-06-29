@@ -14,16 +14,19 @@ interface Fornecedor {
   prazo_medio_prometido: number
 }
 
+const formVazio = {
+  razao_social: '', nome_fantasia: '', cnpj: '',
+  telefone: '', whatsapp: '', email: '',
+  contato_comercial: '', prazo_medio_prometido: '', observacoes: ''
+}
+
 export default function Fornecedores() {
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [busca, setBusca] = useState('')
-  const [form, setForm] = useState({
-    razao_social: '', nome_fantasia: '', cnpj: '',
-    telefone: '', whatsapp: '', email: '',
-    contato_comercial: '', prazo_medio_prometido: '', observacoes: ''
-  })
+  const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [form, setForm] = useState(formVazio)
 
   useEffect(() => { buscarFornecedores() }, [])
 
@@ -34,15 +37,44 @@ export default function Fornecedores() {
     setLoading(false)
   }
 
+  function abrirNovo() {
+    setEditandoId(null)
+    setForm(formVazio)
+    setShowForm(true)
+  }
+
+  function abrirEdicao(f: Fornecedor) {
+    setEditandoId(f.id)
+    setForm({
+      razao_social: f.razao_social || '',
+      nome_fantasia: f.nome_fantasia || '',
+      cnpj: (f as any).cnpj || '',
+      telefone: f.telefone || '',
+      whatsapp: f.whatsapp || '',
+      email: f.email || '',
+      contato_comercial: f.contato_comercial || '',
+      prazo_medio_prometido: f.prazo_medio_prometido ? String(f.prazo_medio_prometido) : '',
+      observacoes: (f as any).observacoes || '',
+    })
+    setShowForm(true)
+  }
+
   async function salvarFornecedor() {
     if (!form.razao_social) return alert('Razão social é obrigatória')
-    const { error } = await supabase.from('fornecedores').insert([{
+    const payload = {
       ...form,
       prazo_medio_prometido: form.prazo_medio_prometido ? parseInt(form.prazo_medio_prometido) : null
-    }])
-    if (error) return alert('Erro ao salvar: ' + error.message)
+    }
+    if (editandoId) {
+      const { error } = await supabase.from('fornecedores').update(payload).eq('id', editandoId)
+      if (error) return alert('Erro ao atualizar: ' + error.message)
+    } else {
+      const { error } = await supabase.from('fornecedores').insert([payload])
+      if (error) return alert('Erro ao salvar: ' + error.message)
+    }
     setShowForm(false)
-    setForm({ razao_social: '', nome_fantasia: '', cnpj: '', telefone: '', whatsapp: '', email: '', contato_comercial: '', prazo_medio_prometido: '', observacoes: '' })
+    setForm(formVazio)
+    setEditandoId(null)
     buscarFornecedores()
   }
 
@@ -79,7 +111,7 @@ export default function Fornecedores() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
           <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Fornecedores</span>
-          <button onClick={() => setShowForm(true)} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
+          <button onClick={abrirNovo} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
             + Novo fornecedor
           </button>
         </div>
@@ -93,8 +125,8 @@ export default function Fornecedores() {
           />
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
-              <span>Nome fantasia</span><span>Razão social</span><span>Telefone</span><span>Contato</span><span>Prazo (dias)</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px 72px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
+              <span>Nome fantasia</span><span>Razão social</span><span>Telefone</span><span>Contato</span><span>Prazo</span><span></span>
             </div>
 
             {loading && <div style={{ padding: '24px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Carregando...</div>}
@@ -104,12 +136,18 @@ export default function Fornecedores() {
             )}
 
             {filtrados.map((f, i) => (
-              <div key={f.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+              <div key={f.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{f.nome_fantasia || f.razao_social}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{f.razao_social}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{f.telefone || '—'}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{f.contato_comercial || '—'}</span>
                 <span style={{ fontSize: '12px', color: '#555', textAlign: 'center' }}>{f.prazo_medio_prometido ? `${f.prazo_medio_prometido}d` : '—'}</span>
+                <button
+                  onClick={() => abrirEdicao(f)}
+                  style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}
+                >
+                  Editar
+                </button>
               </div>
             ))}
           </div>
@@ -117,10 +155,10 @@ export default function Fornecedores() {
       </div>
 
       {showForm && (
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '520px', maxHeight: '85vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Novo fornecedor</span>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{editandoId ? 'Editar fornecedor' : 'Novo fornecedor'}</span>
               <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
             </div>
 
@@ -156,7 +194,9 @@ export default function Fornecedores() {
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-              <button onClick={salvarFornecedor} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Salvar fornecedor</button>
+              <button onClick={salvarFornecedor} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
+                {editandoId ? 'Salvar alterações' : 'Salvar fornecedor'}
+              </button>
             </div>
           </div>
         </div>
