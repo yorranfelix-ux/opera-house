@@ -23,11 +23,13 @@ interface Item {
   tecido: string
   cor: string
   acabamento: string
+  observacoes: string
   status: string
   previsao_chegada: string
   apto_entrega: boolean
   tem_at: boolean
   requer_icamento: boolean
+  fornecedor_id: string
   fornecedores: { nome_fantasia: string; razao_social: string }
 }
 
@@ -35,7 +37,7 @@ const STATUS_ITEM: Record<string, { label: string; bg: string; color: string }> 
   aguardando_compra: { label: 'Aguard. compra', bg: '#FAECE7', color: '#712B13' },
   compra_enviada: { label: 'Compra enviada', bg: '#FAEEDA', color: '#633806' },
   compra_confirmada: { label: 'Confirmado', bg: '#FAEEDA', color: '#633806' },
-  em_producao: { label: 'Em producao', bg: '#E6F1FB', color: '#0C447C' },
+  em_producao: { label: 'Em produção', bg: '#E6F1FB', color: '#0C447C' },
   em_transporte: { label: 'Em transporte', bg: '#FAEEDA', color: '#633806' },
   recebido: { label: 'Recebido', bg: '#EAF3DE', color: '#27500A' },
   conferido_ok: { label: 'Conferido OK', bg: '#EAF3DE', color: '#27500A' },
@@ -53,24 +55,21 @@ const SEMAFORO_COLOR: Record<string, string> = {
   roxo: '#534AB7',
 }
 
+const itemFormVazio = {
+  descricao: '', quantidade: '1', medida: '', tecido: '', cor: '',
+  acabamento: '', observacoes: '', fornecedor_id: '', requer_icamento: false,
+  status: 'aguardando_compra', previsao_chegada: '', apto_entrega: false,
+}
+
 export default function CentralPedido({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [pedido, setPedido] = useState<Pedido | null>(null)
   const [itens, setItens] = useState<Item[]>([])
   const [loading, setLoading] = useState(true)
   const [showItemForm, setShowItemForm] = useState(false)
+  const [editandoItemId, setEditandoItemId] = useState<string | null>(null)
   const [fornecedores, setFornecedores] = useState<{ id: string; nome_fantasia: string; razao_social: string }[]>([])
-  const [itemForm, setItemForm] = useState({
-    descricao: '',
-    quantidade: '1',
-    medida: '',
-    tecido: '',
-    cor: '',
-    acabamento: '',
-    observacoes: '',
-    fornecedor_id: '',
-    requer_icamento: false,
-  })
+  const [itemForm, setItemForm] = useState(itemFormVazio)
 
   useEffect(() => {
     buscarPedido()
@@ -105,10 +104,34 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     setFornecedores(data || [])
   }
 
+  function abrirNovoItem() {
+    setEditandoItemId(null)
+    setItemForm(itemFormVazio)
+    setShowItemForm(true)
+  }
+
+  function abrirEdicaoItem(item: Item) {
+    setEditandoItemId(item.id)
+    setItemForm({
+      descricao: item.descricao || '',
+      quantidade: String(item.quantidade || 1),
+      medida: item.medida || '',
+      tecido: item.tecido || '',
+      cor: item.cor || '',
+      acabamento: item.acabamento || '',
+      observacoes: item.observacoes || '',
+      fornecedor_id: item.fornecedor_id || '',
+      requer_icamento: item.requer_icamento || false,
+      status: item.status || 'aguardando_compra',
+      previsao_chegada: item.previsao_chegada || '',
+      apto_entrega: item.apto_entrega || false,
+    })
+    setShowItemForm(true)
+  }
+
   async function salvarItem() {
-    if (!itemForm.descricao) return alert('Descricao e obrigatoria')
-    const { error } = await supabase.from('itens_pedido').insert([{
-      pedido_id: id,
+    if (!itemForm.descricao) return alert('Descrição é obrigatória')
+    const payload = {
       descricao: itemForm.descricao,
       quantidade: parseInt(itemForm.quantidade) || 1,
       medida: itemForm.medida,
@@ -118,11 +141,20 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       observacoes: itemForm.observacoes,
       fornecedor_id: itemForm.fornecedor_id || null,
       requer_icamento: itemForm.requer_icamento,
-      status: 'aguardando_compra',
-    }])
-    if (error) return alert('Erro: ' + error.message)
+      status: itemForm.status,
+      previsao_chegada: itemForm.previsao_chegada || null,
+      apto_entrega: itemForm.apto_entrega,
+    }
+    if (editandoItemId) {
+      const { error } = await supabase.from('itens_pedido').update(payload).eq('id', editandoItemId)
+      if (error) return alert('Erro: ' + error.message)
+    } else {
+      const { error } = await supabase.from('itens_pedido').insert([{ ...payload, pedido_id: id, status: 'aguardando_compra' }])
+      if (error) return alert('Erro: ' + error.message)
+    }
     setShowItemForm(false)
-    setItemForm({ descricao: '', quantidade: '1', medida: '', tecido: '', cor: '', acabamento: '', observacoes: '', fornecedor_id: '', requer_icamento: false })
+    setItemForm(itemFormVazio)
+    setEditandoItemId(null)
     buscarItens()
   }
 
@@ -135,8 +167,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     { label: 'Pedidos', href: '/pedidos' },
     { label: 'Clientes', href: '/clientes' },
     { label: 'Fornecedores', href: '/fornecedores' },
-    { label: 'Assistencia Tecnica', href: '/assistencia' },
-    { label: 'Ocorrencias', href: '/ocorrencias' },
+    { label: 'Assistência Técnica', href: '/assistencia' },
+    { label: 'Ocorrências', href: '/ocorrencias' },
     { label: 'Entregas', href: '/entregas' },
   ]
 
@@ -147,19 +179,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       </div>
       <div style={{ height: '0.5px', background: '#2d2d44', margin: '0 16px 12px' }} />
       {navItems.map((item) => (
-        <a
-          key={item.href}
-          href={item.href}
-          style={{
-            display: 'block',
-            padding: '9px 20px',
-            fontSize: '13px',
-            color: item.href === '/pedidos' ? '#C9A84C' : '#8888aa',
-            textDecoration: 'none',
-            margin: '0 8px',
-            borderRadius: '8px',
-          }}
-        >
+        <a key={item.href} href={item.href} style={{ display: 'block', padding: '9px 20px', fontSize: '13px', color: item.href === '/pedidos' ? '#C9A84C' : '#8888aa', textDecoration: 'none', margin: '0 8px', borderRadius: '8px', background: item.href === '/pedidos' ? '#C9A84C18' : 'transparent' }}>
           {item.label}
         </a>
       ))}
@@ -170,9 +190,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     return (
       <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif' }}>
         {sidebar}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
-          Carregando...
-        </div>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>Carregando...</div>
       </div>
     )
   }
@@ -181,9 +199,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     return (
       <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif' }}>
         {sidebar}
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
-          Pedido nao encontrado.
-        </div>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>Pedido não encontrado.</div>
       </div>
     )
   }
@@ -213,16 +229,16 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                 <div style={{ fontSize: '11px', color: '#6a6a8a', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Central do Pedido</div>
                 <div style={{ fontSize: '20px', fontWeight: '500', color: '#fff', marginBottom: '4px' }}>Pedido {pedido.numero_pedido}</div>
                 <div style={{ fontSize: '13px', color: '#8888aa' }}>
-                  {pedido.clientes?.nome} - {pedido.clientes?.cidade} {pedido.clientes?.estado}
+                  {pedido.clientes?.nome} — {pedido.clientes?.cidade} {pedido.clientes?.estado}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '11px', color: '#6a6a8a', marginBottom: '4px' }}>Prazo prometido</div>
                 <div style={{ fontSize: '15px', fontWeight: '500', color: '#C9A84C' }}>
-                  {pedido.prazo_prometido ? new Date(pedido.prazo_prometido).toLocaleDateString('pt-BR') : '-'}
+                  {pedido.prazo_prometido ? new Date(pedido.prazo_prometido + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
                 </div>
                 <div style={{ fontSize: '11px', color: '#6a6a8a', marginTop: '4px' }}>
-                  Venda: {pedido.data_venda ? new Date(pedido.data_venda).toLocaleDateString('pt-BR') : '-'}
+                  Venda: {pedido.data_venda ? new Date(pedido.data_venda + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
                 </div>
               </div>
             </div>
@@ -238,7 +254,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
               { label: 'Total de itens', value: itens.length, color: '#1a1a2e' },
               { label: 'Aptos p/ entrega', value: aptos, color: '#3B6D11' },
               { label: 'Com AT ativa', value: comAT, color: '#185FA5' },
-              { label: 'Requer icamento', value: icamento, color: '#BA7517' },
+              { label: 'Requer içamento', value: icamento, color: '#BA7517' },
             ].map(card => (
               <div key={card.label} style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '14px' }}>
                 <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px' }}>{card.label}</div>
@@ -250,59 +266,54 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
               <span style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Produtos do pedido</span>
-              <button
-                onClick={() => setShowItemForm(true)}
-                style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}
-              >
+              <button onClick={abrirNovoItem} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}>
                 + Adicionar item
               </button>
             </div>
 
             {itens.length === 0 && (
-              <div style={{ padding: '24px', textAlign: 'center', color: '#888', fontSize: '13px' }}>
-                Nenhum item adicionado ainda.
-              </div>
+              <div style={{ padding: '24px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhum item adicionado ainda.</div>
             )}
 
             {itens.length > 0 && (
               <div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 100px 110px 90px 50px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 50px 110px 120px 90px 40px 72px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
                   <span>Item</span>
                   <span>Qtd</span>
                   <span>Fornecedor</span>
                   <span>Status</span>
-                  <span>Previsao</span>
+                  <span>Previsão</span>
                   <span>Apto</span>
+                  <span></span>
                 </div>
                 {itens.map((item, i) => (
-                  <div
-                    key={item.id}
-                    style={{ display: 'grid', gridTemplateColumns: '1fr 60px 100px 110px 90px 50px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}
-                  >
+                  <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 50px 110px 120px 90px 40px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                     <div>
                       <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{item.descricao}</div>
                       <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
-                        {[item.medida, item.tecido, item.cor, item.acabamento].filter(Boolean).join(' - ')}
+                        {[item.medida, item.tecido, item.cor, item.acabamento].filter(Boolean).join(' · ')}
                         {item.requer_icamento && (
-                          <span style={{ marginLeft: '6px', background: '#FAEEDA', color: '#633806', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>
-                            Icamento
-                          </span>
+                          <span style={{ marginLeft: '6px', background: '#FAEEDA', color: '#633806', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>Içamento</span>
                         )}
                       </div>
                     </div>
                     <span style={{ fontSize: '13px', color: '#555' }}>{item.quantidade}</span>
-                    <span style={{ fontSize: '11px', color: '#555' }}>
-                      {item.fornecedores?.nome_fantasia || item.fornecedores?.razao_social || '-'}
-                    </span>
+                    <span style={{ fontSize: '11px', color: '#555' }}>{item.fornecedores?.nome_fantasia || item.fornecedores?.razao_social || '—'}</span>
                     <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '8px', fontWeight: '500', background: STATUS_ITEM[item.status]?.bg || '#f0efe9', color: STATUS_ITEM[item.status]?.color || '#555' }}>
                       {STATUS_ITEM[item.status]?.label || item.status}
                     </span>
                     <span style={{ fontSize: '11px', color: '#555' }}>
-                      {item.previsao_chegada ? new Date(item.previsao_chegada).toLocaleDateString('pt-BR') : '-'}
+                      {item.previsao_chegada ? new Date(item.previsao_chegada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
                     </span>
-                    <span style={{ fontSize: '16px', textAlign: 'center' }}>
-                      {item.apto_entrega ? 'OK' : '-'}
+                    <span style={{ fontSize: '13px', textAlign: 'center', color: item.apto_entrega ? '#3B6D11' : '#ccc' }}>
+                      {item.apto_entrega ? '✓' : '—'}
                     </span>
+                    <button
+                      onClick={() => abrirEdicaoItem(item)}
+                      style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}
+                    >
+                      Editar
+                    </button>
                   </div>
                 ))}
               </div>
@@ -314,20 +325,20 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
 
       {showItemForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '500px', maxHeight: '85vh', overflowY: 'auto' }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '520px', maxHeight: '88vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Adicionar item ao pedido</span>
-              <button onClick={() => setShowItemForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>x</button>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{editandoItemId ? 'Editar item' : 'Adicionar item ao pedido'}</span>
+              <button onClick={() => setShowItemForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
             </div>
 
             {([
-              { label: 'Descricao do item *', field: 'descricao' },
+              { label: 'Descrição do item *', field: 'descricao' },
               { label: 'Quantidade', field: 'quantidade' },
               { label: 'Medida', field: 'medida' },
               { label: 'Tecido', field: 'tecido' },
               { label: 'Cor', field: 'cor' },
               { label: 'Acabamento', field: 'acabamento' },
-              { label: 'Observacoes', field: 'observacoes' },
+              { label: 'Observações', field: 'observacoes' },
             ] as { label: string; field: keyof typeof itemForm }[]).map(({ label, field }) => (
               <div key={field} style={{ marginBottom: '12px' }}>
                 <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
@@ -341,42 +352,45 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Fornecedor</div>
-              <select
-                value={itemForm.fornecedor_id}
-                onChange={e => setItemForm({ ...itemForm, fornecedor_id: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
-              >
+              <select value={itemForm.fornecedor_id} onChange={e => setItemForm({ ...itemForm, fornecedor_id: e.target.value })}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
                 <option value="">Selecione o fornecedor</option>
-                {fornecedores.map(f => (
-                  <option key={f.id} value={f.id}>{f.nome_fantasia || f.razao_social}</option>
-                ))}
+                {fornecedores.map(f => <option key={f.id} value={f.id}>{f.nome_fantasia || f.razao_social}</option>)}
               </select>
             </div>
 
+            {editandoItemId && (
+              <>
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Status</div>
+                  <select value={itemForm.status} onChange={e => setItemForm({ ...itemForm, status: e.target.value })}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
+                    {Object.entries(STATUS_ITEM).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                  </select>
+                </div>
+
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Previsão de chegada</div>
+                  <input type="date" value={itemForm.previsao_chegada} onChange={e => setItemForm({ ...itemForm, previsao_chegada: e.target.value })}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+
+                <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input type="checkbox" id="apto" checked={itemForm.apto_entrega} onChange={e => setItemForm({ ...itemForm, apto_entrega: e.target.checked })} />
+                  <label htmlFor="apto" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Apto para entrega</label>
+                </div>
+              </>
+            )}
+
             <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input
-                type="checkbox"
-                id="icamento"
-                checked={itemForm.requer_icamento}
-                onChange={e => setItemForm({ ...itemForm, requer_icamento: e.target.checked })}
-              />
-              <label htmlFor="icamento" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>
-                Requer icamento na entrega
-              </label>
+              <input type="checkbox" id="icamento" checked={itemForm.requer_icamento} onChange={e => setItemForm({ ...itemForm, requer_icamento: e.target.checked })} />
+              <label htmlFor="icamento" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Requer içamento na entrega</label>
             </div>
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setShowItemForm(false)}
-                style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={salvarItem}
-                style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}
-              >
-                Salvar item
+              <button onClick={() => setShowItemForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+              <button onClick={salvarItem} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
+                {editandoItemId ? 'Salvar alterações' : 'Salvar item'}
               </button>
             </div>
           </div>
