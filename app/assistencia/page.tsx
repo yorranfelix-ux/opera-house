@@ -62,6 +62,7 @@ export default function AssistenciaTecnica() {
   const [showFornecedorForm, setShowFornecedorForm] = useState(false)
   const [atSelecionada, setAtSelecionada] = useState<AT | null>(null)
   const [busca, setBusca] = useState('')
+  const [filtroStatus, setFiltroStatus] = useState<'ativas' | 'finalizadas' | 'todos'>('ativas')
   const [form, setForm] = useState({
     pedido_id: '',
     tipo_at: 'retirada_cliente',
@@ -159,12 +160,15 @@ export default function AssistenciaTecnica() {
     buscarATs()
   }
 
-  const filtradas = ats.filter(a =>
-    a.pedidos?.numero_pedido?.includes(busca) ||
-    a.pedidos?.clientes?.nome?.toLowerCase().includes(busca.toLowerCase()) ||
-    a.descricao_problema?.toLowerCase().includes(busca.toLowerCase()) ||
-    (a.numero_at || '').includes(busca)
-  )
+  const STATUS_ATIVAS = ['aberta', 'aguardando_retirada', 'em_reparo', 'enviado_fornecedor', 'aguardando_devolucao']
+
+  const filtradas = ats.filter(a => {
+    const buscaOk = a.pedidos?.numero_pedido?.includes(busca) || a.pedidos?.clientes?.nome?.toLowerCase().includes(busca.toLowerCase()) || a.descricao_problema?.toLowerCase().includes(busca.toLowerCase()) || (a.numero_at || '').includes(busca)
+    if (!buscaOk) return false
+    if (filtroStatus === 'ativas') return STATUS_ATIVAS.includes(a.status)
+    if (filtroStatus === 'finalizadas') return a.status === 'resolvida' || a.status === 'cancelada'
+    return true
+  })
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
@@ -179,13 +183,29 @@ export default function AssistenciaTecnica() {
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
             <input
-              placeholder="Buscar por pedido, cliente ou descricao..."
+              placeholder="Buscar por pedido, cliente ou descrição..."
               value={busca}
               onChange={e => setBusca(e.target.value)}
-              style={{ width: '320px', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+              style={{ width: '280px', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none' }}
             />
+            <div style={{ display: 'flex', gap: '4px', background: '#fff', border: '0.5px solid #e8e7e3', borderRadius: '8px', padding: '3px' }}>
+              {([
+                { key: 'ativas', label: 'Em aberto' },
+                { key: 'finalizadas', label: 'Finalizadas' },
+                { key: 'todos', label: 'Todas' },
+              ] as const).map(op => (
+                <button
+                  key={op.key}
+                  onClick={() => setFiltroStatus(op.key)}
+                  style={{ padding: '5px 14px', borderRadius: '6px', border: 'none', fontSize: '12px', fontWeight: '500', cursor: 'pointer', background: filtroStatus === op.key ? '#1a1a2e' : 'transparent', color: filtroStatus === op.key ? '#C9A84C' : '#888' }}
+                >
+                  {op.label}
+                </button>
+              ))}
+            </div>
+            <span style={{ fontSize: '12px', color: '#aaa' }}>{filtradas.length} AT{filtradas.length !== 1 ? 's' : ''}</span>
           </div>
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>

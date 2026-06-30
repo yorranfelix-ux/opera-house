@@ -63,6 +63,7 @@ export default function Pedidos() {
   const [clientes, setClientes] = useState<{ id: string; nome: string }[]>([])
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
+  const [filtroStatus, setFiltroStatus] = useState<'abertos' | 'entregues' | 'todos'>('abertos')
 
   useEffect(() => {
     buscarPedidos()
@@ -133,10 +134,15 @@ export default function Pedidos() {
     buscarPedidos()
   }
 
-  const filtrados = pedidos.filter(p =>
-    p.numero_pedido?.toLowerCase().includes(busca.toLowerCase()) ||
-    p.clientes?.nome?.toLowerCase().includes(busca.toLowerCase())
-  )
+  const STATUS_ABERTOS = ['criado', 'aguardando_compra', 'em_producao', 'em_transporte', 'recebido', 'apto_agendamento', 'agendado', 'com_at']
+
+  const filtrados = pedidos.filter(p => {
+    const buscaOk = p.numero_pedido?.toLowerCase().includes(busca.toLowerCase()) || p.clientes?.nome?.toLowerCase().includes(busca.toLowerCase())
+    if (!buscaOk) return false
+    if (filtroStatus === 'abertos') return STATUS_ABERTOS.includes(p.status)
+    if (filtroStatus === 'entregues') return p.status === 'entregue' || p.status === 'cancelado'
+    return true
+  })
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
@@ -150,12 +156,30 @@ export default function Pedidos() {
         </div>
 
         <div style={{ padding: '24px', flex: 1, overflow: 'auto' }}>
-          <input
-            placeholder="Buscar por número ou cliente..."
-            value={busca}
-            onChange={e => setBusca(e.target.value)}
-            style={{ width: '300px', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', marginBottom: '16px', outline: 'none' }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+            <input
+              placeholder="Buscar por número ou cliente..."
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+              style={{ width: '280px', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none' }}
+            />
+            <div style={{ display: 'flex', gap: '4px', background: '#fff', border: '0.5px solid #e8e7e3', borderRadius: '8px', padding: '3px' }}>
+              {([
+                { key: 'abertos', label: 'Em aberto' },
+                { key: 'entregues', label: 'Entregues' },
+                { key: 'todos', label: 'Todos' },
+              ] as const).map(op => (
+                <button
+                  key={op.key}
+                  onClick={() => setFiltroStatus(op.key)}
+                  style={{ padding: '5px 14px', borderRadius: '6px', border: 'none', fontSize: '12px', fontWeight: '500', cursor: 'pointer', background: filtroStatus === op.key ? '#1a1a2e' : 'transparent', color: filtroStatus === op.key ? '#C9A84C' : '#888', transition: 'all 0.15s' }}
+                >
+                  {op.label}
+                </button>
+              ))}
+            </div>
+            <span style={{ fontSize: '12px', color: '#aaa' }}>{filtrados.length} pedido{filtrados.length !== 1 ? 's' : ''}</span>
+          </div>
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 100px 100px 80px 120px 72px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
