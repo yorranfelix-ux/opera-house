@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import Sidebar from '../../components/Sidebar'
 import { use } from 'react'
 
 interface Pedido {
@@ -162,34 +163,10 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const comAT = itens.filter(i => i.tem_at).length
   const icamento = itens.filter(i => i.requer_icamento).length
 
-  const navItems = [
-    { label: 'Dashboard', href: '/dashboard' },
-    { label: 'Pedidos', href: '/pedidos' },
-    { label: 'Clientes', href: '/clientes' },
-    { label: 'Fornecedores', href: '/fornecedores' },
-    { label: 'Assistência Técnica', href: '/assistencia' },
-    { label: 'Ocorrências', href: '/ocorrencias' },
-    { label: 'Entregas', href: '/entregas' },
-  ]
-
-  const sidebar = (
-    <div style={{ width: '200px', background: '#1a1a2e', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-      <div style={{ padding: '22px 20px 16px', fontSize: '18px', fontWeight: '500', color: '#fff' }}>
-        Opera <span style={{ color: '#C9A84C' }}>House</span>
-      </div>
-      <div style={{ height: '0.5px', background: '#2d2d44', margin: '0 16px 12px' }} />
-      {navItems.map((item) => (
-        <a key={item.href} href={item.href} style={{ display: 'block', padding: '9px 20px', fontSize: '13px', color: item.href === '/pedidos' ? '#C9A84C' : '#8888aa', textDecoration: 'none', margin: '0 8px', borderRadius: '8px', background: item.href === '/pedidos' ? '#C9A84C18' : 'transparent' }}>
-          {item.label}
-        </a>
-      ))}
-    </div>
-  )
-
   if (loading) {
     return (
       <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif' }}>
-        {sidebar}
+        <Sidebar ativa="/pedidos" />
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>Carregando...</div>
       </div>
     )
@@ -198,7 +175,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   if (!pedido) {
     return (
       <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif' }}>
-        {sidebar}
+        <Sidebar ativa="/pedidos" />
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>Pedido não encontrado.</div>
       </div>
     )
@@ -206,7 +183,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
-      {sidebar}
+      <Sidebar ativa="/pedidos" />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>

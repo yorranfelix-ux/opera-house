@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import Sidebar from '../components/Sidebar'
 
 interface Fornecedor {
   id: string
@@ -83,31 +84,9 @@ export default function Fornecedores() {
     f.razao_social?.toLowerCase().includes(busca.toLowerCase())
   )
 
-  const sidebar = (
-    <div style={{ width: '200px', background: '#1a1a2e', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-      <div style={{ padding: '22px 20px 16px', fontSize: '18px', fontWeight: '500', color: '#fff' }}>
-        Opera <span style={{ color: '#C9A84C' }}>House</span>
-      </div>
-      <div style={{ height: '0.5px', background: '#2d2d44', margin: '0 16px 12px' }} />
-      {[
-        { label: 'Dashboard', href: '/dashboard' },
-        { label: 'Pedidos', href: '/pedidos' },
-        { label: 'Clientes', href: '/clientes' },
-        { label: 'Fornecedores', href: '/fornecedores' },
-        { label: 'Assistência Técnica', href: '/assistencia' },
-        { label: 'Ocorrências', href: '/ocorrencias' },
-        { label: 'Entregas', href: '/entregas' },
-      ].map((item) => (
-        <a key={item.href} href={item.href} style={{ display: 'block', padding: '9px 20px', fontSize: '13px', color: item.href === '/fornecedores' ? '#C9A84C' : '#8888aa', textDecoration: 'none', margin: '0 8px', borderRadius: '8px', background: item.href === '/fornecedores' ? '#C9A84C18' : 'transparent' }}>
-          {item.label}
-        </a>
-      ))}
-    </div>
-  )
-
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
-      {sidebar}
+      <Sidebar ativa="/fornecedores" />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
           <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Fornecedores</span>
