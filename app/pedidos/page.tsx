@@ -112,6 +112,17 @@ export default function Pedidos() {
     if (editandoId) {
       const { error } = await supabase.from('pedidos').update(form).eq('id', editandoId)
       if (error) return alert('Erro ao atualizar: ' + error.message)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('nome').eq('id', user.id).single()
+        await supabase.from('historico_alteracoes').insert([{
+          pedido_id: editandoId,
+          usuario_id: user.id,
+          usuario_nome: profile?.nome || user.email,
+          tipo: 'pedido_editado',
+          descricao: `Pedido ${form.numero_pedido} editado`,
+        }])
+      }
     } else {
       const { error } = await supabase.from('pedidos').insert([{ ...form, semaforo: 'verde' }])
       if (error) return alert('Erro ao salvar: ' + error.message)

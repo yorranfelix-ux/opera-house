@@ -34,6 +34,15 @@ interface Item {
   fornecedores: { nome_fantasia: string; razao_social: string }
 }
 
+interface Historico {
+  id: string
+  tipo: string
+  descricao: string
+  usuario_nome: string
+  created_at: string
+  item_id: string | null
+}
+
 const STATUS_ITEM: Record<string, { label: string; bg: string; color: string }> = {
   aguardando_compra: { label: 'Aguard. compra', bg: '#FAECE7', color: '#712B13' },
   compra_enviada: { label: 'Compra enviada', bg: '#FAEEDA', color: '#633806' },
@@ -66,9 +75,11 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const { id } = use(params)
   const [pedido, setPedido] = useState<Pedido | null>(null)
   const [itens, setItens] = useState<Item[]>([])
+  const [historico, setHistorico] = useState<Historico[]>([])
   const [loading, setLoading] = useState(true)
   const [showItemForm, setShowItemForm] = useState(false)
   const [editandoItemId, setEditandoItemId] = useState<string | null>(null)
+  const [itemAnterior, setItemAnterior] = useState<Item | null>(null)
   const [fornecedores, setFornecedores] = useState<{ id: string; nome_fantasia: string; razao_social: string }[]>([])
   const [itemForm, setItemForm] = useState(itemFormVazio)
 
@@ -76,6 +87,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     buscarPedido()
     buscarItens()
     buscarFornecedores()
+    buscarHistorico()
   }, [id])
 
   async function buscarPedido() {
@@ -105,14 +117,40 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     setFornecedores(data || [])
   }
 
+  async function buscarHistorico() {
+    const { data } = await supabase
+      .from('historico_alteracoes')
+      .select('*')
+      .eq('pedido_id', id)
+      .order('created_at', { ascending: false })
+      .limit(30)
+    setHistorico(data || [])
+  }
+
+  async function registrarHistorico(descricao: string, tipo: string, itemId?: string) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data: profile } = await supabase.from('profiles').select('nome').eq('id', user.id).single()
+    await supabase.from('historico_alteracoes').insert([{
+      pedido_id: id,
+      item_id: itemId || null,
+      usuario_id: user.id,
+      usuario_nome: profile?.nome || user.email,
+      tipo,
+      descricao,
+    }])
+  }
+
   function abrirNovoItem() {
     setEditandoItemId(null)
+    setItemAnterior(null)
     setItemForm(itemFormVazio)
     setShowItemForm(true)
   }
 
   function abrirEdicaoItem(item: Item) {
     setEditandoItemId(item.id)
+    setItemAnterior(item)
     setItemForm({
       descricao: item.descricao || '',
       quantidade: String(item.quantidade || 1),
@@ -146,17 +184,38 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       previsao_chegada: itemForm.previsao_chegada || null,
       apto_entrega: itemForm.apto_entrega,
     }
+
     if (editandoItemId) {
       const { error } = await supabase.from('itens_pedido').update(payload).eq('id', editandoItemId)
       if (error) return alert('Erro: ' + error.message)
+
+      const mudancas: string[] = []
+      if (itemAnterior?.status !== itemForm.status) {
+        mudancas.push(`Status: ${STATUS_ITEM[itemAnterior?.status || '']?.label || itemAnterior?.status} → ${STATUS_ITEM[itemForm.status]?.label || itemForm.status}`)
+      }
+      if (itemAnterior?.apto_entrega !== itemForm.apto_entrega) {
+        mudancas.push(`Apto entrega: ${itemForm.apto_entrega ? 'Sim' : 'Não'}`)
+      }
+      if (itemAnterior?.previsao_chegada !== itemForm.previsao_chegada && itemForm.previsao_chegada) {
+        mudancas.push(`Previsão: ${new Date(itemForm.previsao_chegada + 'T12:00:00').toLocaleDateString('pt-BR')}`)
+      }
+      if (itemAnterior?.descricao !== itemForm.descricao) {
+        mudancas.push(`Descrição alterada`)
+      }
+      const descricao = `Item "${itemForm.descricao}" editado${mudancas.length ? ': ' + mudancas.join(' · ') : ''}`
+      await registrarHistorico(descricao, 'item_editado', editandoItemId)
     } else {
       const { error } = await supabase.from('itens_pedido').insert([{ ...payload, pedido_id: id, status: 'aguardando_compra' }])
       if (error) return alert('Erro: ' + error.message)
+      await registrarHistorico(`Item "${itemForm.descricao}" adicionado ao pedido`, 'item_adicionado')
     }
+
     setShowItemForm(false)
     setItemForm(itemFormVazio)
     setEditandoItemId(null)
+    setItemAnterior(null)
     buscarItens()
+    buscarHistorico()
   }
 
   const aptos = itens.filter(i => i.apto_entrega).length
@@ -255,13 +314,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             {itens.length > 0 && (
               <div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 50px 110px 120px 90px 40px 72px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
-                  <span>Item</span>
-                  <span>Qtd</span>
-                  <span>Fornecedor</span>
-                  <span>Status</span>
-                  <span>Previsão</span>
-                  <span>Apto</span>
-                  <span></span>
+                  <span>Item</span><span>Qtd</span><span>Fornecedor</span><span>Status</span><span>Previsão</span><span>Apto</span><span></span>
                 </div>
                 {itens.map((item, i) => (
                   <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 50px 110px 120px 90px 40px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
@@ -285,10 +338,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                     <span style={{ fontSize: '13px', textAlign: 'center', color: item.apto_entrega ? '#3B6D11' : '#ccc' }}>
                       {item.apto_entrega ? '✓' : '—'}
                     </span>
-                    <button
-                      onClick={() => abrirEdicaoItem(item)}
-                      style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}
-                    >
+                    <button onClick={() => abrirEdicaoItem(item)} style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>
                       Editar
                     </button>
                   </div>
@@ -296,6 +346,29 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
               </div>
             )}
           </div>
+
+          {historico.length > 0 && (
+            <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
+              <div style={{ padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
+                <span style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Histórico de alterações</span>
+              </div>
+              <div style={{ padding: '8px 0' }}>
+                {historico.map((h, i) => (
+                  <div key={h.id} style={{ display: 'flex', gap: '12px', padding: '10px 16px', borderTop: i > 0 ? '0.5px solid #f7f6f3' : 'none', alignItems: 'flex-start' }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '11px', color: '#C9A84C', fontWeight: '600' }}>
+                      {h.usuario_nome?.charAt(0).toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '13px', color: '#1a1a2e' }}>{h.descricao}</div>
+                      <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
+                        {h.usuario_nome} · {new Date(h.created_at).toLocaleDateString('pt-BR')} às {new Date(h.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
         </div>
       </div>
@@ -319,11 +392,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             ] as { label: string; field: keyof typeof itemForm }[]).map(({ label, field }) => (
               <div key={field} style={{ marginBottom: '12px' }}>
                 <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
-                <input
-                  value={itemForm[field] as string}
-                  onChange={e => setItemForm({ ...itemForm, [field]: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
-                />
+                <input value={itemForm[field] as string} onChange={e => setItemForm({ ...itemForm, [field]: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
               </div>
             ))}
 
