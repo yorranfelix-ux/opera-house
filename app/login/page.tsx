@@ -73,7 +73,6 @@ export default function Login() {
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
         <div style={{ fontSize: '32px', color: '#e8e7e3' }}>🏛️</div>
-        <div style={{ fontSize: '15px', color: '#aaa', fontWeight: '500' }}>Delinear Móveis</div>
         <div style={{ fontSize: '12px', color: '#ccc' }}>Opera House — Gestão interna</div>
       </div>
     </div>
