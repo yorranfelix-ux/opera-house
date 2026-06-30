@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { LOGO_NEG } from '../lib/logos'
 
 const navItems = [
   { label: 'Dashboard', href: '/dashboard' },
@@ -34,7 +35,7 @@ export default function Sidebar({ ativa }: { ativa: string }) {
   return (
     <div style={{ width: '200px', background: '#1a1a2e', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
       <div style={{ padding: '20px 20px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <img src="/logo.png" alt="Opera House" style={{ width: '120px', objectFit: 'contain' }} />
+        <img src={LOGO_NEG} alt="Opera House" style={{ width: '120px', objectFit: 'contain' }} />
       </div>
       <div style={{ height: '0.5px', background: '#2d2d44', margin: '0 16px 12px' }} />
 

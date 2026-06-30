@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { LOGO_NEG, LOGO_DARK } from '../lib/logos'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -25,7 +26,7 @@ export default function Login() {
   return (
     <div style={{ height: '100vh', display: 'flex', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
       <div style={{ width: '420px', background: '#1a1a2e', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px' }}>
-        <img src="/logo.png" alt="Opera House" style={{ width: '160px', marginBottom: '12px', objectFit: 'contain' }} />
+        <img src={LOGO_NEG} alt="Opera House" style={{ width: '160px', marginBottom: '12px', objectFit: 'contain' }} />
         <div style={{ fontSize: '13px', color: '#6a6a8a', marginBottom: '48px' }}>Sistema de gestão de pedidos</div>
 
         <div style={{ width: '100%' }}>
@@ -70,7 +71,7 @@ export default function Login() {
       </div>
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
-        <img src="/logo-dark.png" alt="Opera House" style={{ width: '200px', objectFit: 'contain', opacity: 0.15 }} />
+        <img src={LOGO_DARK} alt="Opera House" style={{ width: '200px', objectFit: 'contain', opacity: 0.15 }} />
         <div style={{ fontSize: '12px', color: '#ccc', marginTop: '16px' }}>Opera House — Gestão interna</div>
       </div>
     </div>
