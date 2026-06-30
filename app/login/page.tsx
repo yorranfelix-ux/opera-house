@@ -25,9 +25,7 @@ export default function Login() {
   return (
     <div style={{ height: '100vh', display: 'flex', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
       <div style={{ width: '420px', background: '#1a1a2e', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px' }}>
-        <div style={{ fontSize: '28px', fontWeight: '500', color: '#fff', marginBottom: '8px' }}>
-          Opera <span style={{ color: '#C9A84C' }}>House</span>
-        </div>
+        <img src="/logo.png" alt="Opera House" style={{ width: '160px', marginBottom: '12px', objectFit: 'contain' }} />
         <div style={{ fontSize: '13px', color: '#6a6a8a', marginBottom: '48px' }}>Sistema de gestão de pedidos</div>
 
         <div style={{ width: '100%' }}>
@@ -72,8 +70,8 @@ export default function Login() {
       </div>
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
-        <div style={{ fontSize: '32px', color: '#e8e7e3' }}>🏛️</div>
-        <div style={{ fontSize: '12px', color: '#ccc' }}>Opera House — Gestão interna</div>
+        <img src="/logo-dark.png" alt="Opera House" style={{ width: '200px', objectFit: 'contain', opacity: 0.15 }} />
+        <div style={{ fontSize: '12px', color: '#ccc', marginTop: '16px' }}>Opera House — Gestão interna</div>
       </div>
     </div>
   )
