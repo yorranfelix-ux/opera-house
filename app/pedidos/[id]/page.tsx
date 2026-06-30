@@ -31,6 +31,8 @@ interface Item {
   tem_at: boolean
   requer_icamento: boolean
   fornecedor_id: string
+  data_recebimento: string
+  numero_nf: string
   fornecedores: { nome_fantasia: string; razao_social: string }
 }
 
@@ -69,6 +71,7 @@ const itemFormVazio = {
   descricao: '', quantidade: '1', medida: '', tecido: '', cor: '',
   acabamento: '', observacoes: '', fornecedor_id: '', requer_icamento: false,
   status: 'aguardando_compra', previsao_chegada: '', apto_entrega: false,
+  data_recebimento: '', numero_nf: '',
 }
 
 export default function CentralPedido({ params }: { params: Promise<{ id: string }> }) {
@@ -164,6 +167,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       status: item.status || 'aguardando_compra',
       previsao_chegada: item.previsao_chegada || '',
       apto_entrega: item.apto_entrega || false,
+      data_recebimento: item.data_recebimento || '',
+      numero_nf: item.numero_nf || '',
     })
     setShowItemForm(true)
   }
@@ -183,6 +188,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       status: itemForm.status,
       previsao_chegada: itemForm.previsao_chegada || null,
       apto_entrega: itemForm.apto_entrega,
+      data_recebimento: itemForm.data_recebimento || null,
+      numero_nf: itemForm.numero_nf || null,
     }
 
     if (editandoItemId) {
@@ -326,6 +333,13 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                           <span style={{ marginLeft: '6px', background: '#FAEEDA', color: '#633806', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>Içamento</span>
                         )}
                       </div>
+                      {(item.numero_nf || item.data_recebimento) && (
+                        <div style={{ fontSize: '11px', color: '#C9A84C', marginTop: '2px' }}>
+                          {item.numero_nf && <span>NF {item.numero_nf}</span>}
+                          {item.numero_nf && item.data_recebimento && <span> · </span>}
+                          {item.data_recebimento && <span>Recebido: {new Date(item.data_recebimento + 'T12:00:00').toLocaleDateString('pt-BR')}</span>}
+                        </div>
+                      )}
                     </div>
                     <span style={{ fontSize: '13px', color: '#555' }}>{item.quantidade}</span>
                     <span style={{ fontSize: '11px', color: '#555' }}>{item.fornecedores?.nome_fantasia || item.fornecedores?.razao_social || '—'}</span>
@@ -429,9 +443,25 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
               </>
             )}
 
-            <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <input type="checkbox" id="icamento" checked={itemForm.requer_icamento} onChange={e => setItemForm({ ...itemForm, requer_icamento: e.target.checked })} />
               <label htmlFor="icamento" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Requer içamento na entrega</label>
+            </div>
+
+            <div style={{ borderTop: '0.5px solid #f0efe9', paddingTop: '14px', marginBottom: '12px' }}>
+              <div style={{ fontSize: '10px', color: '#888', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '500' }}>Recebimento</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Número da NF</div>
+                  <input value={itemForm.numero_nf} onChange={e => setItemForm({ ...itemForm, numero_nf: e.target.value })} placeholder="Ex: 1234"
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Data de recebimento</div>
+                  <input type="date" value={itemForm.data_recebimento} onChange={e => setItemForm({ ...itemForm, data_recebimento: e.target.value })}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
