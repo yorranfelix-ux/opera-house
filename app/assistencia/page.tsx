@@ -80,6 +80,7 @@ export default function AssistenciaTecnica() {
     data_envio_fornecedor: '',
     previsao_retorno_fornecedor: '',
     observacoes_fornecedor: '',
+    numero_nf_envio: '',
   })
 
   useEffect(() => {
@@ -150,13 +151,14 @@ export default function AssistenciaTecnica() {
         data_envio_fornecedor: fornecedorForm.data_envio_fornecedor,
         previsao_retorno_fornecedor: fornecedorForm.previsao_retorno_fornecedor || null,
         observacoes_fornecedor: fornecedorForm.observacoes_fornecedor,
+        numero_nf_envio: fornecedorForm.numero_nf_envio || null,
         status: 'enviado_fornecedor',
       })
       .eq('id', atSelecionada.id)
     if (error) return alert('Erro: ' + error.message)
     setShowFornecedorForm(false)
     setAtSelecionada(null)
-    setFornecedorForm({ fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes_fornecedor: '' })
+    setFornecedorForm({ fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes_fornecedor: '', numero_nf_envio: '' })
     buscarATs()
   }
 
@@ -237,9 +239,12 @@ export default function AssistenciaTecnica() {
                 <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', fontWeight: '500', background: STATUS_COR[a.status]?.bg || '#f0efe9', color: STATUS_COR[a.status]?.color || '#555' }}>
                   {STATUS_COR[a.status]?.label || a.status}
                 </span>
-                <span style={{ fontSize: '11px', color: '#555' }}>
-                  {a.fornecedores?.nome_fantasia || a.fornecedores?.razao_social || '-'}
-                </span>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#555' }}>{a.fornecedores?.nome_fantasia || a.fornecedores?.razao_social || '-'}</div>
+                  {(a as any).numero_nf_envio && (
+                    <div style={{ fontSize: '10px', color: '#C9A84C', marginTop: '2px' }}>NF envio: {(a as any).numero_nf_envio}</div>
+                  )}
+                </div>
                 <div>
                   {(a.status === 'aberta' || a.status === 'em_reparo') && (
                     <button
@@ -376,6 +381,12 @@ export default function AssistenciaTecnica() {
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Previsao de retorno</div>
               <input type="date" value={fornecedorForm.previsao_retorno_fornecedor} onChange={e => setFornecedorForm({ ...fornecedorForm, previsao_retorno_fornecedor: e.target.value })} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>NF de envio</div>
+              <input value={fornecedorForm.numero_nf_envio} onChange={e => setFornecedorForm({ ...fornecedorForm, numero_nf_envio: e.target.value })} placeholder="Número da NF emitida para envio"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
             </div>
 
             <div style={{ marginBottom: '20px' }}>
