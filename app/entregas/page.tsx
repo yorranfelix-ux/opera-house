@@ -55,12 +55,17 @@ function montarEnderecoCliente(c: ClienteEntrega): string {
     .filter(Boolean).join(', ')
 }
 
-function abrirRotaMaps(entregas: Entrega[]) {
+async function abrirRotaMaps(entregas: Entrega[]) {
   const enderecos = entregas
     .map(e => montarEnderecoCliente(e.pedidos?.clientes))
     .filter(Boolean)
   if (enderecos.length === 0) return alert('Nenhum endereço cadastrado para os clientes deste dia.')
-  const url = 'https://www.google.com/maps/dir/' + enderecos.map(e => encodeURIComponent(e)).join('/')
+
+  const { data } = await supabase.from('configuracoes').select('valor').eq('chave', 'endereco_saida').single()
+  const saida = data?.valor?.trim()
+
+  const pontos = saida ? [saida, ...enderecos] : enderecos
+  const url = 'https://www.google.com/maps/dir/' + pontos.map(e => encodeURIComponent(e)).join('/')
   window.open(url, '_blank')
 }
 
