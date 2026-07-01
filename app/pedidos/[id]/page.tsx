@@ -142,7 +142,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       tipo,
       descricao,
     }])
-    if (error) alert('Erro ao registrar histórico: ' + error.message)
+    if (error) console.error('historico error:', error.message)
   }
 
   function abrirNovoItem() {
