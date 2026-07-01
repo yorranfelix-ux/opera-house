@@ -132,9 +132,9 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
 
   async function registrarHistorico(descricao: string, tipo: string, itemId?: string) {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user) { console.error('historico: sem usuario'); return }
     const { data: profile } = await supabase.from('profiles').select('nome').eq('id', user.id).single()
-    await supabase.from('historico_alteracoes').insert([{
+    const { error } = await supabase.from('historico_alteracoes').insert([{
       pedido_id: id,
       item_id: itemId || null,
       usuario_id: user.id,
@@ -142,6 +142,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       tipo,
       descricao,
     }])
+    if (error) alert('Erro ao registrar histórico: ' + error.message)
   }
 
   function abrirNovoItem() {
