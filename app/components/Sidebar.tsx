@@ -13,6 +13,7 @@ const navItems = [
   { label: 'Ocorrências', href: '/ocorrencias' },
   { label: 'Entregas', href: '/entregas' },
   { label: 'Histórico', href: '/historico' },
+  { label: 'Usuários', href: '/usuarios' },
   { label: 'Configurações', href: '/configuracoes' },
 ]
 
