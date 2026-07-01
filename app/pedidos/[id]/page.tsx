@@ -361,11 +361,13 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             )}
           </div>
 
-          {historico.length > 0 && (
-            <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-              <div style={{ padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
-                <span style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Histórico de alterações</span>
-              </div>
+          <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
+            <div style={{ padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
+              <span style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Histórico de alterações</span>
+            </div>
+            {historico.length === 0 ? (
+              <div style={{ padding: '24px', textAlign: 'center', color: '#aaa', fontSize: '13px' }}>Nenhuma alteração registrada ainda.</div>
+            ) : (
               <div style={{ padding: '8px 0' }}>
                 {historico.map((h, i) => (
                   <div key={h.id} style={{ display: 'flex', gap: '12px', padding: '10px 16px', borderTop: i > 0 ? '0.5px solid #f7f6f3' : 'none', alignItems: 'flex-start' }}>
@@ -381,8 +383,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
         </div>
       </div>

@@ -12,6 +12,7 @@ const navItems = [
   { label: 'Assistência Técnica', href: '/assistencia' },
   { label: 'Ocorrências', href: '/ocorrencias' },
   { label: 'Entregas', href: '/entregas' },
+  { label: 'Histórico', href: '/historico' },
   { label: 'Configurações', href: '/configuracoes' },
 ]
 
