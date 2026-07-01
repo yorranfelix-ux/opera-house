@@ -149,6 +149,13 @@ export default function Entregas() {
     buscarEntregas()
   }
 
+  async function deletarEntrega(id: string, numeroPedido: string) {
+    if (!confirm(`Remover o agendamento do Pedido ${numeroPedido}? O pedido não será excluído, apenas o agendamento de entrega.`)) return
+    const { error } = await supabase.from('entregas').delete().eq('id', id)
+    if (error) return alert('Erro: ' + error.message)
+    buscarEntregas()
+  }
+
   const filtradas = entregas.filter(e => {
     if (filtro === 'pendentes') return e.status === 'agendada' || e.status === 'reagendada'
     if (filtro === 'realizadas') return e.status === 'realizada'
@@ -256,12 +263,20 @@ export default function Entregas() {
                             <div style={{ fontSize: '11px', color: '#aaa', marginTop: '2px', fontStyle: 'italic' }}>{e.observacoes}</div>
                           )}
                         </div>
-                        <button
-                          onClick={() => abrirEdicao(e)}
-                          style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555', whiteSpace: 'nowrap' }}
-                        >
-                          Editar
-                        </button>
+                        <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                          <button
+                            onClick={() => abrirEdicao(e)}
+                            style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555', whiteSpace: 'nowrap' }}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => deletarEntrega(e.id, e.pedidos?.numero_pedido || '—')}
+                            style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #FCEBEB', background: '#FCEBEB', fontSize: '12px', cursor: 'pointer', color: '#A32D2D', whiteSpace: 'nowrap' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
                     )
                   })}
