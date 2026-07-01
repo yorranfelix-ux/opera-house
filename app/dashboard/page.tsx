@@ -11,9 +11,7 @@ interface PedidoResumo {
   semaforo: string
   prazo_prometido: string
   clientes: { nome: string; cidade: string; estado: string }
-  fornecedores_principal?: string
   tag?: string
-  entrega_data?: string
 }
 
 interface DonutSegment {
@@ -27,7 +25,6 @@ function DonutChart({ segments, total }: { segments: DonutSegment[]; total: numb
   const circ = 2 * Math.PI * r
   let offset = 0
   const gap = 2
-
   return (
     <svg width="140" height="140" viewBox="0 0 140 140">
       {segments.map((seg, i) => {
@@ -36,16 +33,9 @@ function DonutChart({ segments, total }: { segments: DonutSegment[]; total: numb
         const o = offset
         offset += pct * circ
         return (
-          <circle
-            key={i}
-            cx="70" cy="70" r={r}
-            fill="none"
-            stroke={seg.color}
-            strokeWidth="16"
+          <circle key={i} cx="70" cy="70" r={r} fill="none" stroke={seg.color} strokeWidth="16"
             strokeDasharray={`${Math.max(0, dash)} ${circ}`}
-            strokeDashoffset={-o + circ * 0.25}
-            strokeLinecap="butt"
-          />
+            strokeDashoffset={-o + circ * 0.25} strokeLinecap="butt" />
         )
       })}
       <text x="70" y="66" textAnchor="middle" fontSize="22" fontWeight="600" fill="#1a1a2e">{total}</text>
@@ -54,7 +44,15 @@ function DonutChart({ segments, total }: { segments: DonutSegment[]; total: numb
   )
 }
 
+function saudacao() {
+  const h = new Date().getHours()
+  if (h < 12) return 'Bom dia'
+  if (h < 18) return 'Boa tarde'
+  return 'Boa noite'
+}
+
 export default function Dashboard() {
+  const [usuario, setUsuario] = useState<{ nome: string; cargo: string } | null>(null)
   const [dados, setDados] = useState({
     pedidosAndamento: 0,
     pedidosAtrasados: 0,
@@ -62,13 +60,22 @@ export default function Dashboard() {
     atsAbertas: 0,
     atsSemAtualizacao: 0,
     entregasAmanha: 0,
-    semanaAnteriorPedidos: 0,
-    semanaAtualPedidos: 0,
+    entreguesMes: 0,
   })
   const [pedidosAtencao, setPedidosAtencao] = useState<PedidoResumo[]>([])
   const [statusDist, setStatusDist] = useState<DonutSegment[]>([])
 
-  useEffect(() => { buscar() }, [])
+  useEffect(() => {
+    buscarUsuario()
+    buscar()
+  }, [])
+
+  async function buscarUsuario() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase.from('profiles').select('nome, cargo').eq('id', user.id).single()
+    if (data) setUsuario(data)
+  }
 
   async function buscar() {
     const hoje = new Date()
@@ -76,20 +83,20 @@ export default function Dashboard() {
     const amanha = new Date(hoje); amanha.setDate(amanha.getDate() + 1)
     const amanhaStr = amanha.toISOString().split('T')[0]
     const seteDiasAtras = new Date(hoje); seteDiasAtras.setDate(seteDiasAtras.getDate() - 7)
-    const seteDiasAtrasStr = seteDiasAtras.toISOString().split('T')[0]
-    const inicioSemana = new Date(hoje); inicioSemana.setDate(inicioSemana.getDate() - inicioSemana.getDay())
-    const inicioSemanaAnterior = new Date(inicioSemana); inicioSemanaAnterior.setDate(inicioSemanaAnterior.getDate() - 7)
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0]
 
     const [
       { data: pedidos },
       { data: itens },
       { data: ats },
       { data: entregas },
+      { data: entreguesMes },
     ] = await Promise.all([
       supabase.from('pedidos').select('*, clientes(nome, cidade, estado)').not('status', 'in', '(entregue,cancelado)'),
       supabase.from('itens_pedido').select('id, apto_entrega, pedido_id, tem_at, status'),
       supabase.from('assistencias_tecnicas').select('id, status, updated_at').in('status', ['aberta', 'aguardando_retirada', 'em_reparo', 'enviado_fornecedor', 'aguardando_devolucao']),
-      supabase.from('entregas').select('*, pedidos(numero_pedido, clientes(nome, cidade, estado))').eq('data_agendada', amanhaStr),
+      supabase.from('entregas').select('id').eq('data_agendada', amanhaStr),
+      supabase.from('pedidos').select('id').eq('status', 'entregue').gte('updated_at', inicioMes),
     ])
 
     const pedidosAtivos = (pedidos || []) as any[]
@@ -99,32 +106,26 @@ export default function Dashboard() {
     const atrasados = pedidosAtivos.filter(p => p.prazo_prometido && p.prazo_prometido < hojeStr)
     const aptoIds = new Set(itensData.filter(i => i.apto_entrega).map(i => i.pedido_id))
     const comAtIds = new Set(itensData.filter(i => i.tem_at).map(i => i.pedido_id))
-    const atsSemUpdate = atsData.filter(a => {
-      if (!a.updated_at) return true
-      return new Date(a.updated_at) < seteDiasAtras
-    })
+    const atsSemUpdate = atsData.filter(a => !a.updated_at || new Date(a.updated_at) < seteDiasAtras)
 
-    // Pedidos com atenção
     const atencao: PedidoResumo[] = []
-    atrasados.slice(0, 3).forEach(p => atencao.push({ ...p, tag: 'atrasado' }))
-    pedidosAtivos.filter(p => comAtIds.has(p.id) && !atrasados.find(a => a.id === p.id)).slice(0, 2).forEach(p => atencao.push({ ...p, tag: 'com_at' }))
-    pedidosAtivos.filter(p => aptoIds.has(p.id) && !atrasados.find(a => a.id === p.id)).slice(0, 2).forEach(p => atencao.push({ ...p, tag: 'apto' }))
+    atrasados.slice(0, 3).forEach((p: any) => atencao.push({ ...p, tag: 'atrasado' }))
+    pedidosAtivos.filter((p: any) => comAtIds.has(p.id) && !atrasados.find((a: any) => a.id === p.id)).slice(0, 2).forEach((p: any) => atencao.push({ ...p, tag: 'com_at' }))
+    pedidosAtivos.filter((p: any) => aptoIds.has(p.id) && !atrasados.find((a: any) => a.id === p.id)).slice(0, 2).forEach((p: any) => atencao.push({ ...p, tag: 'apto' }))
 
-    // Distribuição por status dos itens
     const countStatus: Record<string, number> = {}
-    itensData.forEach(i => { countStatus[i.status] = (countStatus[i.status] || 0) + 1 })
+    itensData.forEach((i: any) => { countStatus[i.status] = (countStatus[i.status] || 0) + 1 })
 
     const grupos = [
       { label: 'Em produção', color: '#185FA5', statuses: ['em_producao', 'compra_confirmada', 'compra_enviada'] },
       { label: 'Em transporte', color: '#C9A84C', statuses: ['em_transporte'] },
       { label: 'Recebimento', color: '#3B6D11', statuses: ['recebido', 'conferido_ok', 'apto_entrega'] },
-      { label: 'Atrasados', color: '#A32D2D', statuses: ['conferido_com_problema', 'em_at'] },
+      { label: 'Com problema', color: '#A32D2D', statuses: ['conferido_com_problema', 'em_at'] },
       { label: 'Outros', color: '#ccc', statuses: ['aguardando_compra', 'entregue'] },
     ]
 
-    const segs: DonutSegment[] = grupos.map(g => ({
-      label: g.label,
-      color: g.color,
+    const segs = grupos.map(g => ({
+      label: g.label, color: g.color,
       value: g.statuses.reduce((s, st) => s + (countStatus[st] || 0), 0),
     })).filter(s => s.value > 0)
 
@@ -135,8 +136,7 @@ export default function Dashboard() {
       atsAbertas: atsData.length,
       atsSemAtualizacao: atsSemUpdate.length,
       entregasAmanha: (entregas || []).length,
-      semanaAnteriorPedidos: 0,
-      semanaAtualPedidos: 0,
+      entreguesMes: (entreguesMes || []).length,
     })
     setPedidosAtencao(atencao)
     setStatusDist(segs)
@@ -153,7 +153,6 @@ export default function Dashboard() {
     atrasado: { bg: '#FCEBEB', color: '#791F1F', label: 'Atrasado' },
     com_at: { bg: '#EEEDFE', color: '#3C3489', label: 'Com AT' },
     apto: { bg: '#EAF3DE', color: '#27500A', label: 'Apto agendar' },
-    agendado: { bg: '#E6F1FB', color: '#0C447C', label: 'Agendado' },
   }
 
   const SEMAFORO_COLOR: Record<string, string> = {
@@ -161,18 +160,72 @@ export default function Dashboard() {
   }
 
   const totalItens = statusDist.reduce((s, g) => s + g.value, 0)
+  const primeiroNome = usuario?.nome?.split(' ')[0] || '...'
+  const inicial = usuario?.nome?.charAt(0).toUpperCase() || '?'
+  const pedidosAtencaoCount = pedidosAtencao.length
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
       <Sidebar ativa="/dashboard" />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-        <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', padding: '0 22px', fontSize: '15px', fontWeight: '500', color: '#1a1a2e', flexShrink: 0 }}>
-          Dashboard operacional
+        {/* Topbar */}
+        <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
+          <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Dashboard operacional</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ position: 'relative', cursor: 'pointer' }}>
+              <span style={{ fontSize: '18px', color: '#888' }}>🔔</span>
+              {pedidosAtencaoCount > 0 && (
+                <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '16px', height: '16px', borderRadius: '50%', background: '#A32D2D', color: '#fff', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {pedidosAtencaoCount}
+                </div>
+              )}
+            </div>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', color: '#C9A84C', fontWeight: '600', cursor: 'pointer' }}>
+              {inicial}
+            </div>
+          </div>
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
 
+          {/* Hero card */}
+          <div style={{ background: '#1a1a2e', borderRadius: '16px', padding: '24px 28px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: '11px', color: '#6a6a8a', textTransform: 'uppercase', letterSpacing: '0.7px', marginBottom: '4px' }}>{saudacao()}</div>
+                <div style={{ fontSize: '22px', fontWeight: '600', color: '#fff', marginBottom: '6px' }}>Bem-vindo, {primeiroNome}!</div>
+                <div style={{ fontSize: '13px', color: '#8888aa', marginBottom: '18px' }}>
+                  {pedidosAtencaoCount > 0
+                    ? `Você tem ${pedidosAtencaoCount} pedido${pedidosAtencaoCount !== 1 ? 's' : ''} precisando de atenção hoje.`
+                    : 'Tudo em ordem por hoje.'}
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <a href="/pedidos" style={{ padding: '8px 16px', borderRadius: '8px', background: '#C9A84C', color: '#1a1a2e', fontSize: '12px', fontWeight: '600', textDecoration: 'none' }}>
+                    Ver pedidos urgentes
+                  </a>
+                  <a href="/entregas" style={{ padding: '8px 16px', borderRadius: '8px', background: '#252540', color: '#8888aa', fontSize: '12px', fontWeight: '500', textDecoration: 'none' }}>
+                    Ver entregas
+                  </a>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '28px', flexShrink: 0 }}>
+                {[
+                  { label: 'Em andamento', value: dados.pedidosAndamento, color: '#fff' },
+                  { label: 'Atrasados', value: dados.pedidosAtrasados, color: '#A32D2D' },
+                  { label: 'Entregues/mês', value: dados.entreguesMes, color: '#C9A84C' },
+                  { label: 'ATs abertas', value: dados.atsAbertas, color: '#6a6aaa' },
+                ].map(stat => (
+                  <div key={stat.label} style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '28px', fontWeight: '600', color: stat.color, lineHeight: 1 }}>{stat.value}</div>
+                    <div style={{ fontSize: '11px', color: '#6a6a8a', marginTop: '4px' }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Chips */}
           {chips.length > 0 && (
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
               {chips.map((chip, i) => (
@@ -184,30 +237,29 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
             {[
-              { label: 'Pedidos em andamento', value: dados.pedidosAndamento, color: '#1a1a2e', icon: '📋', sub: null },
-              { label: 'Pedidos atrasados', value: dados.pedidosAtrasados, color: '#A32D2D', icon: '⏰', sub: dados.pedidosAtrasados > 0 ? `${dados.pedidosAtrasados} acima do prazo` : 'Todos no prazo' },
-              { label: 'Apto para agendar', value: dados.aptoEntrega, color: '#3B6D11', icon: '✓', sub: dados.aptoEntrega > 0 ? 'Pronto para entrega' : null },
-              { label: 'ATs abertas', value: dados.atsAbertas, color: '#185FA5', icon: '⚙', sub: dados.atsSemAtualizacao > 0 ? `${dados.atsSemAtualizacao} sem atualização` : null },
+              { label: 'Pedidos em andamento', value: dados.pedidosAndamento, color: '#1a1a2e', sub: null },
+              { label: 'Pedidos atrasados', value: dados.pedidosAtrasados, color: '#A32D2D', sub: dados.pedidosAtrasados > 0 ? 'Acima do prazo' : 'Todos no prazo' },
+              { label: 'Aguard. agendamento', value: dados.aptoEntrega, color: '#3B6D11', sub: dados.aptoEntrega > 0 ? 'Apto agora' : null },
+              { label: 'ATs abertas', value: dados.atsAbertas, color: '#185FA5', sub: dados.atsSemAtualizacao > 0 ? `${dados.atsSemAtualizacao} sem atualização` : null },
             ].map(card => (
               <div key={card.label} style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '18px' }}>
-                <div style={{ fontSize: '13px', color: '#888', marginBottom: '10px' }}>{card.icon} {card.label}</div>
+                <div style={{ fontSize: '12px', color: '#888', marginBottom: '10px' }}>{card.label}</div>
                 <div style={{ fontSize: '32px', fontWeight: '600', color: card.color, lineHeight: 1 }}>{card.value}</div>
                 {card.sub && (
-                  <div style={{ fontSize: '11px', color: card.color === '#1a1a2e' ? '#888' : card.color, marginTop: '6px', opacity: 0.8 }}>
-                    ↑ {card.sub}
-                  </div>
+                  <div style={{ fontSize: '11px', color: card.color, marginTop: '6px', opacity: 0.8 }}>↑ {card.sub}</div>
                 )}
               </div>
             ))}
           </div>
 
+          {/* Bottom grid */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '16px' }}>
-
             <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
-                <span style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>⚠ Pedidos com atenção</span>
+                <span style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pedidos com atenção</span>
                 <a href="/pedidos" style={{ fontSize: '12px', color: '#C9A84C', textDecoration: 'none' }}>Ver todos</a>
               </div>
               {pedidosAtencao.length === 0 ? (
@@ -236,7 +288,7 @@ export default function Dashboard() {
             </div>
 
             <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '18px' }}>
-              <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px' }}>⬤ Pedidos por status</div>
+              <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px' }}>Pedidos por status</div>
               {totalItens === 0 ? (
                 <div style={{ textAlign: 'center', color: '#888', fontSize: '13px', padding: '20px 0' }}>Sem dados</div>
               ) : (
@@ -256,8 +308,8 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
-
           </div>
+
         </div>
       </div>
     </div>
