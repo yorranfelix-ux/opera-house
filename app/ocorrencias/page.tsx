@@ -12,13 +12,22 @@ interface Ocorrencia {
   observacoes: string
   status: string
   pedido_id: string
+  item_id: string | null
+  quantidade_afetada: number | null
   pedidos: { numero_pedido: string; clientes: { nome: string } }
+  itens_pedido: { descricao: string } | null
 }
 
 interface Pedido {
   id: string
   numero_pedido: string
   clientes: { nome: string }
+}
+
+interface ItemPedido {
+  id: string
+  descricao: string
+  quantidade: number
 }
 
 const TIPOS: Record<string, string> = {
@@ -32,42 +41,39 @@ const TIPOS: Record<string, string> = {
 
 const STATUS_LISTA = ['aberta', 'em_tratativa', 'resolvida', 'cancelada']
 
-const STATUS_COR: Record<string, { bg: string; color: string }> = {
-  aberta: { bg: '#FAECE7', color: '#712B13' },
-  em_tratativa: { bg: '#FAEEDA', color: '#633806' },
-  resolvida: { bg: '#EAF3DE', color: '#27500A' },
-  cancelada: { bg: '#f0efe9', color: '#888' },
+const STATUS_COR: Record<string, { bg: string; color: string; label: string }> = {
+  aberta: { bg: '#FAECE7', color: '#712B13', label: 'Aberta' },
+  em_tratativa: { bg: '#FAEEDA', color: '#633806', label: 'Em tratativa' },
+  resolvida: { bg: '#EAF3DE', color: '#27500A', label: 'Resolvida' },
+  cancelada: { bg: '#f0efe9', color: '#888', label: 'Cancelada' },
 }
 
-const navItems = [
-  { label: 'Dashboard', href: '/dashboard' },
-  { label: 'Pedidos', href: '/pedidos' },
-  { label: 'Clientes', href: '/clientes' },
-  { label: 'Fornecedores', href: '/fornecedores' },
-  { label: 'Assistência Técnica', href: '/assistencia' },
-  { label: 'Ocorrências', href: '/ocorrencias' },
-  { label: 'Entregas', href: '/entregas' },
-]
-
-const formVazio = { pedido_id: '', tipo: 'avaria', descricao: '', observacoes: '', status: 'aberta' }
+const formVazio = {
+  pedido_id: '', item_id: '', quantidade_afetada: '',
+  tipo: 'avaria', descricao: '', observacoes: '', status: 'aberta',
+}
 
 export default function Ocorrencias() {
   const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>([])
   const [pedidos, setPedidos] = useState<Pedido[]>([])
+  const [itensPedido, setItensPedido] = useState<ItemPedido[]>([])
   const [showForm, setShowForm] = useState(false)
   const [busca, setBusca] = useState('')
+  const [filtroStatus, setFiltroStatus] = useState<'abertas' | 'resolvidas' | 'todas'>('abertas')
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
 
+  useEffect(() => { buscarOcorrencias(); buscarPedidos() }, [])
+
   useEffect(() => {
-    buscarOcorrencias()
-    buscarPedidos()
-  }, [])
+    if (form.pedido_id) buscarItensPedido(form.pedido_id)
+    else setItensPedido([])
+  }, [form.pedido_id])
 
   async function buscarOcorrencias() {
     const { data } = await supabase
       .from('ocorrencias')
-      .select('*, pedidos(numero_pedido, clientes(nome))')
+      .select('*, pedidos(numero_pedido, clientes(nome)), itens_pedido(descricao)')
       .order('created_at', { ascending: false })
     setOcorrencias((data as unknown as Ocorrencia[]) || [])
   }
@@ -80,9 +86,19 @@ export default function Ocorrencias() {
     setPedidos((data as unknown as Pedido[]) || [])
   }
 
+  async function buscarItensPedido(pedidoId: string) {
+    const { data } = await supabase
+      .from('itens_pedido')
+      .select('id, descricao, quantidade')
+      .eq('pedido_id', pedidoId)
+      .order('created_at')
+    setItensPedido((data as unknown as ItemPedido[]) || [])
+  }
+
   function abrirNovo() {
     setEditandoId(null)
     setForm(formVazio)
+    setItensPedido([])
     setShowForm(true)
   }
 
@@ -90,6 +106,8 @@ export default function Ocorrencias() {
     setEditandoId(o.id)
     setForm({
       pedido_id: o.pedido_id || '',
+      item_id: o.item_id || '',
+      quantidade_afetada: o.quantidade_afetada ? String(o.quantidade_afetada) : '',
       tipo: o.tipo || 'avaria',
       descricao: o.descricao || '',
       observacoes: o.observacoes || '',
@@ -101,11 +119,20 @@ export default function Ocorrencias() {
   async function salvar() {
     if (!form.pedido_id) return alert('Selecione o pedido')
     if (!form.descricao) return alert('Descrição é obrigatória')
+    const payload = {
+      pedido_id: form.pedido_id,
+      item_id: form.item_id || null,
+      quantidade_afetada: form.quantidade_afetada ? parseInt(form.quantidade_afetada) : null,
+      tipo: form.tipo,
+      descricao: form.descricao,
+      observacoes: form.observacoes,
+      status: form.status,
+    }
     if (editandoId) {
-      const { error } = await supabase.from('ocorrencias').update(form).eq('id', editandoId)
+      const { error } = await supabase.from('ocorrencias').update(payload).eq('id', editandoId)
       if (error) return alert('Erro: ' + error.message)
     } else {
-      const { error } = await supabase.from('ocorrencias').insert([{ ...form, status: 'aberta' }])
+      const { error } = await supabase.from('ocorrencias').insert([{ ...payload, status: 'aberta' }])
       if (error) return alert('Erro: ' + error.message)
     }
     setShowForm(false)
@@ -114,11 +141,16 @@ export default function Ocorrencias() {
     buscarOcorrencias()
   }
 
-  const filtradas = ocorrencias.filter(o =>
-    o.pedidos?.numero_pedido?.includes(busca) ||
-    o.pedidos?.clientes?.nome?.toLowerCase().includes(busca.toLowerCase()) ||
-    o.descricao?.toLowerCase().includes(busca.toLowerCase())
-  )
+  const STATUS_ABERTAS = ['aberta', 'em_tratativa']
+  const filtradas = ocorrencias.filter(o => {
+    const buscaOk = o.pedidos?.numero_pedido?.includes(busca) ||
+      o.pedidos?.clientes?.nome?.toLowerCase().includes(busca.toLowerCase()) ||
+      o.descricao?.toLowerCase().includes(busca.toLowerCase())
+    if (!buscaOk) return false
+    if (filtroStatus === 'abertas') return STATUS_ABERTAS.includes(o.status)
+    if (filtroStatus === 'resolvidas') return o.status === 'resolvida' || o.status === 'cancelada'
+    return true
+  })
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
@@ -133,18 +165,31 @@ export default function Ocorrencias() {
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
             <input
               placeholder="Buscar por pedido, cliente ou descrição..."
               value={busca}
               onChange={e => setBusca(e.target.value)}
-              style={{ width: '320px', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none' }}
+              style={{ width: '300px', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none' }}
             />
+            <div style={{ display: 'flex', gap: '4px', background: '#fff', border: '0.5px solid #e8e7e3', borderRadius: '8px', padding: '3px' }}>
+              {([
+                { key: 'abertas', label: 'Em aberto' },
+                { key: 'resolvidas', label: 'Resolvidas' },
+                { key: 'todas', label: 'Todas' },
+              ] as const).map(op => (
+                <button key={op.key} onClick={() => setFiltroStatus(op.key)}
+                  style={{ padding: '5px 14px', borderRadius: '6px', border: 'none', fontSize: '12px', fontWeight: '500', cursor: 'pointer', background: filtroStatus === op.key ? '#1a1a2e' : 'transparent', color: filtroStatus === op.key ? '#C9A84C' : '#888' }}>
+                  {op.label}
+                </button>
+              ))}
+            </div>
+            <span style={{ fontSize: '12px', color: '#aaa' }}>{filtradas.length} ocorrência{filtradas.length !== 1 ? 's' : ''}</span>
           </div>
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 130px 110px 100px 72px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
-              <span>Pedido</span><span>Descrição</span><span>Tipo</span><span>Status</span><span>Data</span><span></span>
+            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 160px 130px 110px 100px 72px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
+              <span>Pedido</span><span>Item / Descrição</span><span>Tipo</span><span>Status</span><span>Qtd afetada</span><span>Data</span><span></span>
             </div>
 
             {filtradas.length === 0 && (
@@ -152,23 +197,29 @@ export default function Ocorrencias() {
             )}
 
             {filtradas.map((o, i) => (
-              <div key={o.id} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 130px 110px 100px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+              <div key={o.id} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 160px 130px 110px 100px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{o.pedidos?.numero_pedido}</div>
                   <div style={{ fontSize: '11px', color: '#888' }}>{o.pedidos?.clientes?.nome}</div>
                 </div>
-                <span style={{ fontSize: '13px', color: '#333' }}>{o.descricao}</span>
+                <div>
+                  {o.itens_pedido?.descricao && (
+                    <div style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a2e', marginBottom: '2px' }}>{o.itens_pedido.descricao}</div>
+                  )}
+                  <div style={{ fontSize: '12px', color: '#555' }}>{o.descricao}</div>
+                </div>
                 <span style={{ fontSize: '12px', color: '#555' }}>{TIPOS[o.tipo] || o.tipo}</span>
                 <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', fontWeight: '500', background: STATUS_COR[o.status]?.bg || '#f0efe9', color: STATUS_COR[o.status]?.color || '#555' }}>
-                  {o.status.replace('_', ' ')}
+                  {STATUS_COR[o.status]?.label || o.status}
+                </span>
+                <span style={{ fontSize: '12px', color: '#555', textAlign: 'center' }}>
+                  {o.quantidade_afetada ? `${o.quantidade_afetada} pç${o.quantidade_afetada !== 1 ? 's' : ''}` : '—'}
                 </span>
                 <span style={{ fontSize: '11px', color: '#888' }}>
                   {new Date(o.created_at).toLocaleDateString('pt-BR')}
                 </span>
-                <button
-                  onClick={() => abrirEdicao(o)}
-                  style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}
-                >
+                <button onClick={() => abrirEdicao(o)}
+                  style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>
                   Editar
                 </button>
               </div>
@@ -179,7 +230,7 @@ export default function Ocorrencias() {
 
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '480px', maxHeight: '85vh', overflowY: 'auto' }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '500px', maxHeight: '88vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{editandoId ? 'Editar ocorrência' : 'Nova ocorrência'}</span>
               <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
@@ -187,11 +238,38 @@ export default function Ocorrencias() {
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Pedido *</div>
-              <select value={form.pedido_id} onChange={e => setForm({ ...form, pedido_id: e.target.value })}
+              <select value={form.pedido_id} onChange={e => setForm({ ...form, pedido_id: e.target.value, item_id: '' })}
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
                 <option value="">Selecione o pedido</option>
-                {pedidos.map(p => <option key={p.id} value={p.id}>{p.numero_pedido} - {p.clientes?.nome}</option>)}
+                {pedidos.map(p => <option key={p.id} value={p.id}>{p.numero_pedido} — {(p.clientes as any)?.nome}</option>)}
               </select>
+            </div>
+
+            {itensPedido.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Item com ocorrência</div>
+                <select value={form.item_id} onChange={e => setForm({ ...form, item_id: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
+                  <option value="">Selecione o item (opcional)</option>
+                  {itensPedido.map(it => <option key={it.id} value={it.id}>{it.descricao} (Qtd: {it.quantidade})</option>)}
+                </select>
+              </div>
+            )}
+
+            {form.pedido_id && itensPedido.length === 0 && (
+              <div style={{ marginBottom: '12px', padding: '10px 12px', borderRadius: '8px', background: '#f7f6f3', fontSize: '12px', color: '#888' }}>
+                Este pedido não tem itens cadastrados ainda.
+              </div>
+            )}
+
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Quantidade de peças afetadas</div>
+              <input
+                type="number" min="1" value={form.quantidade_afetada}
+                onChange={e => setForm({ ...form, quantidade_afetada: e.target.value })}
+                placeholder="Ex: 2"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+              />
             </div>
 
             <div style={{ marginBottom: '12px' }}>
@@ -207,13 +285,13 @@ export default function Ocorrencias() {
                 <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Status</div>
                 <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
                   style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
-                  {STATUS_LISTA.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+                  {STATUS_LISTA.map(s => <option key={s} value={s}>{STATUS_COR[s]?.label || s}</option>)}
                 </select>
               </div>
             )}
 
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Descrição *</div>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Descrição da ocorrência *</div>
               <textarea value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} rows={3}
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
             </div>
