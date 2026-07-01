@@ -30,6 +30,8 @@ interface Item {
   apto_entrega: boolean
   tem_at: boolean
   requer_icamento: boolean
+  requer_tecido_fornecido: boolean
+  tipo: string
   fornecedor_id: string
   data_recebimento: string
   numero_nf: string
@@ -70,6 +72,7 @@ const SEMAFORO_COLOR: Record<string, string> = {
 const itemFormVazio = {
   descricao: '', quantidade: '1', medida: '', tecido: '', cor: '',
   acabamento: '', observacoes: '', fornecedor_id: '', requer_icamento: false,
+  requer_tecido_fornecido: false, tipo: 'movel',
   status: 'aguardando_compra', previsao_chegada: '', apto_entrega: false,
   data_recebimento: '', numero_nf: '',
 }
@@ -165,6 +168,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       observacoes: item.observacoes || '',
       fornecedor_id: item.fornecedor_id || '',
       requer_icamento: item.requer_icamento || false,
+      requer_tecido_fornecido: item.requer_tecido_fornecido || false,
+      tipo: item.tipo || 'movel',
       status: item.status || 'aguardando_compra',
       previsao_chegada: item.previsao_chegada || '',
       apto_entrega: item.apto_entrega || false,
@@ -186,6 +191,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       observacoes: itemForm.observacoes,
       fornecedor_id: itemForm.fornecedor_id || null,
       requer_icamento: itemForm.requer_icamento,
+      requer_tecido_fornecido: itemForm.requer_tecido_fornecido,
+      tipo: itemForm.tipo || 'movel',
       status: itemForm.status,
       previsao_chegada: itemForm.previsao_chegada || null,
       apto_entrega: itemForm.apto_entrega,
@@ -360,13 +367,21 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                   <span>Item</span><span>Qtd</span><span>Fornecedor</span><span>Status</span><span>Previsão</span><span>Apto</span><span></span>
                 </div>
                 {itens.map((item, i) => (
-                  <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 50px 110px 120px 90px 40px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+                  <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 50px 110px 120px 90px 40px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: item.tipo === 'tecido' ? '#F5F0FF' : item.tipo === 'outro' ? '#F5F5F5' : i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{item.descricao}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {item.tipo === 'tecido' && (
+                          <span style={{ background: '#EEEDFE', color: '#3C3489', padding: '1px 7px', borderRadius: '6px', fontSize: '10px', fontWeight: '500', flexShrink: 0 }}>Tecido</span>
+                        )}
+                        <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{item.descricao}</span>
+                      </div>
                       <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
                         {[item.medida, item.tecido, item.cor, item.acabamento].filter(Boolean).join(' · ')}
                         {item.requer_icamento && (
                           <span style={{ marginLeft: '6px', background: '#FAEEDA', color: '#633806', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>Içamento</span>
+                        )}
+                        {item.requer_tecido_fornecido && (
+                          <span style={{ marginLeft: '6px', background: '#EEEDFE', color: '#3C3489', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>Tecido a enviar</span>
                         )}
                       </div>
                       {(item.numero_nf || item.data_recebimento) && (
@@ -433,6 +448,18 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
               <button onClick={() => setShowItemForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
             </div>
 
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Tipo do item</div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {[{ value: 'movel', label: 'Móvel' }, { value: 'tecido', label: 'Tecido' }, { value: 'outro', label: 'Outro' }].map(opt => (
+                  <button key={opt.value} onClick={() => setItemForm({ ...itemForm, tipo: opt.value })}
+                    style={{ flex: 1, padding: '7px', borderRadius: '8px', border: `1px solid ${itemForm.tipo === opt.value ? '#1a1a2e' : '#e8e7e3'}`, background: itemForm.tipo === opt.value ? '#1a1a2e' : '#fff', color: itemForm.tipo === opt.value ? '#C9A84C' : '#555', fontSize: '13px', cursor: 'pointer', fontWeight: itemForm.tipo === opt.value ? '500' : '400' }}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {([
               { label: 'Descrição do item *', field: 'descricao' },
               { label: 'Quantidade', field: 'quantidade' },
@@ -481,9 +508,14 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
               </>
             )}
 
-            <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <input type="checkbox" id="icamento" checked={itemForm.requer_icamento} onChange={e => setItemForm({ ...itemForm, requer_icamento: e.target.checked })} />
               <label htmlFor="icamento" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Requer içamento na entrega</label>
+            </div>
+
+            <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input type="checkbox" id="tecido_fornecido" checked={itemForm.requer_tecido_fornecido} onChange={e => setItemForm({ ...itemForm, requer_tecido_fornecido: e.target.checked })} />
+              <label htmlFor="tecido_fornecido" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Requer envio de tecido fornecido ao fornecedor</label>
             </div>
 
             <div style={{ borderTop: '0.5px solid #f0efe9', paddingTop: '14px', marginBottom: '12px' }}>
