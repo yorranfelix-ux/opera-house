@@ -198,17 +198,52 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       if (error) return alert('Erro: ' + error.message)
 
       const mudancas: string[] = []
+      if (itemAnterior?.descricao !== itemForm.descricao) {
+        mudancas.push(`Descrição: "${itemAnterior?.descricao}" → "${itemForm.descricao}"`)
+      }
       if (itemAnterior?.status !== itemForm.status) {
         mudancas.push(`Status: ${STATUS_ITEM[itemAnterior?.status || '']?.label || itemAnterior?.status} → ${STATUS_ITEM[itemForm.status]?.label || itemForm.status}`)
+      }
+      if (String(itemAnterior?.quantidade ?? '') !== String(itemForm.quantidade)) {
+        mudancas.push(`Quantidade: ${itemAnterior?.quantidade} → ${itemForm.quantidade}`)
+      }
+      if ((itemAnterior?.medida || '') !== (itemForm.medida || '')) {
+        mudancas.push(`Medida: "${itemAnterior?.medida || '—'}" → "${itemForm.medida || '—'}"`)
+      }
+      if ((itemAnterior?.tecido || '') !== (itemForm.tecido || '')) {
+        mudancas.push(`Tecido: "${itemAnterior?.tecido || '—'}" → "${itemForm.tecido || '—'}"`)
+      }
+      if ((itemAnterior?.cor || '') !== (itemForm.cor || '')) {
+        mudancas.push(`Cor: "${itemAnterior?.cor || '—'}" → "${itemForm.cor || '—'}"`)
+      }
+      if ((itemAnterior?.acabamento || '') !== (itemForm.acabamento || '')) {
+        mudancas.push(`Acabamento: "${itemAnterior?.acabamento || '—'}" → "${itemForm.acabamento || '—'}"`)
+      }
+      if ((itemAnterior?.observacoes || '') !== (itemForm.observacoes || '')) {
+        mudancas.push(`Observações alteradas`)
+      }
+      if ((itemAnterior?.fornecedor_id || '') !== (itemForm.fornecedor_id || '')) {
+        const nomeForn = fornecedores.find(f => f.id === itemForm.fornecedor_id)?.nome_fantasia || itemForm.fornecedor_id || '—'
+        mudancas.push(`Fornecedor: ${nomeForn}`)
+      }
+      if ((itemAnterior?.numero_nf || '') !== (itemForm.numero_nf || '')) {
+        mudancas.push(`NF: "${itemAnterior?.numero_nf || '—'}" → "${itemForm.numero_nf || '—'}"`)
+      }
+      if ((itemAnterior?.data_recebimento || '') !== (itemForm.data_recebimento || '')) {
+        const dataAntes = itemAnterior?.data_recebimento ? new Date(itemAnterior.data_recebimento + 'T12:00:00').toLocaleDateString('pt-BR') : '—'
+        const dataDepois = itemForm.data_recebimento ? new Date(itemForm.data_recebimento + 'T12:00:00').toLocaleDateString('pt-BR') : '—'
+        mudancas.push(`Data recebimento: ${dataAntes} → ${dataDepois}`)
+      }
+      if (itemAnterior?.previsao_chegada !== itemForm.previsao_chegada) {
+        const prevAntes = itemAnterior?.previsao_chegada ? new Date(itemAnterior.previsao_chegada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'
+        const prevDepois = itemForm.previsao_chegada ? new Date(itemForm.previsao_chegada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'
+        mudancas.push(`Previsão chegada: ${prevAntes} → ${prevDepois}`)
       }
       if (itemAnterior?.apto_entrega !== itemForm.apto_entrega) {
         mudancas.push(`Apto entrega: ${itemForm.apto_entrega ? 'Sim' : 'Não'}`)
       }
-      if (itemAnterior?.previsao_chegada !== itemForm.previsao_chegada && itemForm.previsao_chegada) {
-        mudancas.push(`Previsão: ${new Date(itemForm.previsao_chegada + 'T12:00:00').toLocaleDateString('pt-BR')}`)
-      }
-      if (itemAnterior?.descricao !== itemForm.descricao) {
-        mudancas.push(`Descrição alterada`)
+      if (itemAnterior?.requer_icamento !== itemForm.requer_icamento) {
+        mudancas.push(`Içamento: ${itemForm.requer_icamento ? 'Sim' : 'Não'}`)
       }
       const descricao = `Item "${itemForm.descricao}" editado${mudancas.length ? ': ' + mudancas.join(' · ') : ''}`
       await registrarHistorico(descricao, 'item_editado', editandoItemId)
