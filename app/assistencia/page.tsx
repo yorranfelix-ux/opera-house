@@ -34,6 +34,12 @@ interface Fornecedor {
   razao_social: string
 }
 
+interface ItemPedido {
+  id: string
+  descricao: string
+  quantidade: number
+}
+
 const STATUS_COR: Record<string, { bg: string; color: string; label: string }> = {
   aberta: { bg: '#FAECE7', color: '#712B13', label: 'Aberta' },
   aguardando_retirada: { bg: '#FAEEDA', color: '#633806', label: 'Aguard. retirada' },
@@ -58,6 +64,7 @@ export default function AssistenciaTecnica() {
   const [ats, setAts] = useState<AT[]>([])
   const [pedidos, setPedidos] = useState<Pedido[]>([])
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
+  const [itensPedido, setItensPedido] = useState<ItemPedido[]>([])
   const [showForm, setShowForm] = useState(false)
   const [showFornecedorForm, setShowFornecedorForm] = useState(false)
   const [atSelecionada, setAtSelecionada] = useState<AT | null>(null)
@@ -65,6 +72,7 @@ export default function AssistenciaTecnica() {
   const [filtroStatus, setFiltroStatus] = useState<'ativas' | 'finalizadas' | 'todos'>('ativas')
   const [form, setForm] = useState({
     pedido_id: '',
+    item_id: '',
     tipo_at: 'retirada_cliente',
     descricao_problema: '',
     requer_retirada: false,
@@ -89,10 +97,15 @@ export default function AssistenciaTecnica() {
     buscarFornecedores()
   }, [])
 
+  useEffect(() => {
+    if (form.pedido_id) buscarItensPedido(form.pedido_id)
+    else setItensPedido([])
+  }, [form.pedido_id])
+
   async function buscarATs() {
     const { data } = await supabase
       .from('assistencias_tecnicas')
-      .select('*, pedidos(numero_pedido, clientes(nome, cidade)), fornecedores(nome_fantasia, razao_social)')
+      .select('*, pedidos(numero_pedido, clientes(nome, cidade)), fornecedores(nome_fantasia, razao_social), itens_pedido(descricao)')
       .order('created_at', { ascending: false })
     setAts((data as unknown as AT[]) || [])
   }
@@ -103,6 +116,11 @@ export default function AssistenciaTecnica() {
       .select('id, numero_pedido, clientes(nome)')
       .order('numero_pedido', { ascending: false })
     setPedidos((data as unknown as Pedido[]) || [])
+  }
+
+  async function buscarItensPedido(pedidoId: string) {
+    const { data } = await supabase.from('itens_pedido').select('id, descricao, quantidade').eq('pedido_id', pedidoId).order('created_at')
+    setItensPedido((data as unknown as ItemPedido[]) || [])
   }
 
   async function buscarFornecedores() {
@@ -123,6 +141,7 @@ export default function AssistenciaTecnica() {
 
     const { error } = await supabase.from('assistencias_tecnicas').insert([{
       pedido_id: form.pedido_id,
+      item_id: (form as any).item_id || null,
       tipo_at: form.tipo_at,
       descricao_problema: form.descricao_problema,
       requer_retirada: form.requer_retirada,
@@ -136,7 +155,8 @@ export default function AssistenciaTecnica() {
     }])
     if (error) return alert('Erro: ' + error.message)
     setShowForm(false)
-    setForm({ pedido_id: '', tipo_at: 'retirada_cliente', descricao_problema: '', requer_retirada: false, endereco_retirada: '', data_retirada_agendada: '', fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes: '' })
+    setForm({ pedido_id: '', item_id: '', tipo_at: 'retirada_cliente', descricao_problema: '', requer_retirada: false, endereco_retirada: '', data_retirada_agendada: '', fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes: '' } as any)
+    setItensPedido([])
     buscarATs()
   }
 
@@ -235,7 +255,12 @@ export default function AssistenciaTecnica() {
                 <span style={{ fontSize: '11px', color: '#555' }}>
                   {a.tipo_at === 'devolucao_fornecedor' ? 'Devol. fornecedor' : 'Retirada cliente'}
                 </span>
-                <span style={{ fontSize: '13px', color: '#333' }}>{a.descricao_problema}</span>
+                <div>
+                  {(a as any).itens_pedido?.descricao && (
+                    <div style={{ fontSize: '11px', fontWeight: '500', color: '#C9A84C', marginBottom: '2px' }}>{(a as any).itens_pedido.descricao}</div>
+                  )}
+                  <div style={{ fontSize: '13px', color: '#333' }}>{a.descricao_problema}</div>
+                </div>
                 <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', fontWeight: '500', background: STATUS_COR[a.status]?.bg || '#f0efe9', color: STATUS_COR[a.status]?.color || '#555' }}>
                   {STATUS_COR[a.status]?.label || a.status}
                 </span>
@@ -271,11 +296,21 @@ export default function AssistenciaTecnica() {
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Pedido *</div>
-              <select value={form.pedido_id} onChange={e => setForm({ ...form, pedido_id: e.target.value })} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
+              <select value={form.pedido_id} onChange={e => setForm({ ...form, pedido_id: e.target.value, item_id: '' } as any)} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
                 <option value="">Selecione o pedido</option>
                 {pedidos.map(p => <option key={p.id} value={p.id}>{p.numero_pedido} - {p.clientes?.nome}</option>)}
               </select>
             </div>
+
+            {itensPedido.length > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Item com problema</div>
+                <select value={(form as any).item_id} onChange={e => setForm({ ...form, item_id: e.target.value } as any)} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
+                  <option value="">Selecione o item (opcional)</option>
+                  {itensPedido.map(it => <option key={it.id} value={it.id}>{it.descricao} (Qtd: {it.quantidade})</option>)}
+                </select>
+              </div>
+            )}
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Tipo da AT *</div>
