@@ -169,7 +169,7 @@ export default function Sidebar({ ativa }: { ativa: string }) {
       </div>
 
       {/* Nav */}
-      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0' }}>
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0', scrollbarWidth: 'thin', scrollbarColor: '#242440 #1a1a2e' } as React.CSSProperties}>
         {GROUPS.map((group, gi) => (
           <div key={gi} style={{ marginBottom: '4px' }}>
             {/* Group label */}
