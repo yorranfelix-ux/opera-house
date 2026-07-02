@@ -82,18 +82,27 @@ export default function Dashboard() {
       { data: ats },
       { data: entregas },
       { data: entreguesMes },
+      { data: ocorrencias },
+      { data: itensTecido },
+      { data: itensSemPrevisao },
     ] = await Promise.all([
       supabase.from('pedidos').select('id, numero_pedido, prazo_prometido, semaforo, clientes(nome, cidade)').not('status', 'in', '(entregue,cancelado)'),
       supabase.from('itens_pedido').select('id, apto_entrega, pedido_id, tem_at, status'),
       supabase.from('assistencias_tecnicas').select('id, status, updated_at, pedidos(numero_pedido)').in('status', ['aberta', 'aguardando_retirada', 'em_reparo', 'enviado_fornecedor', 'aguardando_devolucao']),
       supabase.from('entregas').select('id, pedidos(numero_pedido, clientes(nome))').eq('data_agendada', amanhaStr),
       supabase.from('pedidos').select('id').eq('status', 'entregue').gte('updated_at', inicioMes),
+      supabase.from('ocorrencias').select('id, created_at, pedidos(numero_pedido, clientes(nome))').eq('status', 'aberta').lt('created_at', new Date(hoje.getTime() - 3 * 86400000).toISOString()),
+      supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_tecido_fornecido', true).not('status', 'in', '(entregue,cancelado)'),
+      supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').is('previsao_chegada', null).not('status', 'in', '(entregue,apto_entrega,conferido_ok,recebido)'),
     ])
 
     const pedidosAtivos = (pedidos || []) as any[]
     const itensData = (itens || []) as any[]
     const atsData = (ats || []) as any[]
     const entregasData = (entregas || []) as any[]
+    const ocorrenciasData = (ocorrencias || []) as any[]
+    const itensTecidoData = (itensTecido || []) as any[]
+    const itensSemPrevisaoData = (itensSemPrevisao || []) as any[]
 
     const aptoIds = new Set(itensData.filter(i => i.apto_entrega).map(i => i.pedido_id))
     const comAtIds = new Set(itensData.filter(i => i.tem_at).map(i => i.pedido_id))
@@ -142,6 +151,43 @@ export default function Dashboard() {
         titulo: `Entrega amanhã · Pedido ${(e.pedidos as any)?.numero_pedido || '—'}`,
         detalhe: `Cliente: ${(e.pedidos as any)?.clientes?.nome || '—'}`,
         tag: 'Amanhã', tagColor: '#0C447C', tagBg: '#E6F1FB',
+      })
+    })
+
+    ocorrenciasData.forEach((o: any) => {
+      const diasAberta = Math.floor((hoje.getTime() - new Date(o.created_at).getTime()) / 86400000)
+      lista.push({
+        id: o.id, href: '/ocorrencias',
+        tipo: 'atencao',
+        titulo: `Ocorrência · Pedido ${(o.pedidos as any)?.numero_pedido || '—'}`,
+        detalhe: `Aberta há ${diasAberta} dia${diasAberta !== 1 ? 's' : ''} sem resolução · ${(o.pedidos as any)?.clientes?.nome || ''}`,
+        tag: 'Ocorrência aberta', tagColor: '#633806', tagBg: '#FAEEDA',
+      })
+    })
+
+    const pedidosTecidoVistos = new Set<string>()
+    itensTecidoData.forEach((i: any) => {
+      if (pedidosTecidoVistos.has(i.pedido_id)) return
+      pedidosTecidoVistos.add(i.pedido_id)
+      lista.push({
+        id: i.id, href: `/pedidos/${i.pedido_id}`,
+        tipo: 'atencao',
+        titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || '—'} · ${(i.pedidos as any)?.clientes?.nome || ''}`,
+        detalhe: `Item "${i.descricao}" aguarda envio de tecido fornecido ao fornecedor`,
+        tag: 'Tecido pendente', tagColor: '#3C3489', tagBg: '#EEEDFE',
+      })
+    })
+
+    const pedidosSemPrevisaoVistos = new Set<string>()
+    itensSemPrevisaoData.forEach((i: any) => {
+      if (pedidosSemPrevisaoVistos.has(i.pedido_id)) return
+      pedidosSemPrevisaoVistos.add(i.pedido_id)
+      lista.push({
+        id: i.id, href: `/pedidos/${i.pedido_id}`,
+        tipo: 'info',
+        titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || '—'} · ${(i.pedidos as any)?.clientes?.nome || ''}`,
+        detalhe: `Item "${i.descricao}" sem previsão de chegada definida`,
+        tag: 'Sem previsão', tagColor: '#0C447C', tagBg: '#E6F1FB',
       })
     })
 
