@@ -76,7 +76,24 @@ export default function Ocorrencias() {
       .from('ocorrencias')
       .select('*, pedidos(numero_pedido, clientes(nome))')
       .order('created_at', { ascending: false })
-    setOcorrencias((data as unknown as Ocorrencia[]) || [])
+    const ocorrenciasData = (data as unknown as Ocorrencia[]) || []
+
+    // Busca itens separadamente para evitar falha silenciosa no join
+    const itemIds = ocorrenciasData.map(o => o.item_id).filter(Boolean) as string[]
+    if (itemIds.length > 0) {
+      const { data: itens } = await supabase
+        .from('itens_pedido')
+        .select('id, descricao')
+        .in('id', itemIds)
+      const itensMap = Object.fromEntries((itens || []).map(it => [it.id, it]))
+      ocorrenciasData.forEach(o => {
+        if (o.item_id && itensMap[o.item_id]) {
+          o.itens_pedido = itensMap[o.item_id]
+        }
+      })
+    }
+
+    setOcorrencias(ocorrenciasData)
   }
 
   async function buscarPedidos() {
