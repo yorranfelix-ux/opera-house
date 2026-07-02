@@ -73,7 +73,7 @@ export default function Ocorrencias() {
   async function buscarOcorrencias() {
     const { data } = await supabase
       .from('ocorrencias')
-      .select('*, pedidos(numero_pedido, clientes(nome)), itens_pedido(descricao)')
+      .select('*, pedidos(numero_pedido, clientes(nome))')
       .order('created_at', { ascending: false })
     setOcorrencias((data as unknown as Ocorrencia[]) || [])
   }
