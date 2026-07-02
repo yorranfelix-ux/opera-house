@@ -139,7 +139,11 @@ export default function AssistenciaTecnica() {
     if (form.tipo_at === 'devolucao_fornecedor') status = 'enviado_fornecedor'
     else if (form.requer_retirada) status = 'aguardando_retirada'
 
+    const pedidoSelecionado = pedidos.find(p => p.id === form.pedido_id)
+    const numeroAt = `AT ${pedidoSelecionado?.numero_pedido}-${Date.now().toString().slice(-4)}`
+
     const { error } = await supabase.from('assistencias_tecnicas').insert([{
+      numero_at: numeroAt,
       pedido_id: form.pedido_id,
       item_id: (form as any).item_id || null,
       tipo_at: form.tipo_at,
