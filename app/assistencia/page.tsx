@@ -90,6 +90,12 @@ export default function AssistenciaTecnica() {
     observacoes_fornecedor: '',
     numero_nf_envio: '',
   })
+  const [showProcessoModal, setShowProcessoModal] = useState(false)
+  const [showRetornoModal, setShowRetornoModal] = useState(false)
+  const [showResolvidaModal, setShowResolvidaModal] = useState(false)
+  const [processoObs, setProcessoObs] = useState('')
+  const [retornoObs, setRetornoObs] = useState('')
+  const [resolvidaObs, setResolvidaObs] = useState('')
 
   useEffect(() => {
     buscarATs()
@@ -192,6 +198,27 @@ export default function AssistenciaTecnica() {
     buscarATs()
   }
 
+  async function iniciarProcesso() {
+    if (!atSelecionada) return
+    const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'em_reparo', observacoes: processoObs }).eq('id', atSelecionada.id)
+    if (error) return alert('Erro: ' + error.message)
+    setShowProcessoModal(false); setAtSelecionada(null); setProcessoObs(''); buscarATs()
+  }
+
+  async function registrarRetorno() {
+    if (!atSelecionada) return
+    const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'aguardando_devolucao', observacoes_fornecedor: retornoObs }).eq('id', atSelecionada.id)
+    if (error) return alert('Erro: ' + error.message)
+    setShowRetornoModal(false); setAtSelecionada(null); setRetornoObs(''); buscarATs()
+  }
+
+  async function marcarResolvida() {
+    if (!atSelecionada) return
+    const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'resolvida', observacoes: resolvidaObs }).eq('id', atSelecionada.id)
+    if (error) return alert('Erro: ' + error.message)
+    setShowResolvidaModal(false); setAtSelecionada(null); setResolvidaObs(''); buscarATs()
+  }
+
   const STATUS_ATIVAS = ['aberta', 'aguardando_retirada', 'em_reparo', 'enviado_fornecedor', 'aguardando_devolucao']
 
   const filtradas = ats.filter(a => {
@@ -280,13 +307,29 @@ export default function AssistenciaTecnica() {
                     <div style={{ fontSize: '10px', color: '#C9A84C', marginTop: '2px' }}>NF envio: {(a as any).numero_nf_envio}</div>
                   )}
                 </div>
-                <div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {(a.status === 'aberta' || a.status === 'aguardando_retirada') && (
+                    <button onClick={() => { setAtSelecionada(a); setProcessoObs(''); setShowProcessoModal(true) }}
+                      style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', border: '0.5px solid #0C447C', color: '#0C447C', background: '#E6F1FB', cursor: 'pointer' }}>
+                      Em processo
+                    </button>
+                  )}
                   {(a.status === 'aberta' || a.status === 'em_reparo') && (
-                    <button
-                      onClick={() => { setAtSelecionada(a); setShowFornecedorForm(true) }}
-                      style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', border: '0.5px solid #3C3489', color: '#3C3489', background: '#EEEDFE', cursor: 'pointer' }}
-                    >
+                    <button onClick={() => { setAtSelecionada(a); setShowFornecedorForm(true) }}
+                      style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', border: '0.5px solid #3C3489', color: '#3C3489', background: '#EEEDFE', cursor: 'pointer' }}>
                       Enviar fornecedor
+                    </button>
+                  )}
+                  {a.status === 'enviado_fornecedor' && (
+                    <button onClick={() => { setAtSelecionada(a); setRetornoObs(''); setShowRetornoModal(true) }}
+                      style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', border: '0.5px solid #633806', color: '#633806', background: '#FAEEDA', cursor: 'pointer' }}>
+                      Registrar retorno
+                    </button>
+                  )}
+                  {(a.status === 'em_reparo' || a.status === 'aguardando_devolucao') && (
+                    <button onClick={() => { setAtSelecionada(a); setResolvidaObs(''); setShowResolvidaModal(true) }}
+                      style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', border: '0.5px solid #27500A', color: '#27500A', background: '#EAF3DE', cursor: 'pointer' }}>
+                      Marcar resolvida
                     </button>
                   )}
                 </div>
@@ -394,6 +437,66 @@ export default function AssistenciaTecnica() {
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
               <button onClick={salvar} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Salvar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showProcessoModal && atSelecionada && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '420px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Em processo de reparo</span>
+              <button onClick={() => setShowProcessoModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+            </div>
+            <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>AT {atSelecionada.numero_at} — {atSelecionada.descricao_problema}</div>
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações do processo</div>
+              <textarea value={processoObs} onChange={e => setProcessoObs(e.target.value)} rows={3} placeholder="Descreva o que está sendo feito no reparo..." style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
+            </div>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowProcessoModal(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+              <button onClick={iniciarProcesso} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Confirmar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRetornoModal && atSelecionada && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '420px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Registrar retorno do fornecedor</span>
+              <button onClick={() => setShowRetornoModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+            </div>
+            <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>AT {atSelecionada.numero_at} — {atSelecionada.descricao_problema}</div>
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações do retorno</div>
+              <textarea value={retornoObs} onChange={e => setRetornoObs(e.target.value)} rows={3} placeholder="Como o item voltou do fornecedor..." style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
+            </div>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowRetornoModal(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+              <button onClick={registrarRetorno} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Confirmar retorno</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showResolvidaModal && atSelecionada && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '420px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Marcar como resolvida</span>
+              <button onClick={() => setShowResolvidaModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+            </div>
+            <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>AT {atSelecionada.numero_at} — {atSelecionada.descricao_problema}</div>
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações da resolução</div>
+              <textarea value={resolvidaObs} onChange={e => setResolvidaObs(e.target.value)} rows={3} placeholder="Como o problema foi resolvido..." style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
+            </div>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowResolvidaModal(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+              <button onClick={marcarResolvida} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#3B6D11', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Marcar resolvida</button>
             </div>
           </div>
         </div>
