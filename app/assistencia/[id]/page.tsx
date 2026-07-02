@@ -76,6 +76,7 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
   const [showRetornoModal, setShowRetornoModal] = useState(false)
   const [showResolvidaModal, setShowResolvidaModal] = useState(false)
   const [showCancelarModal, setShowCancelarModal] = useState(false)
+  const [showExcluirModal, setShowExcluirModal] = useState(false)
 
   const [processoObs, setProcessoObs] = useState('')
   const [resolvidaObs, setResolvidaObs] = useState('')
@@ -205,6 +206,12 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
     setResolvidaObs('')
     buscarAT()
     buscarHistorico()
+  }
+
+  async function excluirAT() {
+    const { error } = await supabase.from('assistencias_tecnicas').delete().eq('id', id)
+    if (error) return alert('Erro ao excluir: ' + error.message)
+    window.location.href = '/assistencia'
   }
 
   async function cancelarAT() {
@@ -376,6 +383,9 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
                     Cancelar AT
                   </button>
                 )}
+                <button onClick={() => setShowExcluirModal(true)} style={{ padding: '9px 14px', borderRadius: '8px', border: '0.5px solid #f0c0c0', background: '#FCEBEB', color: '#791F1F', fontSize: '13px', cursor: 'pointer', textAlign: 'left' as const }}>
+                  Excluir AT
+                </button>
               </div>
             </div>
 
@@ -486,6 +496,20 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '16px' }}>
               <button onClick={() => setShowResolvidaModal(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
               <button onClick={marcarResolvida} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#EAF3DE', color: '#27500A', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Marcar resolvida</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Excluir modal */}
+      {showExcluirModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '380px' }}>
+            <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e', marginBottom: '8px' }}>Excluir AT {at.numero_at}?</div>
+            <div style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>Esta ação não pode ser desfeita. A AT será removida permanentemente.</div>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowExcluirModal(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+              <button onClick={excluirAT} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#FCEBEB', color: '#791F1F', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Excluir AT</button>
             </div>
           </div>
         </div>

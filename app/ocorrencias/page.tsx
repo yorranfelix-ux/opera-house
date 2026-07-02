@@ -62,6 +62,7 @@ export default function Ocorrencias() {
   const [filtroStatus, setFiltroStatus] = useState<'abertas' | 'resolvidas' | 'todas'>('abertas')
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [expandidoId, setExpandidoId] = useState<string | null>(null)
+  const [excluindoId, setExcluindoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
 
   useEffect(() => { buscarOcorrencias(); buscarPedidos() }, [])
@@ -132,6 +133,13 @@ export default function Ocorrencias() {
       status: o.status || 'aberta',
     })
     setShowForm(true)
+  }
+
+  async function excluir(id: string) {
+    const { error } = await supabase.from('ocorrencias').delete().eq('id', id)
+    if (error) return alert('Erro ao excluir: ' + error.message)
+    setExcluindoId(null)
+    buscarOcorrencias()
   }
 
   async function salvar() {
@@ -251,6 +259,10 @@ export default function Ocorrencias() {
                           Abrir AT
                         </a>
                       )}
+                      <button onClick={() => setExcluindoId(o.id)}
+                        style={{ padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #f0c0c0', background: '#FCEBEB', fontSize: '11px', cursor: 'pointer', color: '#791F1F' }}>
+                        Excluir
+                      </button>
                     </div>
                   </div>
 
@@ -304,6 +316,19 @@ export default function Ocorrencias() {
           </div>
         </div>
       </div>
+
+      {excluindoId && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '380px' }}>
+            <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e', marginBottom: '8px' }}>Excluir ocorrência?</div>
+            <div style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>Esta ação não pode ser desfeita.</div>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setExcluindoId(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+              <button onClick={() => excluir(excluindoId)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#FCEBEB', color: '#791F1F', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Excluir</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
