@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { registrarHistorico } from '../lib/historico'
 import Sidebar from '../components/Sidebar'
 
 interface Fornecedor {
@@ -69,9 +70,11 @@ export default function Fornecedores() {
     if (editandoId) {
       const { error } = await supabase.from('fornecedores').update(payload).eq('id', editandoId)
       if (error) return alert('Erro ao atualizar: ' + error.message)
+      await registrarHistorico({ tipo: 'fornecedor_editado', descricao: `Fornecedor ${form.nome_fantasia || form.razao_social} editado` })
     } else {
       const { error } = await supabase.from('fornecedores').insert([payload])
       if (error) return alert('Erro ao salvar: ' + error.message)
+      await registrarHistorico({ tipo: 'fornecedor_criado', descricao: `Fornecedor ${form.nome_fantasia || form.razao_social} cadastrado` })
     }
     setShowForm(false)
     setForm(formVazio)

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { registrarHistorico } from '../lib/historico'
 import Sidebar from '../components/Sidebar'
 
 interface Pedido {
@@ -135,8 +136,9 @@ export default function Pedidos() {
         }])
       }
     } else {
-      const { error } = await supabase.from('pedidos').insert([{ ...form, semaforo: 'verde' }])
+      const { data: novo, error } = await supabase.from('pedidos').insert([{ ...form, semaforo: 'verde' }]).select('id').single()
       if (error) return alert('Erro ao salvar: ' + error.message)
+      await registrarHistorico({ tipo: 'pedido_criado', descricao: `Pedido ${form.numero_pedido} criado`, pedidoId: novo?.id })
     }
     setShowForm(false)
     setForm(formVazio)

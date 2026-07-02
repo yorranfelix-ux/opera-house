@@ -16,11 +16,23 @@ interface Registro {
 }
 
 const TIPO_COR: Record<string, { bg: string; color: string; label: string }> = {
-  item_adicionado:  { bg: '#EAF3DE', color: '#27500A', label: 'Item adicionado' },
-  item_editado:     { bg: '#E6F1FB', color: '#0C447C', label: 'Item editado' },
-  pedido_criado:    { bg: '#EEEDFE', color: '#3C3489', label: 'Pedido criado' },
-  pedido_editado:   { bg: '#FAEEDA', color: '#633806', label: 'Pedido editado' },
-  pedido_excluido:  { bg: '#FCEBEB', color: '#791F1F', label: 'Pedido excluído' },
+  item_adicionado:       { bg: '#EAF3DE', color: '#27500A', label: 'Item adicionado' },
+  item_editado:          { bg: '#E6F1FB', color: '#0C447C', label: 'Item editado' },
+  pedido_criado:         { bg: '#EEEDFE', color: '#3C3489', label: 'Pedido criado' },
+  pedido_editado:        { bg: '#FAEEDA', color: '#633806', label: 'Pedido editado' },
+  pedido_excluido:       { bg: '#FCEBEB', color: '#791F1F', label: 'Pedido excluído' },
+  at_criada:             { bg: '#EAF3DE', color: '#27500A', label: 'AT criada' },
+  at_atualizada:         { bg: '#E6F1FB', color: '#0C447C', label: 'AT atualizada' },
+  at_excluida:           { bg: '#FCEBEB', color: '#791F1F', label: 'AT excluída' },
+  ocorrencia_criada:     { bg: '#FAEEDA', color: '#633806', label: 'Ocorrência aberta' },
+  ocorrencia_editada:    { bg: '#E6F1FB', color: '#0C447C', label: 'Ocorrência editada' },
+  ocorrencia_excluida:   { bg: '#FCEBEB', color: '#791F1F', label: 'Ocorrência excluída' },
+  cliente_criado:        { bg: '#EAF3DE', color: '#27500A', label: 'Cliente cadastrado' },
+  cliente_editado:       { bg: '#E6F1FB', color: '#0C447C', label: 'Cliente editado' },
+  fornecedor_criado:     { bg: '#EAF3DE', color: '#27500A', label: 'Fornecedor cadastrado' },
+  fornecedor_editado:    { bg: '#E6F1FB', color: '#0C447C', label: 'Fornecedor editado' },
+  profissional_criado:   { bg: '#EAF3DE', color: '#27500A', label: 'Profissional cadastrado' },
+  profissional_editado:  { bg: '#E6F1FB', color: '#0C447C', label: 'Profissional editado' },
 }
 
 export default function Historico() {

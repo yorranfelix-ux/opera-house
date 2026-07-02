@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { registrarHistorico } from '../lib/historico'
 import Sidebar from '../components/Sidebar'
 
 interface Ocorrencia {
@@ -136,8 +137,10 @@ export default function Ocorrencias() {
   }
 
   async function excluir(id: string) {
+    const oc = ocorrencias.find(o => o.id === id)
     const { error } = await supabase.from('ocorrencias').delete().eq('id', id)
     if (error) return alert('Erro ao excluir: ' + error.message)
+    await registrarHistorico({ tipo: 'ocorrencia_excluida', descricao: `Ocorrência excluída — Pedido ${oc?.pedidos?.numero_pedido}: ${oc?.descricao}`, pedidoId: oc?.pedido_id })
     setExcluindoId(null)
     buscarOcorrencias()
   }
@@ -157,9 +160,11 @@ export default function Ocorrencias() {
     if (editandoId) {
       const { error } = await supabase.from('ocorrencias').update(payload).eq('id', editandoId)
       if (error) return alert('Erro: ' + error.message)
+      await registrarHistorico({ tipo: 'ocorrencia_editada', descricao: `Ocorrência editada — Pedido ${pedidos.find(p => p.id === form.pedido_id)?.numero_pedido}: ${form.descricao}`, pedidoId: form.pedido_id })
     } else {
       const { error } = await supabase.from('ocorrencias').insert([{ ...payload, status: 'aberta' }])
       if (error) return alert('Erro: ' + error.message)
+      await registrarHistorico({ tipo: 'ocorrencia_criada', descricao: `Ocorrência aberta — Pedido ${pedidos.find(p => p.id === form.pedido_id)?.numero_pedido}: ${form.descricao}`, pedidoId: form.pedido_id })
     }
     setShowForm(false)
     setForm(formVazio)

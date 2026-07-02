@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { registrarHistorico } from '../lib/historico'
 import Sidebar from '../components/Sidebar'
 
 interface AT {
@@ -184,6 +185,7 @@ export default function AssistenciaTecnica() {
       status,
     }])
     if (error) return alert('Erro: ' + error.message)
+    await registrarHistorico({ tipo: 'at_criada', descricao: `AT ${numeroAt} aberta — ${form.descricao_problema}`, pedidoId: form.pedido_id })
 
     // Se veio de uma ocorrência, fecha ela automaticamente
     if (ocorrenciaOrigem) {

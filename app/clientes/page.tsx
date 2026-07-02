@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { registrarHistorico } from '../lib/historico'
 import Sidebar from '../components/Sidebar'
 
 interface Cliente {
@@ -68,9 +69,11 @@ export default function Clientes() {
     if (editandoId) {
       const { error } = await supabase.from('clientes').update(form).eq('id', editandoId)
       if (error) return alert('Erro ao atualizar: ' + error.message)
+      await registrarHistorico({ tipo: 'cliente_editado', descricao: `Cliente ${form.nome} editado` })
     } else {
       const { error } = await supabase.from('clientes').insert([form])
       if (error) return alert('Erro ao salvar: ' + error.message)
+      await registrarHistorico({ tipo: 'cliente_criado', descricao: `Cliente ${form.nome} cadastrado` })
     }
     setShowForm(false)
     setForm(formVazio)

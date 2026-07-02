@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { registrarHistorico as registrarHistoricoGlobal } from '../../lib/historico'
 import Sidebar from '../../components/Sidebar'
 import { use } from 'react'
 
@@ -209,6 +210,7 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
   }
 
   async function excluirAT() {
+    await registrarHistoricoGlobal({ tipo: 'at_excluida', descricao: `AT ${at?.numero_at} excluída permanentemente`, pedidoId: at?.pedido_id })
     const { error } = await supabase.from('assistencias_tecnicas').delete().eq('id', id)
     if (error) return alert('Erro ao excluir: ' + error.message)
     window.location.href = '/assistencia'

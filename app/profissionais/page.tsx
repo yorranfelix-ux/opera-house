@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { registrarHistorico } from '../lib/historico'
 import Sidebar from '../components/Sidebar'
 
 interface Profissional {
@@ -75,9 +76,11 @@ export default function Profissionais() {
     if (editandoId) {
       const { error } = await supabase.from('profissionais').update(payload).eq('id', editandoId)
       if (error) return alert('Erro: ' + error.message)
+      await registrarHistorico({ tipo: 'profissional_editado', descricao: `Profissional ${form.nome} (${form.tipo}) editado` })
     } else {
       const { error } = await supabase.from('profissionais').insert([payload])
       if (error) return alert('Erro: ' + error.message)
+      await registrarHistorico({ tipo: 'profissional_criado', descricao: `Profissional ${form.nome} (${form.tipo}) cadastrado` })
     }
     setShowForm(false)
     setForm(formVazio)
