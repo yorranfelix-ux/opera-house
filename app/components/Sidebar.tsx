@@ -9,6 +9,7 @@ const navItems = [
   { label: 'Pedidos', href: '/pedidos' },
   { label: 'Clientes', href: '/clientes' },
   { label: 'Fornecedores', href: '/fornecedores' },
+  { label: 'Profissionais', href: '/profissionais' },
   { label: 'Assistência Técnica', href: '/assistencia' },
   { label: 'Ocorrências', href: '/ocorrencias' },
   { label: 'Entregas', href: '/entregas' },
