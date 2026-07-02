@@ -15,33 +15,16 @@ interface Acao {
   tagBg: string
 }
 
-interface DonutSegment {
+interface EventoDia {
+  tipo: 'entrega' | 'at'
   label: string
-  value: number
-  color: string
 }
 
-function DonutChart({ segments, total }: { segments: DonutSegment[]; total: number }) {
-  const r = 54
-  const circ = 2 * Math.PI * r
-  let offset = 0
-  return (
-    <svg width="140" height="140" viewBox="0 0 140 140">
-      {segments.map((seg, i) => {
-        const pct = total > 0 ? seg.value / total : 0
-        const dash = pct * circ - 2
-        const o = offset
-        offset += pct * circ
-        return (
-          <circle key={i} cx="70" cy="70" r={r} fill="none" stroke={seg.color} strokeWidth="16"
-            strokeDasharray={`${Math.max(0, dash)} ${circ}`}
-            strokeDashoffset={-o + circ * 0.25} strokeLinecap="butt" />
-        )
-      })}
-      <text x="70" y="66" textAnchor="middle" fontSize="22" fontWeight="600" fill="#1a1a2e">{total}</text>
-      <text x="70" y="82" textAnchor="middle" fontSize="10" fill="#888">pedidos</text>
-    </svg>
-  )
+interface Lembrete {
+  id: string
+  texto: string
+  feito: boolean
+  urgente: boolean
 }
 
 const TIPO_STYLE = {
@@ -50,17 +33,52 @@ const TIPO_STYLE = {
   info:    { border: '#185FA5', dot: '#185FA5' },
 }
 
+const DIAS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+
+function chaveHoje() {
+  return 'operare_lembretes_' + new Date().toISOString().split('T')[0]
+}
+
+function lerLembretes(): Lembrete[] {
+  try {
+    const raw = localStorage.getItem(chaveHoje())
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+
+function salvarLembretes(lista: Lembrete[]) {
+  localStorage.setItem(chaveHoje(), JSON.stringify(lista))
+}
+
 export default function Dashboard() {
   const [usuario, setUsuario] = useState<{ nome: string; cargo: string } | null>(null)
   const [acoes, setAcoes] = useState<Acao[]>([])
   const [dados, setDados] = useState({ pedidosAndamento: 0, pedidosAtrasados: 0, aptoEntrega: 0, atsAbertas: 0, entregasAmanha: 0, entreguesMes: 0 })
-  const [statusDist, setStatusDist] = useState<DonutSegment[]>([])
   const [showSino, setShowSino] = useState(false)
   const [showAvatar, setShowAvatar] = useState(false)
+  const [eventosPorDia, setEventosPorDia] = useState<Record<string, EventoDia[]>>({})
+  const [lembretes, setLembretes] = useState<Lembrete[]>([])
+  const [novoTexto, setNovoTexto] = useState('')
+  const [novoUrgente, setNovoUrgente] = useState(false)
+  const [diasSemana, setDiasSemana] = useState<{ data: string; diaSemana: string; diaNum: number; hoje: boolean }[]>([])
 
   useEffect(() => {
     buscarUsuario()
     buscar()
+    setLembretes(lerLembretes())
+
+    const hoje = new Date()
+    const dias = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(hoje)
+      d.setDate(d.getDate() + i)
+      return {
+        data: d.toISOString().split('T')[0],
+        diaSemana: DIAS_PT[d.getDay()],
+        diaNum: d.getDate(),
+        hoje: i === 0,
+      }
+    })
+    setDiasSemana(dias)
   }, [])
 
   async function buscarUsuario() {
@@ -75,6 +93,8 @@ export default function Dashboard() {
     const hojeStr = hoje.toISOString().split('T')[0]
     const amanha = new Date(hoje); amanha.setDate(amanha.getDate() + 1)
     const amanhaStr = amanha.toISOString().split('T')[0]
+    const sete = new Date(hoje); sete.setDate(sete.getDate() + 7)
+    const seteStr = sete.toISOString().split('T')[0]
     const seteDiasAtras = new Date(hoje); seteDiasAtras.setDate(seteDiasAtras.getDate() - 7)
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0]
 
@@ -87,6 +107,8 @@ export default function Dashboard() {
       { data: ocorrencias },
       { data: itensTecido },
       { data: itensSemPrevisao },
+      { data: entregasCalendario },
+      { data: atsCalendario },
     ] = await Promise.all([
       supabase.from('pedidos').select('id, numero_pedido, prazo_prometido, semaforo, clientes(nome, cidade)').not('status', 'in', '(entregue,cancelado)'),
       supabase.from('itens_pedido').select('id, apto_entrega, pedido_id, tem_at, status'),
@@ -96,6 +118,8 @@ export default function Dashboard() {
       supabase.from('ocorrencias').select('id, created_at, pedidos(numero_pedido, clientes(nome))').eq('status', 'aberta').lt('created_at', new Date(hoje.getTime() - 3 * 86400000).toISOString()),
       supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_tecido_fornecido', true).not('status', 'in', '(entregue,cancelado)'),
       supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').is('previsao_chegada', null).not('status', 'in', '(entregue,apto_entrega,conferido_ok,recebido)'),
+      supabase.from('entregas').select('data_agendada, pedidos(numero_pedido)').gte('data_agendada', hojeStr).lte('data_agendada', seteStr),
+      supabase.from('assistencias_tecnicas').select('data_retirada_agendada, pedidos(numero_pedido)').not('data_retirada_agendada', 'is', null).gte('data_retirada_agendada', hojeStr).lte('data_retirada_agendada', seteStr),
     ])
 
     const pedidosAtivos = (pedidos || []) as any[]
@@ -107,18 +131,15 @@ export default function Dashboard() {
     const itensSemPrevisaoData = (itensSemPrevisao || []) as any[]
 
     const aptoIds = new Set(itensData.filter(i => i.apto_entrega).map(i => i.pedido_id))
-    const comAtIds = new Set(itensData.filter(i => i.tem_at).map(i => i.pedido_id))
     const atsSemUpdate = atsData.filter(a => !a.updated_at || new Date(a.updated_at) < seteDiasAtras)
     const atrasados = pedidosAtivos.filter(p => p.prazo_prometido && p.prazo_prometido < hojeStr)
 
-    // Montar lista de ações
     const lista: Acao[] = []
 
     atrasados.forEach((p: any) => {
       const diasAtraso = Math.floor((new Date(hojeStr).getTime() - new Date(p.prazo_prometido).getTime()) / 86400000)
       lista.push({
-        id: p.id, href: `/pedidos/${p.id}`,
-        tipo: 'urgente',
+        id: p.id, href: `/pedidos/${p.id}`, tipo: 'urgente',
         titulo: `Pedido ${p.numero_pedido} · ${(p.clientes as any)?.nome || ''}`,
         detalhe: `Prazo vencido há ${diasAtraso} dia${diasAtraso !== 1 ? 's' : ''} · ${(p.clientes as any)?.cidade || ''}`,
         tag: 'Atrasado', tagColor: '#791F1F', tagBg: '#FCEBEB',
@@ -128,8 +149,7 @@ export default function Dashboard() {
     atsSemUpdate.forEach((a: any) => {
       const diasSemUpdate = Math.floor((hoje.getTime() - new Date(a.updated_at || a.created_at || hojeStr).getTime()) / 86400000)
       lista.push({
-        id: a.id, href: '/assistencia',
-        tipo: 'atencao',
+        id: a.id, href: '/assistencia', tipo: 'atencao',
         titulo: `AT do pedido ${(a.pedidos as any)?.numero_pedido || '—'}`,
         detalhe: `Sem atualização há ${diasSemUpdate} dia${diasSemUpdate !== 1 ? 's' : ''}`,
         tag: 'Sem atualização', tagColor: '#633806', tagBg: '#FAEEDA',
@@ -138,8 +158,7 @@ export default function Dashboard() {
 
     pedidosAtivos.filter((p: any) => aptoIds.has(p.id) && !atrasados.find((a: any) => a.id === p.id)).forEach((p: any) => {
       lista.push({
-        id: p.id, href: `/pedidos/${p.id}`,
-        tipo: 'atencao',
+        id: p.id, href: `/pedidos/${p.id}`, tipo: 'atencao',
         titulo: `Pedido ${p.numero_pedido} · ${(p.clientes as any)?.nome || ''}`,
         detalhe: 'Itens prontos — aguardando agendamento de entrega',
         tag: 'Apto p/ agendar', tagColor: '#27500A', tagBg: '#EAF3DE',
@@ -148,8 +167,7 @@ export default function Dashboard() {
 
     entregasData.forEach((e: any) => {
       lista.push({
-        id: e.id, href: '/entregas',
-        tipo: 'info',
+        id: e.id, href: '/entregas', tipo: 'info',
         titulo: `Entrega amanhã · Pedido ${(e.pedidos as any)?.numero_pedido || '—'}`,
         detalhe: `Cliente: ${(e.pedidos as any)?.clientes?.nome || '—'}`,
         tag: 'Amanhã', tagColor: '#0C447C', tagBg: '#E6F1FB',
@@ -159,8 +177,7 @@ export default function Dashboard() {
     ocorrenciasData.forEach((o: any) => {
       const diasAberta = Math.floor((hoje.getTime() - new Date(o.created_at).getTime()) / 86400000)
       lista.push({
-        id: o.id, href: '/ocorrencias',
-        tipo: 'atencao',
+        id: o.id, href: '/ocorrencias', tipo: 'atencao',
         titulo: `Ocorrência · Pedido ${(o.pedidos as any)?.numero_pedido || '—'}`,
         detalhe: `Aberta há ${diasAberta} dia${diasAberta !== 1 ? 's' : ''} sem resolução · ${(o.pedidos as any)?.clientes?.nome || ''}`,
         tag: 'Ocorrência aberta', tagColor: '#633806', tagBg: '#FAEEDA',
@@ -172,8 +189,7 @@ export default function Dashboard() {
       if (pedidosTecidoVistos.has(i.pedido_id)) return
       pedidosTecidoVistos.add(i.pedido_id)
       lista.push({
-        id: i.id, href: `/pedidos/${i.pedido_id}`,
-        tipo: 'atencao',
+        id: i.id, href: `/pedidos/${i.pedido_id}`, tipo: 'atencao',
         titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || '—'} · ${(i.pedidos as any)?.clientes?.nome || ''}`,
         detalhe: `Item "${i.descricao}" aguarda envio de tecido fornecido ao fornecedor`,
         tag: 'Tecido pendente', tagColor: '#3C3489', tagBg: '#EEEDFE',
@@ -185,28 +201,29 @@ export default function Dashboard() {
       if (pedidosSemPrevisaoVistos.has(i.pedido_id)) return
       pedidosSemPrevisaoVistos.add(i.pedido_id)
       lista.push({
-        id: i.id, href: `/pedidos/${i.pedido_id}`,
-        tipo: 'info',
+        id: i.id, href: `/pedidos/${i.pedido_id}`, tipo: 'info',
         titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || '—'} · ${(i.pedidos as any)?.clientes?.nome || ''}`,
         detalhe: `Item "${i.descricao}" sem previsão de chegada definida`,
         tag: 'Sem previsão', tagColor: '#0C447C', tagBg: '#E6F1FB',
       })
     })
 
-    // Distribuição por status
-    const countStatus: Record<string, number> = {}
-    itensData.forEach((i: any) => { countStatus[i.status] = (countStatus[i.status] || 0) + 1 })
-    const grupos = [
-      { label: 'Em produção', color: '#185FA5', statuses: ['em_producao', 'compra_confirmada', 'compra_enviada'] },
-      { label: 'Em transporte', color: '#C9A84C', statuses: ['em_transporte'] },
-      { label: 'Recebimento', color: '#3B6D11', statuses: ['recebido', 'conferido_ok', 'apto_entrega'] },
-      { label: 'Com problema', color: '#A32D2D', statuses: ['conferido_com_problema', 'em_at'] },
-      { label: 'Outros', color: '#ccc', statuses: ['aguardando_compra', 'entregue'] },
-    ]
-    const segs = grupos.map(g => ({ label: g.label, color: g.color, value: g.statuses.reduce((s, st) => s + (countStatus[st] || 0), 0) })).filter(s => s.value > 0)
+    // Montar calendário 7 dias
+    const epd: Record<string, EventoDia[]> = {}
+    ;(entregasCalendario || []).forEach((e: any) => {
+      const d = e.data_agendada
+      if (!epd[d]) epd[d] = []
+      epd[d].push({ tipo: 'entrega', label: `Ped. ${(e.pedidos as any)?.numero_pedido || '—'}` })
+    })
+    ;(atsCalendario || []).forEach((a: any) => {
+      const d = a.data_retirada_agendada
+      if (!d) return
+      if (!epd[d]) epd[d] = []
+      epd[d].push({ tipo: 'at', label: `AT ${(a.pedidos as any)?.numero_pedido || '—'}` })
+    })
+    setEventosPorDia(epd)
 
     setAcoes(lista)
-    setStatusDist(segs)
     setDados({
       pedidosAndamento: pedidosAtivos.length,
       pedidosAtrasados: atrasados.length,
@@ -217,9 +234,32 @@ export default function Dashboard() {
     })
   }
 
+  function adicionarLembrete() {
+    const texto = novoTexto.trim()
+    if (!texto) return
+    const novo: Lembrete = { id: Date.now().toString(), texto, feito: false, urgente: novoUrgente }
+    const atualizado = [...lembretes, novo]
+    setLembretes(atualizado)
+    salvarLembretes(atualizado)
+    setNovoTexto('')
+    setNovoUrgente(false)
+  }
+
+  function toggleFeito(id: string) {
+    const atualizado = lembretes.map(l => l.id === id ? { ...l, feito: !l.feito } : l)
+    setLembretes(atualizado)
+    salvarLembretes(atualizado)
+  }
+
+  function excluirLembrete(id: string) {
+    const atualizado = lembretes.filter(l => l.id !== id)
+    setLembretes(atualizado)
+    salvarLembretes(atualizado)
+  }
+
   const primeiroNome = usuario?.nome?.split(' ')[0] || '...'
   const inicial = usuario?.nome?.charAt(0).toUpperCase() || '?'
-  const totalItens = statusDist.reduce((s, g) => s + g.value, 0)
+  const dataHoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
@@ -233,16 +273,21 @@ export default function Dashboard() {
             {/* Sino */}
             <div style={{ position: 'relative' }}>
               <div onClick={() => { setShowSino(!showSino); setShowAvatar(false) }}
-                style={{ cursor: 'pointer', fontSize: '18px', color: '#888', userSelect: 'none' }}>🔔</div>
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '8px', color: '#888', userSelect: 'none' }}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 1.5a5 5 0 0 1 5 5v3l1 1.5H2L3 9.5v-3a5 5 0 0 1 5-5z"/>
+                  <path d="M6.5 13.5a1.5 1.5 0 0 0 3 0"/>
+                </svg>
+              </div>
               {acoes.length > 0 && (
-                <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '16px', height: '16px', borderRadius: '50%', background: '#A32D2D', color: '#fff', fontSize: '9px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                  {acoes.length}
+                <div style={{ position: 'absolute', top: '2px', right: '2px', width: '14px', height: '14px', borderRadius: '50%', background: '#A32D2D', color: '#fff', fontSize: '8px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                  {acoes.length > 9 ? '9+' : acoes.length}
                 </div>
               )}
               {showSino && (
                 <>
                   <div onClick={() => setShowSino(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
-                  <div style={{ position: 'absolute', top: '36px', right: 0, width: '380px', background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 50, overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: '40px', right: 0, width: '380px', background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 50, overflow: 'hidden' }}>
                     <div style={{ padding: '14px 16px', borderBottom: '0.5px solid #f0efe9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '13px', fontWeight: '600', color: '#1a1a2e' }}>Alertas</span>
                       <span style={{ fontSize: '11px', color: '#888' }}>{acoes.length} pendente{acoes.length !== 1 ? 's' : ''}</span>
@@ -285,14 +330,8 @@ export default function Dashboard() {
                       <div style={{ fontSize: '13px', fontWeight: '600', color: '#1a1a2e' }}>{usuario?.nome}</div>
                       <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>{usuario?.cargo || 'Usuário'}</div>
                     </div>
-                    <a href="/usuarios" onClick={() => setShowAvatar(false)}
-                      style={{ display: 'block', padding: '11px 16px', fontSize: '13px', color: '#555', textDecoration: 'none', borderBottom: '0.5px solid #f0efe9' }}>
-                      Gerenciar usuários
-                    </a>
-                    <a href="/configuracoes" onClick={() => setShowAvatar(false)}
-                      style={{ display: 'block', padding: '11px 16px', fontSize: '13px', color: '#555', textDecoration: 'none', borderBottom: '0.5px solid #f0efe9' }}>
-                      Configurações
-                    </a>
+                    <a href="/usuarios" onClick={() => setShowAvatar(false)} style={{ display: 'block', padding: '11px 16px', fontSize: '13px', color: '#555', textDecoration: 'none', borderBottom: '0.5px solid #f0efe9' }}>Gerenciar usuários</a>
+                    <a href="/configuracoes" onClick={() => setShowAvatar(false)} style={{ display: 'block', padding: '11px 16px', fontSize: '13px', color: '#555', textDecoration: 'none', borderBottom: '0.5px solid #f0efe9' }}>Configurações</a>
                     <button onClick={async () => { const { createBrowserClient } = await import('@supabase/ssr'); const sb = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!); await sb.auth.signOut(); window.location.href = '/login' }}
                       style={{ display: 'block', width: '100%', padding: '11px 16px', fontSize: '13px', color: '#A32D2D', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer' }}>
                       Sair
@@ -307,31 +346,30 @@ export default function Dashboard() {
 
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
 
-          {/* Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
+          {/* Cards topo */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
             {[
-              { label: 'Em andamento', value: dados.pedidosAndamento, color: '#1a1a2e', sub: null },
-              { label: 'Atrasados', value: dados.pedidosAtrasados, color: '#A32D2D', sub: dados.pedidosAtrasados > 0 ? 'Acima do prazo' : 'Todos no prazo' },
-              { label: 'Apto p/ agendar', value: dados.aptoEntrega, color: '#3B6D11', sub: dados.aptoEntrega > 0 ? 'Pronto para entrega' : null },
-              { label: 'ATs abertas', value: dados.atsAbertas, color: '#185FA5', sub: null },
+              { label: 'Em andamento', value: dados.pedidosAndamento, color: '#1a1a2e' },
+              { label: 'Atrasados', value: dados.pedidosAtrasados, color: '#A32D2D' },
+              { label: 'Apto p/ agendar', value: dados.aptoEntrega, color: '#3B6D11' },
+              { label: 'ATs abertas', value: dados.atsAbertas, color: '#185FA5' },
             ].map(card => (
-              <div key={card.label} style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '18px' }}>
-                <div style={{ fontSize: '12px', color: '#888', marginBottom: '10px' }}>{card.label}</div>
-                <div style={{ fontSize: '32px', fontWeight: '600', color: card.color, lineHeight: 1 }}>{card.value}</div>
-                {card.sub && <div style={{ fontSize: '11px', color: card.color, marginTop: '6px', opacity: 0.8 }}>{card.sub}</div>}
+              <div key={card.label} style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '16px 18px' }}>
+                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '8px' }}>{card.label}</div>
+                <div style={{ fontSize: '28px', fontWeight: '600', color: card.color, lineHeight: 1 }}>{card.value}</div>
               </div>
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 380px', gap: '16px' }}>
 
-            {/* Inbox de ações */}
-            <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
+            {/* Inbox ações */}
+            <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden', alignSelf: 'start' }}>
               <div style={{ padding: '14px 20px', borderBottom: '0.5px solid #f0efe9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <span style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a2e' }}>Olá, {primeiroNome}</span>
                   <span style={{ fontSize: '13px', color: '#888', marginLeft: '8px' }}>
-                    {acoes.length === 0 ? '— tudo em ordem por hoje.' : `— ${acoes.length} item${acoes.length !== 1 ? 'ns' : ''} precisando de atenção.`}
+                    {acoes.length === 0 ? '— tudo em ordem.' : `— ${acoes.length} item${acoes.length !== 1 ? 'ns' : ''} precisando de atenção.`}
                   </span>
                 </div>
                 {acoes.length > 0 && (
@@ -340,75 +378,142 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
-
               {acoes.length === 0 ? (
                 <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>✓</div>
                   <div style={{ fontSize: '14px', fontWeight: '500', color: '#1a1a2e', marginBottom: '4px' }}>Nada pendente</div>
                   <div style={{ fontSize: '13px', color: '#888' }}>Todos os pedidos estão dentro do prazo.</div>
                 </div>
               ) : (
                 acoes.map((acao, i) => (
-                  <a
-                    key={`${acao.id}-${i}`}
-                    href={acao.href}
-                    style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', borderTop: '0.5px solid #f0efe9', textDecoration: 'none', borderLeft: `3px solid ${TIPO_STYLE[acao.tipo].border}`, background: i % 2 === 0 ? '#fff' : '#fdfcfb', transition: 'background 0.15s' }}
-                  >
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: TIPO_STYLE[acao.tipo].dot, flexShrink: 0 }} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e', marginBottom: '2px' }}>{acao.titulo}</div>
-                      <div style={{ fontSize: '12px', color: '#888' }}>{acao.detalhe}</div>
+                  <a key={`${acao.id}-${i}`} href={acao.href}
+                    style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '13px 20px', borderTop: '0.5px solid #f0efe9', textDecoration: 'none', borderLeft: `3px solid ${TIPO_STYLE[acao.tipo].border}` }}>
+                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: TIPO_STYLE[acao.tipo].dot, flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{acao.titulo}</div>
+                      <div style={{ fontSize: '12px', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{acao.detalhe}</div>
                     </div>
                     <span style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '6px', fontWeight: '500', background: acao.tagBg, color: acao.tagColor, whiteSpace: 'nowrap', flexShrink: 0 }}>
                       {acao.tag}
                     </span>
-                    <span style={{ fontSize: '14px', color: '#ccc' }}>→</span>
+                    <span style={{ fontSize: '14px', color: '#ccc', flexShrink: 0 }}>→</span>
                   </a>
                 ))
               )}
             </div>
 
-            {/* Donut */}
-            <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '18px' }}>
-              <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px' }}>Itens por status</div>
-              {totalItens === 0 ? (
-                <div style={{ textAlign: 'center', color: '#888', fontSize: '13px', padding: '20px 0' }}>Sem dados</div>
-              ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                  <DonutChart segments={statusDist} total={dados.pedidosAndamento} />
-                  <div style={{ flex: 1 }}>
-                    {statusDist.map(seg => (
-                      <div key={seg.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: seg.color, flexShrink: 0 }} />
-                          <span style={{ fontSize: '12px', color: '#555' }}>{seg.label}</span>
-                        </div>
-                        <span style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a2e' }}>{seg.value}</span>
+            {/* Coluna direita */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+              {/* Calendário 7 dias */}
+              <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
+                <div style={{ padding: '12px 16px', borderBottom: '0.5px solid #f0efe9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Próximos 7 dias</span>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ width: '7px', height: '7px', borderRadius: '2px', background: '#3B6D11' }} />
+                      <span style={{ fontSize: '10px', color: '#888' }}>Entrega</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ width: '7px', height: '7px', borderRadius: '2px', background: '#185FA5' }} />
+                      <span style={{ fontSize: '10px', color: '#888' }}>Retirada AT</span>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ padding: '10px', display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '5px' }}>
+                  {diasSemana.map(dia => {
+                    const eventos = eventosPorDia[dia.data] || []
+                    return (
+                      <div key={dia.data} style={{
+                        borderRadius: '8px',
+                        border: dia.hoje ? '1px solid #C9A84C' : '0.5px solid #f0efe9',
+                        background: dia.hoje ? '#fffbf0' : '#fafaf8',
+                        padding: '6px 4px',
+                        minHeight: '80px',
+                      }}>
+                        <div style={{ fontSize: '9px', color: dia.hoje ? '#C9A84C' : '#aaa', textAlign: 'center', marginBottom: '2px', fontWeight: dia.hoje ? '600' : '400' }}>{dia.diaSemana}</div>
+                        <div style={{ fontSize: '13px', fontWeight: '600', color: dia.hoje ? '#C9A84C' : '#1a1a2e', textAlign: 'center', marginBottom: '5px' }}>{dia.diaNum}</div>
+                        {eventos.length === 0 ? (
+                          <div style={{ textAlign: 'center', color: '#e0deda', fontSize: '12px', marginTop: '8px' }}>—</div>
+                        ) : (
+                          eventos.map((ev, ei) => (
+                            <div key={ei} style={{
+                              fontSize: '9px', padding: '2px 4px', borderRadius: '4px', marginBottom: '2px',
+                              background: ev.tipo === 'entrega' ? '#EAF3DE' : '#E6F1FB',
+                              color: ev.tipo === 'entrega' ? '#27500A' : '#0C447C',
+                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                              lineHeight: '1.4',
+                            }}>{ev.label}</div>
+                          ))
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Lembretes do dia */}
+              <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
+                <div style={{ padding: '12px 16px', borderBottom: '0.5px solid #f0efe9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Lembretes do dia</span>
+                  <span style={{ fontSize: '11px', color: '#aaa' }}>{dataHoje}</span>
+                </div>
+
+                {lembretes.length === 0 ? (
+                  <div style={{ padding: '20px 16px', textAlign: 'center', color: '#bbb', fontSize: '12px' }}>
+                    Nenhum lembrete para hoje.
+                  </div>
+                ) : (
+                  <div>
+                    {lembretes.map(l => (
+                      <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 16px', borderBottom: '0.5px solid #f9f8f5' }}>
+                        <button onClick={() => toggleFeito(l.id)} style={{
+                          width: '17px', height: '17px', borderRadius: '5px', flexShrink: 0, cursor: 'pointer',
+                          border: l.feito ? 'none' : '1.5px solid #d0cfcb',
+                          background: l.feito ? '#C9A84C' : 'transparent',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                        }}>
+                          {l.feito && (
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><polyline points="2,5 4,7 8,3"/></svg>
+                          )}
+                        </button>
+                        <span style={{ flex: 1, fontSize: '12px', color: l.feito ? '#bbb' : '#1a1a2e', textDecoration: l.feito ? 'line-through' : 'none', lineHeight: '1.4' }}>{l.texto}</span>
+                        {l.urgente && !l.feito && (
+                          <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '4px', background: '#FCEBEB', color: '#791F1F', fontWeight: '500', flexShrink: 0 }}>urgente</span>
+                        )}
+                        <button onClick={() => excluirLembrete(l.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ddd', fontSize: '14px', padding: '0 2px', lineHeight: 1, flexShrink: 0 }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#A32D2D' }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#ddd' }}>×</button>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
 
-              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '0.5px solid #f0efe9' }}>
-                <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Este mês</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '22px', fontWeight: '600', color: '#3B6D11' }}>{dados.entreguesMes}</div>
-                    <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>Entregas</div>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '22px', fontWeight: '600', color: '#185FA5' }}>{dados.entregasAmanha}</div>
-                    <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>Amanhã</div>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '22px', fontWeight: '600', color: '#A32D2D' }}>{dados.pedidosAtrasados}</div>
-                    <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>Atrasados</div>
-                  </div>
+                <div style={{ padding: '10px 12px', borderTop: '0.5px solid #f0efe9', display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <input
+                    placeholder="Adicionar lembrete..."
+                    value={novoTexto}
+                    onChange={e => setNovoTexto(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') adicionarLembrete() }}
+                    style={{ flex: 1, fontSize: '12px', padding: '6px 10px', border: '0.5px solid #e0deda', borderRadius: '7px', outline: 'none', color: '#444', background: '#fafaf8' }}
+                  />
+                  <button onClick={() => setNovoUrgente(!novoUrgente)}
+                    title="Marcar como urgente"
+                    style={{
+                      padding: '6px 8px', borderRadius: '7px', border: '0.5px solid',
+                      borderColor: novoUrgente ? '#A32D2D' : '#e0deda',
+                      background: novoUrgente ? '#FCEBEB' : '#fafaf8',
+                      cursor: 'pointer', fontSize: '11px',
+                      color: novoUrgente ? '#791F1F' : '#aaa',
+                      fontWeight: '500', flexShrink: 0,
+                    }}>!</button>
+                  <button onClick={adicionarLembrete}
+                    style={{ padding: '6px 12px', borderRadius: '7px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '12px', cursor: 'pointer', flexShrink: 0, fontWeight: '500' }}>
+                    Salvar
+                  </button>
                 </div>
               </div>
-            </div>
 
+            </div>
           </div>
         </div>
       </div>
