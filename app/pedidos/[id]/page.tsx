@@ -91,6 +91,9 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const [showSemaforo, setShowSemaforo] = useState(false)
   const [atsCount, setAtsCount] = useState(0)
   const [ocorrenciaItemIds, setOcorrenciaItemIds] = useState<Set<string>>(new Set())
+  const [showExcluirModal, setShowExcluirModal] = useState(false)
+  const [confirmacaoExcluir, setConfirmacaoExcluir] = useState('')
+  const [excluindo, setExcluindo] = useState(false)
 
   useEffect(() => {
     buscarPedido()
@@ -136,6 +139,19 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     setPedido(prev => prev ? { ...prev, semaforo: cor } : prev)
     setShowSemaforo(false)
     await registrarHistorico(`Semáforo alterado para ${cor}`, 'pedido_editado')
+  }
+
+  async function excluirPedido() {
+    if (confirmacaoExcluir !== pedido?.numero_pedido) return
+    setExcluindo(true)
+    await supabase.from('historico_alteracoes').delete().eq('pedido_id', id)
+    await supabase.from('itens_pedido').delete().eq('pedido_id', id)
+    await supabase.from('assistencias_tecnicas').delete().eq('pedido_id', id)
+    await supabase.from('ocorrencias').delete().eq('pedido_id', id)
+    await supabase.from('entregas').delete().eq('pedido_id', id)
+    const { error } = await supabase.from('pedidos').delete().eq('id', id)
+    if (error) { alert('Erro ao excluir: ' + error.message); setExcluindo(false); return }
+    window.location.href = '/pedidos'
   }
 
   async function buscarItens() {
@@ -332,6 +348,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             <span style={{ color: '#ccc' }}>/</span>
             <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Pedido {pedido.numero_pedido}</span>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ position: 'relative' }}>
             <div onClick={() => setShowSemaforo(!showSemaforo)}
               style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff' }}>
@@ -354,6 +371,10 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
               </>
             )}
           </div>
+          <button onClick={() => { setShowExcluirModal(true); setConfirmacaoExcluir('') }}
+            style={{ padding: '6px 14px', borderRadius: '8px', border: '0.5px solid #f5c6c6', background: '#fff', color: '#A32D2D', fontSize: '12px', cursor: 'pointer' }}>
+            Excluir pedido
+          </button>
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
@@ -365,9 +386,11 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                 <div style={{ fontSize: '20px', fontWeight: '500', color: '#fff', marginBottom: '4px' }}>Pedido {pedido.numero_pedido}</div>
                 <div style={{ fontSize: '13px', color: '#8888aa' }}>
                   {pedido.clientes?.nome}
-                </div>
-                <div style={{ fontSize: '12px', color: '#6a6a8a', marginTop: '2px' }}>
-                  {[pedido.clientes?.endereco, pedido.clientes?.cidade, pedido.clientes?.estado].filter(Boolean).join(', ')}
+                  {[pedido.clientes?.endereco, pedido.clientes?.cidade, pedido.clientes?.estado].filter(Boolean).length > 0 && (
+                    <span style={{ color: '#4a4a6a', marginLeft: '8px' }}>
+                      — {[pedido.clientes?.endereco, pedido.clientes?.cidade, pedido.clientes?.estado].filter(Boolean).join(', ')}
+                    </span>
+                  )}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -593,6 +616,36 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
               <button onClick={() => setShowItemForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
               <button onClick={salvarItem} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
                 {editandoItemId ? 'Salvar alterações' : 'Salvar item'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showExcluirModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '420px' }}>
+            <div style={{ fontSize: '16px', fontWeight: '600', color: '#A32D2D', marginBottom: '8px' }}>Excluir pedido {pedido.numero_pedido}</div>
+            <p style={{ fontSize: '13px', color: '#555', marginBottom: '6px', lineHeight: '1.5' }}>
+              Esta ação é <strong>irreversível</strong>. Todos os itens, histórico, ATs, ocorrências e entregas vinculados a este pedido serão excluídos permanentemente.
+            </p>
+            <p style={{ fontSize: '13px', color: '#555', marginBottom: '16px', lineHeight: '1.5' }}>
+              Para confirmar, digite o número do pedido: <strong>{pedido.numero_pedido}</strong>
+            </p>
+            <input
+              value={confirmacaoExcluir}
+              onChange={e => setConfirmacaoExcluir(e.target.value)}
+              placeholder={`Digite ${pedido.numero_pedido} para confirmar`}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: `1px solid ${confirmacaoExcluir === pedido.numero_pedido ? '#A32D2D' : '#e8e7e3'}`, fontSize: '13px', outline: 'none', boxSizing: 'border-box', marginBottom: '16px' }}
+            />
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowExcluirModal(false)}
+                style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>
+                Cancelar
+              </button>
+              <button onClick={excluirPedido} disabled={confirmacaoExcluir !== pedido.numero_pedido || excluindo}
+                style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: confirmacaoExcluir === pedido.numero_pedido ? '#A32D2D' : '#e8e7e3', color: confirmacaoExcluir === pedido.numero_pedido ? '#fff' : '#aaa', fontSize: '13px', fontWeight: '500', cursor: confirmacaoExcluir === pedido.numero_pedido ? 'pointer' : 'not-allowed' }}>
+                {excluindo ? 'Excluindo...' : 'Excluir permanentemente'}
               </button>
             </div>
           </div>
