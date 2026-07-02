@@ -144,6 +144,18 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   async function excluirPedido() {
     if (confirmacaoExcluir !== pedido?.numero_pedido) return
     setExcluindo(true)
+
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: profile } = await supabase.from('profiles').select('nome').eq('id', user?.id || '').single()
+    await supabase.from('historico_alteracoes').insert([{
+      pedido_id: null,
+      item_id: null,
+      usuario_id: user?.id || null,
+      usuario_nome: profile?.nome || user?.email || 'Sistema',
+      tipo: 'pedido_excluido',
+      descricao: `Pedido ${pedido?.numero_pedido} (${pedido?.clientes?.nome}) foi excluído permanentemente`,
+    }])
+
     await supabase.from('historico_alteracoes').delete().eq('pedido_id', id)
     await supabase.from('itens_pedido').delete().eq('pedido_id', id)
     await supabase.from('assistencias_tecnicas').delete().eq('pedido_id', id)

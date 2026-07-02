@@ -20,6 +20,7 @@ const TIPO_COR: Record<string, { bg: string; color: string; label: string }> = {
   item_editado:     { bg: '#E6F1FB', color: '#0C447C', label: 'Item editado' },
   pedido_criado:    { bg: '#EEEDFE', color: '#3C3489', label: 'Pedido criado' },
   pedido_editado:   { bg: '#FAEEDA', color: '#633806', label: 'Pedido editado' },
+  pedido_excluido:  { bg: '#FCEBEB', color: '#791F1F', label: 'Pedido excluído' },
 }
 
 export default function Historico() {
