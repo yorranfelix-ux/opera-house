@@ -53,13 +53,69 @@ const STATUS_COR: Record<string, { bg: string; color: string; label: string }> =
   cancelada: { bg: '#f0efe9', color: '#888', label: 'Cancelada' },
 }
 
-function DateCard({ label, value, highlight }: { label: string; value: string | null; highlight?: boolean }) {
+function EditableDateCard({ label, value, highlight, onSave }: { label: string; value: string | null; highlight?: boolean; onSave: (val: string) => void }) {
+  const [editando, setEditando] = useState(false)
+  const [valorLocal, setValorLocal] = useState(value || '')
   const formatted = value ? new Date(value + 'T12:00:00').toLocaleDateString('pt-BR') : '—'
   const isPast = value && new Date(value) < new Date() && highlight
+  function confirmar() {
+    setEditando(false)
+    if (valorLocal !== (value || '')) onSave(valorLocal)
+  }
   return (
-    <div style={{ background: '#fff', borderRadius: '12px', border: `0.5px solid ${isPast ? '#f0c0c0' : '#e8e7e3'}`, padding: '14px 16px' }}>
-      <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
-      <div style={{ fontSize: '16px', fontWeight: '500', color: isPast ? '#A32D2D' : '#1a1a2e' }}>{formatted}</div>
+    <div style={{ background: '#fff', borderRadius: '12px', border: `0.5px solid ${editando ? '#C9A84C' : isPast ? '#f0c0c0' : '#e8e7e3'}`, padding: '14px 16px', cursor: editando ? 'default' : 'pointer' }}
+      onClick={() => { if (!editando) { setValorLocal(value || ''); setEditando(true) } }}>
+      <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'flex', justifyContent: 'space-between' }}>
+        {label}
+        {!editando && <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#ccc" strokeWidth="1.5" strokeLinecap="round"><path d="M11 2l3 3-9 9H2v-3l9-9z"/></svg>}
+      </div>
+      {editando ? (
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+          <input type="date" value={valorLocal} onChange={e => setValorLocal(e.target.value)} autoFocus
+            onKeyDown={e => { if (e.key === 'Enter') confirmar(); if (e.key === 'Escape') setEditando(false) }}
+            style={{ flex: 1, padding: '4px 8px', borderRadius: '6px', border: '0.5px solid #C9A84C', fontSize: '13px', outline: 'none' }} />
+          <button onClick={confirmar} style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: '#C9A84C', color: '#fff', fontSize: '12px', cursor: 'pointer' }}>✓</button>
+          <button onClick={() => setEditando(false)} style={{ padding: '4px 8px', borderRadius: '6px', border: '0.5px solid #e0deda', background: '#fff', color: '#888', fontSize: '12px', cursor: 'pointer' }}>✕</button>
+        </div>
+      ) : (
+        <div style={{ fontSize: '16px', fontWeight: '500', color: isPast ? '#A32D2D' : '#1a1a2e' }}>{formatted}</div>
+      )}
+    </div>
+  )
+}
+
+function EditableTextCard({ label, value, multiline, onSave }: { label: string; value: string | null; multiline?: boolean; onSave: (val: string) => void }) {
+  const [editando, setEditando] = useState(false)
+  const [valorLocal, setValorLocal] = useState(value || '')
+  function confirmar() {
+    setEditando(false)
+    if (valorLocal !== (value || '')) onSave(valorLocal)
+  }
+  return (
+    <div style={{ background: '#fff', borderRadius: '12px', border: `0.5px solid ${editando ? '#C9A84C' : '#e8e7e3'}`, padding: '16px', cursor: editando ? 'default' : 'pointer' }}
+      onClick={() => { if (!editando) { setValorLocal(value || ''); setEditando(true) } }}>
+      <div style={{ fontSize: '11px', color: '#888', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'flex', justifyContent: 'space-between' }}>
+        {label}
+        {!editando && <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#ccc" strokeWidth="1.5" strokeLinecap="round"><path d="M11 2l3 3-9 9H2v-3l9-9z"/></svg>}
+      </div>
+      {editando ? (
+        <div onClick={e => e.stopPropagation()}>
+          {multiline ? (
+            <textarea value={valorLocal} onChange={e => setValorLocal(e.target.value)} autoFocus rows={3}
+              style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '0.5px solid #C9A84C', fontSize: '13px', outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'sans-serif', lineHeight: '1.6', color: '#1a1a2e' }} />
+          ) : (
+            <input value={valorLocal} onChange={e => setValorLocal(e.target.value)} autoFocus
+              onKeyDown={e => { if (e.key === 'Enter') confirmar(); if (e.key === 'Escape') setEditando(false) }}
+              style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '0.5px solid #C9A84C', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+          )}
+          <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', marginTop: '8px' }}>
+            <button onClick={() => setEditando(false)} style={{ padding: '5px 12px', borderRadius: '7px', border: '0.5px solid #e0deda', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#888' }}>Cancelar</button>
+            <button onClick={confirmar} style={{ padding: '5px 14px', borderRadius: '7px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}>Salvar</button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ fontSize: '13px', color: value ? '#1a1a2e' : '#ccc', lineHeight: '1.6' }}>{value || 'Clique para editar...'}</div>
+      )}
     </div>
   )
 }
@@ -216,6 +272,24 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
     window.location.href = '/assistencia'
   }
 
+  const CAMPO_LABEL: Record<string, string> = {
+    data_retirada_agendada: 'Data retirada',
+    data_envio_fornecedor: 'Envio fornecedor',
+    previsao_retorno_fornecedor: 'Previsão retorno',
+    data_retorno_fornecedor: 'Retorno efetivo',
+    previsao_entrega_cliente: 'Previsão entrega',
+    descricao_problema: 'Descrição do problema',
+    observacoes: 'Observações gerais',
+    observacoes_fornecedor: 'Observações fornecedor',
+  }
+
+  async function atualizarCampo(campo: string, valor: string) {
+    await supabase.from('assistencias_tecnicas').update({ [campo]: valor || null }).eq('id', id)
+    await registrarHistorico(`${CAMPO_LABEL[campo] || campo} atualizado`, 'at_atualizada')
+    buscarAT()
+    buscarHistorico()
+  }
+
   async function cancelarAT() {
     await supabase.from('assistencias_tecnicas').update({ status: 'cancelada', observacoes: cancelarObs || null }).eq('id', id)
     await registrarHistorico(`AT cancelada. ${cancelarObs ? 'Motivo: ' + cancelarObs : ''}`, 'at_atualizada')
@@ -311,46 +385,27 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
 
             {/* Date cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-              <DateCard label="Abertura" value={at.created_at?.slice(0, 10)} />
-              <DateCard label="Data retirada" value={at.data_retirada_agendada} />
-              <DateCard label="Envio fornecedor" value={at.data_envio_fornecedor} />
-              <DateCard label="Previsão retorno" value={at.previsao_retorno_fornecedor} highlight />
-              <DateCard label="Retorno efetivo" value={at.data_retorno_fornecedor} />
-              <DateCard label="Previsão entrega" value={(at as any).previsao_entrega_cliente} highlight />
+              <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '14px 16px' }}>
+                <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Abertura</div>
+                <div style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{at.created_at ? new Date(at.created_at).toLocaleDateString('pt-BR') : '—'}</div>
+              </div>
+              <EditableDateCard label="Data retirada" value={at.data_retirada_agendada} onSave={v => atualizarCampo('data_retirada_agendada', v)} />
+              <EditableDateCard label="Envio fornecedor" value={at.data_envio_fornecedor} onSave={v => atualizarCampo('data_envio_fornecedor', v)} />
+              <EditableDateCard label="Previsão retorno" value={at.previsao_retorno_fornecedor} highlight onSave={v => atualizarCampo('previsao_retorno_fornecedor', v)} />
+              <EditableDateCard label="Retorno efetivo" value={at.data_retorno_fornecedor} onSave={v => atualizarCampo('data_retorno_fornecedor', v)} />
+              <EditableDateCard label="Previsão entrega" value={(at as any).previsao_entrega_cliente} highlight onSave={v => atualizarCampo('previsao_entrega_cliente', v)} />
             </div>
 
             {/* Problema */}
-            {at.descricao_problema && (
-              <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '16px' }}>
-                <div style={{ fontSize: '11px', color: '#888', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Descrição do problema</div>
-                <div style={{ fontSize: '13px', color: '#1a1a2e', lineHeight: '1.6' }}>{at.descricao_problema}</div>
-              </div>
-            )}
+            <EditableTextCard label="Descrição do problema" value={at.descricao_problema} multiline onSave={v => atualizarCampo('descricao_problema', v)} />
 
             {/* Observações */}
-            {(at.observacoes || at.observacoes_fornecedor) && (
-              <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {at.observacoes && (
-                  <div>
-                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações gerais</div>
-                    <div style={{ fontSize: '13px', color: '#555', lineHeight: '1.6' }}>{at.observacoes}</div>
-                  </div>
-                )}
-                {at.observacoes_fornecedor && (
-                  <div>
-                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações fornecedor</div>
-                    <div style={{ fontSize: '13px', color: '#555', lineHeight: '1.6' }}>{at.observacoes_fornecedor}</div>
-                  </div>
-                )}
-              </div>
-            )}
+            <EditableTextCard label="Observações gerais" value={at.observacoes} multiline onSave={v => atualizarCampo('observacoes', v)} />
+            <EditableTextCard label="Observações fornecedor" value={at.observacoes_fornecedor} multiline onSave={v => atualizarCampo('observacoes_fornecedor', v)} />
 
             {/* Address if retirada */}
-            {at.requer_retirada && at.endereco_retirada && (
-              <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '16px' }}>
-                <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Endereço de retirada</div>
-                <div style={{ fontSize: '13px', color: '#1a1a2e' }}>{at.endereco_retirada}</div>
-              </div>
+            {at.requer_retirada && (
+              <EditableTextCard label="Endereço de retirada" value={at.endereco_retirada} onSave={v => atualizarCampo('endereco_retirada', v)} />
             )}
           </div>
 
