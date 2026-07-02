@@ -96,31 +96,44 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
 
   useEffect(() => {
     buscarAT()
-    buscarHistorico()
     buscarFornecedores()
   }, [id])
+
+  useEffect(() => {
+    if (at?.pedido_id) buscarHistorico()
+  }, [at?.pedido_id])
 
   async function buscarAT() {
     const { data, error } = await supabase
       .from('assistencias_tecnicas')
-      .select(`
-        *,
-        pedidos(numero_pedido, clientes(nome, endereco, cidade, estado, telefone), profissionais(nome, tipo)),
-        fornecedores(nome_fantasia, razao_social),
-        itens_pedido(descricao, quantidade, numero_nf)
-      `)
+      .select('*, pedidos(numero_pedido, clientes(nome, endereco, cidade, estado, telefone), profissionais(nome, tipo)), fornecedores(nome_fantasia, razao_social)')
       .eq('id', id)
       .single()
-    if (error) console.error('buscarAT error:', error.message)
-    setAt(data as unknown as AT)
+    if (error) { console.error('buscarAT error:', error.message); setLoading(false); return }
+
+    // Busca item separadamente para evitar falha silenciosa no join
+    const atData = data as unknown as AT
+    if (atData.item_id) {
+      const { data: itemData } = await supabase
+        .from('itens_pedido')
+        .select('descricao, quantidade, numero_nf')
+        .eq('id', atData.item_id)
+        .single()
+      if (itemData) (atData as any).itens_pedido = itemData
+    }
+
+    setAt(atData)
     setLoading(false)
   }
 
-  async function buscarHistorico() {
+  async function buscarHistorico(pedidoId?: string) {
+    const pid = pedidoId || at?.pedido_id
+    if (!pid) return
     const { data } = await supabase
       .from('historico_alteracoes')
       .select('*')
-      .eq('item_id', id)
+      .eq('pedido_id', pid)
+      .eq('tipo', 'at_atualizada')
       .order('created_at', { ascending: false })
       .limit(30)
     setHistorico(data || [])
