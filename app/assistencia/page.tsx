@@ -105,7 +105,7 @@ export default function AssistenciaTecnica() {
   async function buscarATs() {
     const { data } = await supabase
       .from('assistencias_tecnicas')
-      .select('*, pedidos(numero_pedido, clientes(nome, cidade)), fornecedores(nome_fantasia, razao_social), itens_pedido(descricao)')
+      .select('*, pedidos(numero_pedido, clientes(nome, cidade)), fornecedores(nome_fantasia, razao_social)')
       .order('created_at', { ascending: false })
     setAts((data as unknown as AT[]) || [])
   }
