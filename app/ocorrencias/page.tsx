@@ -61,6 +61,7 @@ export default function Ocorrencias() {
   const [busca, setBusca] = useState('')
   const [filtroStatus, setFiltroStatus] = useState<'abertas' | 'resolvidas' | 'todas'>('abertas')
   const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [expandidoId, setExpandidoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
 
   useEffect(() => { buscarOcorrencias(); buscarPedidos() }, [])
@@ -196,42 +197,96 @@ export default function Ocorrencias() {
               <div style={{ padding: '32px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhuma ocorrência encontrada.</div>
             )}
 
-            {filtradas.map((o, i) => (
-              <div key={o.id} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 160px 130px 110px 100px 120px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{o.pedidos?.numero_pedido}</div>
-                  <div style={{ fontSize: '11px', color: '#888' }}>{o.pedidos?.clientes?.nome}</div>
-                </div>
-                <div>
-                  {o.itens_pedido?.descricao && (
-                    <div style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a2e', marginBottom: '2px' }}>{o.itens_pedido.descricao}</div>
+            {filtradas.map((o, i) => {
+              const expandido = expandidoId === o.id
+              return (
+                <div key={o.id} style={{ borderTop: '0.5px solid #f0efe9', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+                  {/* Linha resumo */}
+                  <div
+                    onClick={() => setExpandidoId(expandido ? null : o.id)}
+                    style={{ display: 'grid', gridTemplateColumns: '100px 1fr 160px 130px 110px 100px 120px', padding: '12px 16px', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                  >
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{o.pedidos?.numero_pedido}</div>
+                      <div style={{ fontSize: '11px', color: '#888' }}>{o.pedidos?.clientes?.nome}</div>
+                    </div>
+                    <div>
+                      {o.itens_pedido?.descricao && (
+                        <div style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a2e', marginBottom: '2px' }}>{o.itens_pedido.descricao}</div>
+                      )}
+                      <div style={{ fontSize: '12px', color: '#555' }}>{o.descricao}</div>
+                    </div>
+                    <span style={{ fontSize: '12px', color: '#555' }}>{TIPOS[o.tipo] || o.tipo}</span>
+                    <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', fontWeight: '500', background: STATUS_COR[o.status]?.bg || '#f0efe9', color: STATUS_COR[o.status]?.color || '#555', display: 'inline-block' }}>
+                      {STATUS_COR[o.status]?.label || o.status}
+                    </span>
+                    <span style={{ fontSize: '12px', color: '#555', textAlign: 'center' }}>
+                      {o.quantidade_afetada ? `${o.quantidade_afetada} pç${o.quantidade_afetada !== 1 ? 's' : ''}` : '—'}
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#888' }}>
+                      {new Date(o.created_at).toLocaleDateString('pt-BR')}
+                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }} onClick={e => e.stopPropagation()}>
+                      <button onClick={() => abrirEdicao(o)}
+                        style={{ padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '11px', cursor: 'pointer', color: '#555' }}>
+                        Editar
+                      </button>
+                      {['aberta', 'em_tratativa'].includes(o.status) && (
+                        <a href={`/assistencia?pedido_id=${o.pedido_id}&item_id=${o.item_id || ''}&descricao=${encodeURIComponent(o.descricao)}&ocorrencia_id=${o.id}`}
+                          style={{ padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #3C3489', background: '#EEEDFE', fontSize: '11px', cursor: 'pointer', color: '#3C3489', textDecoration: 'none', display: 'block', textAlign: 'center', fontWeight: '500' }}>
+                          Abrir AT
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Painel expandido com todos os detalhes */}
+                  {expandido && (
+                    <div style={{ margin: '0 16px 14px', background: '#f7f6f3', borderRadius: '10px', padding: '16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                      <div>
+                        <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>Pedido</div>
+                        <div style={{ fontSize: '13px', color: '#1a1a2e', fontWeight: '500' }}>{o.pedidos?.numero_pedido}</div>
+                        <div style={{ fontSize: '12px', color: '#888' }}>{o.pedidos?.clientes?.nome}</div>
+                      </div>
+                      {o.itens_pedido?.descricao && (
+                        <div>
+                          <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>Item</div>
+                          <div style={{ fontSize: '13px', color: '#1a1a2e' }}>{o.itens_pedido.descricao}</div>
+                        </div>
+                      )}
+                      <div>
+                        <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>Tipo</div>
+                        <div style={{ fontSize: '13px', color: '#1a1a2e' }}>{TIPOS[o.tipo] || o.tipo}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>Status</div>
+                        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', fontWeight: '500', background: STATUS_COR[o.status]?.bg || '#f0efe9', color: STATUS_COR[o.status]?.color || '#555' }}>
+                          {STATUS_COR[o.status]?.label || o.status}
+                        </span>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>Qtd afetada</div>
+                        <div style={{ fontSize: '13px', color: '#1a1a2e' }}>{o.quantidade_afetada ? `${o.quantidade_afetada} peça${o.quantidade_afetada !== 1 ? 's' : ''}` : '—'}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>Data de abertura</div>
+                        <div style={{ fontSize: '13px', color: '#1a1a2e' }}>{new Date(o.created_at).toLocaleDateString('pt-BR')}</div>
+                      </div>
+                      <div style={{ gridColumn: '1 / -1' }}>
+                        <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>Descrição do problema</div>
+                        <div style={{ fontSize: '13px', color: '#333', lineHeight: '1.5' }}>{o.descricao || '—'}</div>
+                      </div>
+                      {o.observacoes && (
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>Observações</div>
+                          <div style={{ fontSize: '13px', color: '#555', lineHeight: '1.5' }}>{o.observacoes}</div>
+                        </div>
+                      )}
+                    </div>
                   )}
-                  <div style={{ fontSize: '12px', color: '#555' }}>{o.descricao}</div>
                 </div>
-                <span style={{ fontSize: '12px', color: '#555' }}>{TIPOS[o.tipo] || o.tipo}</span>
-                <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', fontWeight: '500', background: STATUS_COR[o.status]?.bg || '#f0efe9', color: STATUS_COR[o.status]?.color || '#555' }}>
-                  {STATUS_COR[o.status]?.label || o.status}
-                </span>
-                <span style={{ fontSize: '12px', color: '#555', textAlign: 'center' }}>
-                  {o.quantidade_afetada ? `${o.quantidade_afetada} pç${o.quantidade_afetada !== 1 ? 's' : ''}` : '—'}
-                </span>
-                <span style={{ fontSize: '11px', color: '#888' }}>
-                  {new Date(o.created_at).toLocaleDateString('pt-BR')}
-                </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <button onClick={() => abrirEdicao(o)}
-                    style={{ padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '11px', cursor: 'pointer', color: '#555' }}>
-                    Editar
-                  </button>
-                  {['aberta', 'em_tratativa'].includes(o.status) && (
-                    <a href={`/assistencia?pedido_id=${o.pedido_id}&item_id=${o.item_id || ''}&descricao=${encodeURIComponent(o.descricao)}&ocorrencia_id=${o.id}`}
-                      style={{ padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #3C3489', background: '#EEEDFE', fontSize: '11px', cursor: 'pointer', color: '#3C3489', textDecoration: 'none', display: 'block', textAlign: 'center', fontWeight: '500' }}>
-                      Abrir AT
-                    </a>
-                  )}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>
