@@ -140,7 +140,8 @@ export default function AssistenciaTecnica() {
     else if (form.requer_retirada) status = 'aguardando_retirada'
 
     const pedidoSelecionado = pedidos.find(p => p.id === form.pedido_id)
-    const numeroAt = `AT ${pedidoSelecionado?.numero_pedido}-${Date.now().toString().slice(-4)}`
+    const ano = new Date().getFullYear()
+    const numeroAt = `AT ${pedidoSelecionado?.numero_pedido}-${ano}`
 
     const { error } = await supabase.from('assistencias_tecnicas').insert([{
       numero_at: numeroAt,
