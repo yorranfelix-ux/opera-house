@@ -210,11 +210,8 @@ export default function Ocorrencias() {
                       <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{o.pedidos?.numero_pedido}</div>
                       <div style={{ fontSize: '11px', color: '#888' }}>{o.pedidos?.clientes?.nome}</div>
                     </div>
-                    <div>
-                      {o.itens_pedido?.descricao && (
-                        <div style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a2e', marginBottom: '2px' }}>{o.itens_pedido.descricao}</div>
-                      )}
-                      <div style={{ fontSize: '12px', color: '#555' }}>{o.descricao}</div>
+                    <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>
+                      {o.itens_pedido?.descricao || '—'}
                     </div>
                     <span style={{ fontSize: '12px', color: '#555' }}>{TIPOS[o.tipo] || o.tipo}</span>
                     <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', fontWeight: '500', background: STATUS_COR[o.status]?.bg || '#f0efe9', color: STATUS_COR[o.status]?.color || '#555', display: 'inline-block' }}>
