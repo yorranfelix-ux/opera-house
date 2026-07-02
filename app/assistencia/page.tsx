@@ -141,7 +141,12 @@ export default function AssistenciaTecnica() {
 
     const pedidoSelecionado = pedidos.find(p => p.id === form.pedido_id)
     const ano = new Date().getFullYear()
-    const numeroAt = `AT ${pedidoSelecionado?.numero_pedido}-${ano}`
+    const { data: atsExistentes } = await supabase
+      .from('assistencias_tecnicas')
+      .select('id')
+      .eq('pedido_id', form.pedido_id)
+    const sequencia = (atsExistentes?.length || 0) + 1
+    const numeroAt = `AT ${pedidoSelecionado?.numero_pedido}-${ano}-${sequencia}`
 
     const { error } = await supabase.from('assistencias_tecnicas').insert([{
       numero_at: numeroAt,
