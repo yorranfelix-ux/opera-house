@@ -68,6 +68,7 @@ export default function AssistenciaTecnica() {
   const [showForm, setShowForm] = useState(false)
   const [showFornecedorForm, setShowFornecedorForm] = useState(false)
   const [atSelecionada, setAtSelecionada] = useState<AT | null>(null)
+  const [ocorrenciaOrigem, setOcorrenciaOrigem] = useState<string | null>(null)
   const [busca, setBusca] = useState('')
   const [filtroStatus, setFiltroStatus] = useState<'ativas' | 'finalizadas' | 'todos'>('ativas')
   const [form, setForm] = useState({
@@ -107,8 +108,10 @@ export default function AssistenciaTecnica() {
       const pedidoId = params.get('pedido_id')
       const itemId = params.get('item_id')
       const descricao = params.get('descricao')
+      const ocorrenciaId = params.get('ocorrencia_id')
       if (pedidoId) {
         setForm(f => ({ ...f, pedido_id: pedidoId, item_id: itemId || '', descricao_problema: descricao || '' }))
+        if (ocorrenciaId) setOcorrenciaOrigem(ocorrenciaId)
         setShowForm(true)
       }
     }
@@ -181,6 +184,20 @@ export default function AssistenciaTecnica() {
       status,
     }])
     if (error) return alert('Erro: ' + error.message)
+
+    // Se veio de uma ocorrência, fecha ela automaticamente
+    if (ocorrenciaOrigem) {
+      await supabase.from('ocorrencias').update({
+        status: 'resolvida',
+        observacoes: `Convertida em AT ${numeroAt}`,
+      }).eq('id', ocorrenciaOrigem)
+      setOcorrenciaOrigem(null)
+      // Limpa os params da URL sem recarregar
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, '', '/assistencia')
+      }
+    }
+
     setShowForm(false)
     setForm({ pedido_id: '', item_id: '', tipo_at: 'retirada_cliente', descricao_problema: '', requer_retirada: false, endereco_retirada: '', data_retirada_agendada: '', fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes: '' } as any)
     setItensPedido([])
@@ -358,9 +375,15 @@ export default function AssistenciaTecnica() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '500px', maxHeight: '85vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Nova Assistencia Tecnica</span>
-              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>x</button>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Nova Assistência Técnica</span>
+              <button onClick={() => { setShowForm(false); setOcorrenciaOrigem(null) }} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
             </div>
+
+            {ocorrenciaOrigem && (
+              <div style={{ background: '#EEEDFE', border: '0.5px solid #3C3489', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: '#3C3489' }}>
+                Originada de uma ocorrência — ao salvar, a ocorrência será fechada automaticamente.
+              </div>
+            )}
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Pedido *</div>

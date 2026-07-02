@@ -224,7 +224,7 @@ export default function Ocorrencias() {
                     Editar
                   </button>
                   {['aberta', 'em_tratativa'].includes(o.status) && (
-                    <a href={`/assistencia?pedido_id=${o.pedido_id}&item_id=${o.item_id || ''}&descricao=${encodeURIComponent(o.descricao)}`}
+                    <a href={`/assistencia?pedido_id=${o.pedido_id}&item_id=${o.item_id || ''}&descricao=${encodeURIComponent(o.descricao)}&ocorrencia_id=${o.id}`}
                       style={{ padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #3C3489', background: '#EEEDFE', fontSize: '11px', cursor: 'pointer', color: '#3C3489', textDecoration: 'none', display: 'block', textAlign: 'center', fontWeight: '500' }}>
                       Abrir AT
                     </a>
