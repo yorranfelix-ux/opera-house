@@ -375,6 +375,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             style={{ padding: '6px 14px', borderRadius: '8px', border: '0.5px solid #f5c6c6', background: '#fff', color: '#A32D2D', fontSize: '12px', cursor: 'pointer' }}>
             Excluir pedido
           </button>
+          </div>
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
