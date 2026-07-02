@@ -13,7 +13,7 @@ interface Pedido {
   status: string
   semaforo: string
   observacoes_gerais: string
-  clientes: { nome: string; cidade: string; estado: string; telefone: string }
+  clientes: { nome: string; endereco: string; cidade: string; estado: string; telefone: string }
 }
 
 interface Item {
@@ -88,22 +88,54 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const [itemAnterior, setItemAnterior] = useState<Item | null>(null)
   const [fornecedores, setFornecedores] = useState<{ id: string; nome_fantasia: string; razao_social: string }[]>([])
   const [itemForm, setItemForm] = useState(itemFormVazio)
+  const [showSemaforo, setShowSemaforo] = useState(false)
+  const [atsCount, setAtsCount] = useState(0)
+  const [ocorrenciaItemIds, setOcorrenciaItemIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     buscarPedido()
     buscarItens()
     buscarFornecedores()
     buscarHistorico()
+    buscarATs()
+    buscarOcorrencias()
   }, [id])
 
   async function buscarPedido() {
     const { data } = await supabase
       .from('pedidos')
-      .select('*, clientes(nome, cidade, estado, telefone)')
+      .select('*, clientes(nome, endereco, cidade, estado, telefone)')
       .eq('id', id)
       .single()
     setPedido(data)
     setLoading(false)
+  }
+
+  async function buscarATs() {
+    const { data } = await supabase
+      .from('assistencias_tecnicas')
+      .select('id')
+      .eq('pedido_id', id)
+      .in('status', ['aberta', 'aguardando_retirada', 'em_reparo', 'enviado_fornecedor', 'aguardando_devolucao'])
+    setAtsCount((data || []).length)
+  }
+
+  async function buscarOcorrencias() {
+    const { data } = await supabase
+      .from('ocorrencias')
+      .select('item_id')
+      .eq('pedido_id', id)
+      .eq('status', 'aberta')
+      .not('item_id', 'is', null)
+    const ids = new Set((data || []).map((o: any) => o.item_id as string))
+    setOcorrenciaItemIds(ids)
+  }
+
+  async function salvarSemaforo(cor: string) {
+    await supabase.from('pedidos').update({ semaforo: cor }).eq('id', id)
+    setPedido(prev => prev ? { ...prev, semaforo: cor } : prev)
+    setShowSemaforo(false)
+    await registrarHistorico(`Semáforo alterado para ${cor}`, 'pedido_editado')
   }
 
   async function buscarItens() {
@@ -269,7 +301,6 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   }
 
   const aptos = itens.filter(i => i.apto_entrega).length
-  const comAT = itens.filter(i => i.tem_at).length
   const icamento = itens.filter(i => i.requer_icamento).length
 
   if (loading) {
@@ -301,9 +332,27 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             <span style={{ color: '#ccc' }}>/</span>
             <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Pedido {pedido.numero_pedido}</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: SEMAFORO_COLOR[pedido.semaforo] || '#888' }} />
-            <span style={{ fontSize: '12px', color: '#888' }}>{pedido.semaforo}</span>
+          <div style={{ position: 'relative' }}>
+            <div onClick={() => setShowSemaforo(!showSemaforo)}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: SEMAFORO_COLOR[pedido.semaforo] || '#888' }} />
+              <span style={{ fontSize: '12px', color: '#888' }}>{pedido.semaforo || '—'}</span>
+              <span style={{ fontSize: '10px', color: '#ccc' }}>▾</span>
+            </div>
+            {showSemaforo && (
+              <>
+                <div onClick={() => setShowSemaforo(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+                <div style={{ position: 'absolute', top: '36px', right: 0, background: '#fff', borderRadius: '10px', border: '0.5px solid #e8e7e3', boxShadow: '0 8px 24px rgba(0,0,0,0.1)', zIndex: 50, overflow: 'hidden', minWidth: '140px' }}>
+                  {Object.entries(SEMAFORO_COLOR).map(([cor, hex]) => (
+                    <div key={cor} onClick={() => salvarSemaforo(cor)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', cursor: 'pointer', background: pedido.semaforo === cor ? '#f7f6f3' : '#fff', borderBottom: '0.5px solid #f0efe9' }}>
+                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: hex }} />
+                      <span style={{ fontSize: '13px', color: '#1a1a2e', textTransform: 'capitalize' }}>{cor}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -315,7 +364,10 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                 <div style={{ fontSize: '11px', color: '#6a6a8a', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Central do Pedido</div>
                 <div style={{ fontSize: '20px', fontWeight: '500', color: '#fff', marginBottom: '4px' }}>Pedido {pedido.numero_pedido}</div>
                 <div style={{ fontSize: '13px', color: '#8888aa' }}>
-                  {pedido.clientes?.nome} — {pedido.clientes?.cidade} {pedido.clientes?.estado}
+                  {pedido.clientes?.nome}
+                </div>
+                <div style={{ fontSize: '12px', color: '#6a6a8a', marginTop: '2px' }}>
+                  {[pedido.clientes?.endereco, pedido.clientes?.cidade, pedido.clientes?.estado].filter(Boolean).join(', ')}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -339,7 +391,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             {[
               { label: 'Total de itens', value: itens.length, color: '#1a1a2e' },
               { label: 'Aptos p/ entrega', value: aptos, color: '#3B6D11' },
-              { label: 'Com AT ativa', value: comAT, color: '#185FA5' },
+              { label: 'Com AT ativa', value: atsCount, color: '#185FA5' },
               { label: 'Requer içamento', value: icamento, color: '#BA7517' },
             ].map(card => (
               <div key={card.label} style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '14px' }}>
@@ -382,6 +434,9 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                         )}
                         {item.requer_tecido_fornecido && (
                           <span style={{ marginLeft: '6px', background: '#EEEDFE', color: '#3C3489', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>Tecido a enviar</span>
+                        )}
+                        {ocorrenciaItemIds.has(item.id) && (
+                          <span style={{ marginLeft: '6px', background: '#FCEBEB', color: '#791F1F', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>Ocorrência aberta</span>
                         )}
                       </div>
                       {(item.numero_nf || item.data_recebimento) && (
