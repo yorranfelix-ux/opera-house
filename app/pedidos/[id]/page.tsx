@@ -14,6 +14,7 @@ interface Pedido {
   semaforo: string
   observacoes_gerais: string
   clientes: { nome: string; endereco: string; cidade: string; estado: string; telefone: string }
+  profissionais: { nome: string; tipo: string } | null
 }
 
 interface Item {
@@ -107,7 +108,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   async function buscarPedido() {
     const { data } = await supabase
       .from('pedidos')
-      .select('*, clientes(nome, endereco, cidade, estado, telefone)')
+      .select('*, clientes(nome, endereco, cidade, estado, telefone), profissionais(nome, tipo)')
       .eq('id', id)
       .single()
     setPedido(data)
@@ -405,6 +406,11 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                     </span>
                   )}
                 </div>
+                {pedido.profissionais && (
+                  <div style={{ fontSize: '12px', color: '#6a6a8a', marginTop: '6px' }}>
+                    <span style={{ color: '#4a4a6a' }}>{pedido.profissionais.tipo}:</span> {pedido.profissionais.nome}
+                  </div>
+                )}
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '11px', color: '#6a6a8a', marginBottom: '4px' }}>Prazo prometido</div>

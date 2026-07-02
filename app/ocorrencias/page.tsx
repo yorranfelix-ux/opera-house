@@ -188,7 +188,7 @@ export default function Ocorrencias() {
           </div>
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 160px 130px 110px 100px 72px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 160px 130px 110px 100px 120px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
               <span>Pedido</span><span>Item / Descrição</span><span>Tipo</span><span>Status</span><span>Qtd afetada</span><span>Data</span><span></span>
             </div>
 
@@ -197,7 +197,7 @@ export default function Ocorrencias() {
             )}
 
             {filtradas.map((o, i) => (
-              <div key={o.id} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 160px 130px 110px 100px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+              <div key={o.id} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 160px 130px 110px 100px 120px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{o.pedidos?.numero_pedido}</div>
                   <div style={{ fontSize: '11px', color: '#888' }}>{o.pedidos?.clientes?.nome}</div>
@@ -218,10 +218,18 @@ export default function Ocorrencias() {
                 <span style={{ fontSize: '11px', color: '#888' }}>
                   {new Date(o.created_at).toLocaleDateString('pt-BR')}
                 </span>
-                <button onClick={() => abrirEdicao(o)}
-                  style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>
-                  Editar
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <button onClick={() => abrirEdicao(o)}
+                    style={{ padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '11px', cursor: 'pointer', color: '#555' }}>
+                    Editar
+                  </button>
+                  {['aberta', 'em_tratativa'].includes(o.status) && (
+                    <a href={`/assistencia?pedido_id=${o.pedido_id}&item_id=${o.item_id || ''}&descricao=${encodeURIComponent(o.descricao)}`}
+                      style={{ padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #3C3489', background: '#EEEDFE', fontSize: '11px', cursor: 'pointer', color: '#3C3489', textDecoration: 'none', display: 'block', textAlign: 'center', fontWeight: '500' }}>
+                      Abrir AT
+                    </a>
+                  )}
+                </div>
               </div>
             ))}
           </div>

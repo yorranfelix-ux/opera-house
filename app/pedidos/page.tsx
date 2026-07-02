@@ -8,12 +8,14 @@ interface Pedido {
   id: string
   numero_pedido: string
   cliente_id: string
+  profissional_id: string
   data_venda: string
   prazo_prometido: string
   status: string
   semaforo: string
   observacoes_gerais: string
   clientes: { nome: string; cidade: string; estado: string }
+  profissionais: { nome: string; tipo: string } | null
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -51,7 +53,7 @@ const SEMAFORO_COLOR: Record<string, string> = {
 }
 
 const formVazio = {
-  numero_pedido: '', cliente_id: '', data_venda: '',
+  numero_pedido: '', cliente_id: '', profissional_id: '', data_venda: '',
   prazo_prometido: '', observacoes_gerais: '', status: 'criado',
 }
 
@@ -64,17 +66,19 @@ export default function Pedidos() {
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
   const [filtroStatus, setFiltroStatus] = useState<'abertos' | 'entregues' | 'todos'>('abertos')
+  const [profissionais, setProfissionais] = useState<{ id: string; nome: string; tipo: string }[]>([])
 
   useEffect(() => {
     buscarPedidos()
     buscarClientes()
+    buscarProfissionais()
   }, [])
 
   async function buscarPedidos() {
     setLoading(true)
     const { data } = await supabase
       .from('pedidos')
-      .select('*, clientes(nome, cidade, estado)')
+      .select('*, clientes(nome, cidade, estado), profissionais(nome, tipo)')
       .order('created_at', { ascending: false })
     setPedidos(data || [])
     setLoading(false)
@@ -83,6 +87,11 @@ export default function Pedidos() {
   async function buscarClientes() {
     const { data } = await supabase.from('clientes').select('id, nome').order('nome')
     setClientes(data || [])
+  }
+
+  async function buscarProfissionais() {
+    const { data } = await supabase.from('profissionais').select('id, nome, tipo').eq('ativo', true).order('nome')
+    setProfissionais(data || [])
   }
 
   function abrirNovo() {
@@ -98,6 +107,7 @@ export default function Pedidos() {
     setForm({
       numero_pedido: p.numero_pedido || '',
       cliente_id: p.cliente_id || '',
+      profissional_id: p.profissional_id || '',
       data_venda: p.data_venda || '',
       prazo_prometido: p.prazo_prometido || '',
       observacoes_gerais: p.observacoes_gerais || '',
@@ -182,8 +192,8 @@ export default function Pedidos() {
           </div>
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 100px 100px 80px 120px 72px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
-              <span>Pedido</span><span>Cliente</span><span>Data venda</span><span>Prazo</span><span>Semáforo</span><span>Status</span><span></span>
+            <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 140px 100px 100px 80px 120px 72px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
+              <span>Pedido</span><span>Cliente</span><span>Profissional</span><span>Data venda</span><span>Prazo</span><span>Semáforo</span><span>Status</span><span></span>
             </div>
 
             {loading && <div style={{ padding: '24px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Carregando...</div>}
@@ -193,12 +203,20 @@ export default function Pedidos() {
             )}
 
             {filtrados.map((p, i) => (
-              <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 100px 100px 80px 120px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+              <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 140px 100px 100px 80px 120px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <a href={`/pedidos/${p.id}`} style={{ fontSize: '12px', fontWeight: '500', color: '#C9A84C', textDecoration: 'none' }}>{p.numero_pedido}</a>
                 <a href={`/pedidos/${p.id}`} style={{ textDecoration: 'none' }}>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{p.clientes?.nome}</div>
                   <div style={{ fontSize: '11px', color: '#888' }}>{p.clientes?.cidade} {p.clientes?.estado}</div>
                 </a>
+                <div>
+                  {p.profissionais ? (
+                    <>
+                      <div style={{ fontSize: '12px', color: '#1a1a2e', fontWeight: '500' }}>{p.profissionais.nome}</div>
+                      <div style={{ fontSize: '11px', color: '#888' }}>{p.profissionais.tipo}</div>
+                    </>
+                  ) : <span style={{ fontSize: '12px', color: '#ccc' }}>—</span>}
+                </div>
                 <span style={{ fontSize: '12px', color: '#555' }}>{p.data_venda ? new Date(p.data_venda + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}</span>
                 <span style={{ fontSize: '12px', color: p.prazo_prometido && new Date(p.prazo_prometido) < new Date() ? '#A32D2D' : '#555', fontWeight: p.prazo_prometido && new Date(p.prazo_prometido) < new Date() ? '500' : '400' }}>
                   {p.prazo_prometido ? new Date(p.prazo_prometido + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
@@ -241,6 +259,15 @@ export default function Pedidos() {
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
                 <option value="">Selecione o cliente</option>
                 {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Profissional / Arquiteto(a)</div>
+              <select value={form.profissional_id} onChange={e => setForm({ ...form, profissional_id: e.target.value })}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
+                <option value="">Nenhum</option>
+                {profissionais.map(p => <option key={p.id} value={p.id}>{p.nome} — {p.tipo}</option>)}
               </select>
             </div>
 

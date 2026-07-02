@@ -101,6 +101,17 @@ export default function AssistenciaTecnica() {
     buscarATs()
     buscarPedidos()
     buscarFornecedores()
+    // Pre-fill form from URL params (when coming from "Abrir AT" on ocorrências)
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const pedidoId = params.get('pedido_id')
+      const itemId = params.get('item_id')
+      const descricao = params.get('descricao')
+      if (pedidoId) {
+        setForm(f => ({ ...f, pedido_id: pedidoId, item_id: itemId || '', descricao_problema: descricao || '' }))
+        setShowForm(true)
+      }
+    }
   }, [])
 
   useEffect(() => {
@@ -308,6 +319,10 @@ export default function AssistenciaTecnica() {
                   )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <a href={`/assistencia/${a.id}`}
+                    style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', border: '0.5px solid #e8e7e3', color: '#555', background: '#fff', cursor: 'pointer', textDecoration: 'none', display: 'block', textAlign: 'center' }}>
+                    Ver detalhes
+                  </a>
                   {(a.status === 'aberta' || a.status === 'aguardando_retirada') && (
                     <button onClick={() => { setAtSelecionada(a); setProcessoObs(''); setShowProcessoModal(true) }}
                       style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', border: '0.5px solid #0C447C', color: '#0C447C', background: '#E6F1FB', cursor: 'pointer' }}>
