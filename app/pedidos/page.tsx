@@ -121,8 +121,9 @@ export default function Pedidos() {
     if (!form.numero_pedido) return alert('Número do pedido é obrigatório')
     if (!form.cliente_id) return alert('Selecione um cliente')
     if (!form.data_venda) return alert('Data da venda é obrigatória')
+    const payload = { ...form, profissional_id: form.profissional_id || null }
     if (editandoId) {
-      const { error } = await supabase.from('pedidos').update(form).eq('id', editandoId)
+      const { error } = await supabase.from('pedidos').update(payload).eq('id', editandoId)
       if (error) return alert('Erro ao atualizar: ' + error.message)
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
@@ -136,7 +137,7 @@ export default function Pedidos() {
         }])
       }
     } else {
-      const { data: novo, error } = await supabase.from('pedidos').insert([{ ...form, semaforo: 'verde' }]).select('id').single()
+      const { data: novo, error } = await supabase.from('pedidos').insert([{ ...payload, semaforo: 'verde' }]).select('id').single()
       if (error) return alert('Erro ao salvar: ' + error.message)
       await registrarHistorico({ tipo: 'pedido_criado', descricao: `Pedido ${form.numero_pedido} criado`, pedidoId: novo?.id })
     }
