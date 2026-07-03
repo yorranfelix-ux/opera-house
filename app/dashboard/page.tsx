@@ -61,14 +61,11 @@ export default function Dashboard() {
   const [novoTexto, setNovoTexto] = useState('')
   const [novoUrgente, setNovoUrgente] = useState(false)
   const [diasSemana, setDiasSemana] = useState<{ data: string; diaSemana: string; diaNum: number; hoje: boolean }[]>([])
+  const [periodoCalendario, setPeriodoCalendario] = useState(7)
 
-  useEffect(() => {
-    buscarUsuario()
-    buscar()
-    setLembretes(lerLembretes())
-
+  function gerarDias(total: number) {
     const hoje = new Date()
-    const dias = Array.from({ length: 7 }, (_, i) => {
+    return Array.from({ length: total }, (_, i) => {
       const d = new Date(hoje)
       d.setDate(d.getDate() + i)
       return {
@@ -78,8 +75,18 @@ export default function Dashboard() {
         hoje: i === 0,
       }
     })
-    setDiasSemana(dias)
+  }
+
+  useEffect(() => {
+    buscarUsuario()
+    buscar()
+    setLembretes(lerLembretes())
+    setDiasSemana(gerarDias(7))
   }, [])
+
+  useEffect(() => {
+    setDiasSemana(gerarDias(periodoCalendario))
+  }, [periodoCalendario])
 
   async function buscarUsuario() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -93,7 +100,7 @@ export default function Dashboard() {
     const hojeStr = hoje.toISOString().split('T')[0]
     const amanha = new Date(hoje); amanha.setDate(amanha.getDate() + 1)
     const amanhaStr = amanha.toISOString().split('T')[0]
-    const sete = new Date(hoje); sete.setDate(sete.getDate() + 7)
+    const sete = new Date(hoje); sete.setDate(sete.getDate() + 21)
     const seteStr = sete.toISOString().split('T')[0]
     const seteDiasAtras = new Date(hoje); seteDiasAtras.setDate(seteDiasAtras.getDate() - 7)
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0]
@@ -361,6 +368,66 @@ export default function Dashboard() {
             ))}
           </div>
 
+          {/* Calendário full-width */}
+          <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden', marginBottom: '16px' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '0.5px solid #f0efe9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Calendário</span>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {[7, 14, 21].map(p => (
+                    <button key={p} onClick={() => setPeriodoCalendario(p)} style={{
+                      padding: '3px 10px', borderRadius: '6px', border: '0.5px solid',
+                      borderColor: periodoCalendario === p ? '#1a1a2e' : '#e0deda',
+                      background: periodoCalendario === p ? '#1a1a2e' : '#fff',
+                      color: periodoCalendario === p ? '#C9A84C' : '#888',
+                      fontSize: '11px', fontWeight: '500', cursor: 'pointer',
+                    }}>{p} dias</button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '7px', height: '7px', borderRadius: '2px', background: '#3B6D11' }} />
+                  <span style={{ fontSize: '10px', color: '#888' }}>Entrega</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '7px', height: '7px', borderRadius: '2px', background: '#185FA5' }} />
+                  <span style={{ fontSize: '10px', color: '#888' }}>Retirada AT</span>
+                </div>
+              </div>
+            </div>
+            <div style={{ padding: '10px', display: 'grid', gridTemplateColumns: `repeat(${periodoCalendario}, 1fr)`, gap: '4px' }}>
+              {diasSemana.map(dia => {
+                const eventos = eventosPorDia[dia.data] || []
+                return (
+                  <div key={dia.data} style={{
+                    borderRadius: '7px',
+                    border: dia.hoje ? '1px solid #C9A84C' : '0.5px solid #f0efe9',
+                    background: dia.hoje ? '#fffbf0' : '#fafaf8',
+                    padding: periodoCalendario === 21 ? '4px 3px' : '6px 4px',
+                    minHeight: periodoCalendario === 21 ? '60px' : '80px',
+                  }}>
+                    <div style={{ fontSize: periodoCalendario === 21 ? '8px' : '9px', color: dia.hoje ? '#C9A84C' : '#aaa', textAlign: 'center', marginBottom: '1px', fontWeight: dia.hoje ? '600' : '400' }}>{dia.diaSemana}</div>
+                    <div style={{ fontSize: periodoCalendario === 21 ? '11px' : '13px', fontWeight: '600', color: dia.hoje ? '#C9A84C' : '#1a1a2e', textAlign: 'center', marginBottom: '4px' }}>{dia.diaNum}</div>
+                    {eventos.length === 0 ? (
+                      <div style={{ textAlign: 'center', color: '#e0deda', fontSize: '10px' }}>—</div>
+                    ) : (
+                      eventos.map((ev, ei) => (
+                        <div key={ei} style={{
+                          fontSize: '8px', padding: '2px 3px', borderRadius: '3px', marginBottom: '2px',
+                          background: ev.tipo === 'entrega' ? '#EAF3DE' : '#E6F1FB',
+                          color: ev.tipo === 'entrega' ? '#27500A' : '#0C447C',
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          lineHeight: '1.4',
+                        }}>{ev.label}</div>
+                      ))
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 380px', gap: '16px' }}>
 
             {/* Inbox ações */}
@@ -403,53 +470,6 @@ export default function Dashboard() {
 
             {/* Coluna direita */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-
-              {/* Calendário 7 dias */}
-              <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-                <div style={{ padding: '12px 16px', borderBottom: '0.5px solid #f0efe9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Próximos 7 dias</span>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <div style={{ width: '7px', height: '7px', borderRadius: '2px', background: '#3B6D11' }} />
-                      <span style={{ fontSize: '10px', color: '#888' }}>Entrega</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <div style={{ width: '7px', height: '7px', borderRadius: '2px', background: '#185FA5' }} />
-                      <span style={{ fontSize: '10px', color: '#888' }}>Retirada AT</span>
-                    </div>
-                  </div>
-                </div>
-                <div style={{ padding: '10px', display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '5px' }}>
-                  {diasSemana.map(dia => {
-                    const eventos = eventosPorDia[dia.data] || []
-                    return (
-                      <div key={dia.data} style={{
-                        borderRadius: '8px',
-                        border: dia.hoje ? '1px solid #C9A84C' : '0.5px solid #f0efe9',
-                        background: dia.hoje ? '#fffbf0' : '#fafaf8',
-                        padding: '6px 4px',
-                        minHeight: '80px',
-                      }}>
-                        <div style={{ fontSize: '9px', color: dia.hoje ? '#C9A84C' : '#aaa', textAlign: 'center', marginBottom: '2px', fontWeight: dia.hoje ? '600' : '400' }}>{dia.diaSemana}</div>
-                        <div style={{ fontSize: '13px', fontWeight: '600', color: dia.hoje ? '#C9A84C' : '#1a1a2e', textAlign: 'center', marginBottom: '5px' }}>{dia.diaNum}</div>
-                        {eventos.length === 0 ? (
-                          <div style={{ textAlign: 'center', color: '#e0deda', fontSize: '12px', marginTop: '8px' }}>—</div>
-                        ) : (
-                          eventos.map((ev, ei) => (
-                            <div key={ei} style={{
-                              fontSize: '9px', padding: '2px 4px', borderRadius: '4px', marginBottom: '2px',
-                              background: ev.tipo === 'entrega' ? '#EAF3DE' : '#E6F1FB',
-                              color: ev.tipo === 'entrega' ? '#27500A' : '#0C447C',
-                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                              lineHeight: '1.4',
-                            }}>{ev.label}</div>
-                          ))
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
 
               {/* Lembretes do dia */}
               <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
