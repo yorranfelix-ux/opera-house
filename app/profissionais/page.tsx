@@ -65,7 +65,10 @@ export default function Profissionais() {
 
   async function excluir(id: string, nome: string) {
     const { error } = await supabase.from('profissionais').delete().eq('id', id)
-    if (error) return alert('Erro ao excluir: ' + error.message)
+    if (error) {
+      if (error.message.includes('foreign key')) return alert(`Não é possível excluir "${nome}" pois existem pedidos vinculados a este profissional.`)
+      return alert('Erro ao excluir: ' + error.message)
+    }
     await registrarHistorico({ tipo: 'profissional_editado', descricao: `Profissional ${nome} excluído` })
     setExcluindoId(null)
     buscar()

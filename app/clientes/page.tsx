@@ -84,7 +84,10 @@ export default function Clientes() {
 
   async function excluirCliente(id: string, nome: string) {
     const { error } = await supabase.from('clientes').delete().eq('id', id)
-    if (error) return alert('Erro ao excluir: ' + error.message)
+    if (error) {
+      if (error.message.includes('foreign key')) return alert(`Não é possível excluir "${nome}" pois existem pedidos vinculados a este cliente.`)
+      return alert('Erro ao excluir: ' + error.message)
+    }
     await registrarHistorico({ tipo: 'cliente_editado', descricao: `Cliente ${nome} excluído` })
     setExcluindoId(null)
     buscarClientes()

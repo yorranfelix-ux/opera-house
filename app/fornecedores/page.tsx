@@ -64,7 +64,10 @@ export default function Fornecedores() {
 
   async function excluirFornecedor(id: string, nome: string) {
     const { error } = await supabase.from('fornecedores').delete().eq('id', id)
-    if (error) return alert('Erro ao excluir: ' + error.message)
+    if (error) {
+      if (error.message.includes('foreign key')) return alert(`Não é possível excluir "${nome}" pois existem itens de pedido ou ATs vinculados a este fornecedor.`)
+      return alert('Erro ao excluir: ' + error.message)
+    }
     await registrarHistorico({ tipo: 'fornecedor_editado', descricao: `Fornecedor ${nome} excluído` })
     setExcluindoId(null)
     buscarFornecedores()
