@@ -156,37 +156,53 @@ export default function Entregas() {
     buscarEntregas()
   }
 
+  const STORAGE_KEY_MOTORISTA = 'operare_motorista_info'
+
+  function carregarInfoMotorista() {
+    try {
+      const salvo = localStorage.getItem(STORAGE_KEY_MOTORISTA)
+      if (salvo) return JSON.parse(salvo)
+    } catch {}
+    return { motorista: '', veiculo: '', placa: '', rodizio: '' }
+  }
+
   function abrirImpressao(dia: string, entregasDia: Entrega[]) {
     setImpressao({ dia, entregas: entregasDia })
-    setInfoMotorista({ motorista: '', veiculo: '', placa: '', rodizio: '' })
+    setInfoMotorista(carregarInfoMotorista())
+  }
+
+  function salvarInfoMotorista(info: typeof infoMotorista) {
+    localStorage.setItem(STORAGE_KEY_MOTORISTA, JSON.stringify(info))
   }
 
   function imprimir(info: ImpressaoInfo, motorista: typeof infoMotorista) {
+    salvarInfoMotorista(motorista)
+
     const dataFormatada = (() => {
       const d = new Date(info.dia + 'T12:00:00')
       return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
     })()
 
-    const TOTAL_LINHAS = 13
+    const TOTAL_LINHAS = 16
     const linhasVazias = Math.max(0, TOTAL_LINHAS - info.entregas.length)
 
     const rowsHtml = info.entregas.map(e => {
       const c = e.pedidos?.clientes
-      const nomeAbrev = (c?.nome || '').substring(0, 12).toUpperCase()
+      const nomeAbrev = (c?.nome || '').substring(0, 14).toUpperCase()
       const label = `P.${e.pedidos?.numero_pedido}-${nomeAbrev}`
       const regiao = (c?.cidade || '').toUpperCase()
       return `
-        <tr>
-          <td style="padding:4px 6px;border-right:1px solid #000;font-size:10px;font-weight:600;white-space:nowrap;overflow:hidden;">${label}</td>
-          <td style="padding:4px 6px;border-right:1px solid #000;"></td>
-          <td style="padding:4px 6px;border-right:1px solid #000;"></td>
-          <td style="padding:4px 6px;border-right:1px solid #000;"></td>
-          <td style="padding:4px 6px;font-size:10px;font-weight:500;">${regiao}</td>
+        <tr style="height:32px;">
+          <td style="padding:4px 8px;border-right:1px solid #000;font-size:10px;font-weight:600;">${label}</td>
+          <td style="padding:4px 8px;border-right:1px solid #000;"></td>
+          <td style="padding:4px 8px;border-right:1px solid #000;"></td>
+          <td style="padding:4px 8px;border-right:1px solid #000;"></td>
+          <td style="padding:4px 8px;font-size:10px;font-weight:500;">${regiao}</td>
         </tr>`
     }).join('')
 
     const emptyRows = Array.from({ length: linhasVazias }).map(() => `
-      <tr style="height:26px;">
+      <tr style="height:32px;">
         <td style="border-right:1px solid #000;"></td>
         <td style="border-right:1px solid #000;"></td>
         <td style="border-right:1px solid #000;"></td>
@@ -200,8 +216,9 @@ export default function Entregas() {
   <meta charset="utf-8"/>
   <title>Sequência de Entregas — ${dataFormatada}</title>
   <style>
+    @page { size: A4 landscape; margin: 12mm 14mm; }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:Arial,sans-serif; font-size:11px; color:#000; background:#fff; padding:18px 22px; }
+    body { font-family:Arial,sans-serif; font-size:11px; color:#000; background:#fff; }
     table { border-collapse:collapse; width:100%; }
     td, th { border:1px solid #000; }
   </style>
@@ -209,15 +226,17 @@ export default function Entregas() {
 <body>
 
 <!-- LOGO -->
-<table style="margin-bottom:10px;">
+<table style="margin-bottom:10px;border:none;">
   <tr>
-    <td style="border:none;width:100%;text-align:center;padding:6px 0 10px;">
-      <table style="margin:0 auto;border:none;">
+    <td style="border:none;text-align:center;padding:4px 0 10px;">
+      <table style="margin:0 auto;border:none;border-collapse:separate;border-spacing:0;">
         <tr>
-          <td style="border:2px solid #000;width:52px;height:52px;text-align:center;vertical-align:middle;font-size:26px;font-weight:bold;font-style:italic;">h</td>
-          <td style="border:none;padding-left:10px;vertical-align:middle;text-align:left;">
-            <div style="font-size:20px;font-weight:bold;letter-spacing:1px;line-height:1.15;">OPERA</div>
-            <div style="font-size:20px;font-weight:bold;letter-spacing:1px;line-height:1.15;">HOUSE</div>
+          <td style="background:#1a1a2e;border:2px solid #1a1a2e;width:56px;height:56px;text-align:center;vertical-align:middle;border-radius:6px;">
+            <span style="color:#C9A84C;font-size:28px;font-weight:900;font-style:italic;font-family:Georgia,serif;">h</span>
+          </td>
+          <td style="border:none;padding-left:12px;vertical-align:middle;text-align:left;">
+            <div style="font-size:22px;font-weight:900;letter-spacing:2px;line-height:1.15;color:#1a1a2e;">OPERA</div>
+            <div style="font-size:22px;font-weight:900;letter-spacing:2px;line-height:1.15;color:#1a1a2e;">HOUSE</div>
           </td>
         </tr>
       </table>
@@ -228,17 +247,17 @@ export default function Entregas() {
 <!-- LINHA 1: Motorista | Rodízio | Data -->
 <table style="margin-bottom:-1px;">
   <tr>
-    <td style="padding:5px 8px;width:30%;">
+    <td style="padding:6px 10px;width:30%;">
       <span style="font-size:10px;font-weight:bold;">Motorista:</span>
-      <span style="font-size:11px;margin-left:4px;">${motorista.motorista}</span>
+      <span style="font-size:12px;font-weight:bold;margin-left:6px;">${motorista.motorista}</span>
     </td>
-    <td style="padding:5px 8px;width:46%;text-align:center;">
+    <td style="padding:6px 10px;width:46%;text-align:center;background:#f5f5f5;">
       <span style="font-size:10px;font-weight:bold;">RODÍZIO:</span>
-      <span style="font-size:10px;font-weight:bold;margin-left:4px;">${motorista.rodizio || 'PLACA FINAL ___ ___-FEIRA'}</span>
+      <span style="font-size:10px;font-weight:bold;margin-left:6px;">${motorista.rodizio || 'PLACA FINAL ___ ___-FEIRA'}</span>
     </td>
-    <td style="padding:5px 8px;width:24%;text-align:right;">
+    <td style="padding:6px 10px;width:24%;text-align:right;">
       <span style="font-size:10px;font-weight:bold;">DATA:</span>
-      <span style="font-size:11px;font-weight:bold;margin-left:4px;">${dataFormatada}</span>
+      <span style="font-size:12px;font-weight:bold;margin-left:6px;">${dataFormatada}</span>
     </td>
   </tr>
 </table>
@@ -246,22 +265,25 @@ export default function Entregas() {
 <!-- LINHA 2: Veículo | Placa | Combustível | Litros | KM -->
 <table style="margin-bottom:-1px;">
   <tr>
-    <td style="padding:5px 8px;width:16%;">
+    <td style="padding:6px 10px;width:18%;">
       <span style="font-size:10px;font-weight:bold;">Veículo:</span>
-      <span style="font-size:11px;margin-left:4px;">${motorista.veiculo}</span>
+      <span style="font-size:11px;margin-left:6px;">${motorista.veiculo}</span>
     </td>
-    <td style="padding:5px 8px;width:20%;">
+    <td style="padding:6px 10px;width:22%;">
       <span style="font-size:10px;font-weight:bold;">Placa:</span>
-      <span style="font-size:11px;margin-left:4px;">${motorista.placa}</span>
+      <span style="font-size:11px;margin-left:6px;">${motorista.placa}</span>
     </td>
-    <td style="padding:5px 8px;width:24%;">
+    <td style="padding:6px 10px;width:22%;">
       <span style="font-size:10px;font-weight:bold;">Combustível: R$:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:60px;margin-left:4px;"></span>
     </td>
-    <td style="padding:5px 8px;width:16%;">
+    <td style="padding:6px 10px;width:18%;">
       <span style="font-size:10px;font-weight:bold;">Litros:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:50px;margin-left:4px;"></span>
     </td>
-    <td style="padding:5px 8px;width:24%;">
+    <td style="padding:6px 10px;width:20%;">
       <span style="font-size:10px;font-weight:bold;">KM:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:70px;margin-left:4px;"></span>
     </td>
   </tr>
 </table>
@@ -269,12 +291,12 @@ export default function Entregas() {
 <!-- TABELA DE ENTREGAS -->
 <table>
   <thead>
-    <tr style="background:#e8e8e8;">
-      <th style="padding:5px 6px;font-size:10px;width:26%;text-align:center;">Cliente / Fornecedor</th>
-      <th style="padding:5px 6px;font-size:10px;width:22%;text-align:center;">Nome legível</th>
-      <th style="padding:5px 6px;font-size:10px;width:16%;text-align:center;">Horario de Chegada</th>
-      <th style="padding:5px 6px;font-size:10px;width:16%;text-align:center;">Horário de Saída</th>
-      <th style="padding:5px 6px;font-size:10px;width:20%;text-align:center;">Região</th>
+    <tr style="background:#1a1a2e;">
+      <th style="padding:6px 8px;font-size:10px;width:24%;text-align:center;color:#C9A84C;font-weight:bold;">Cliente / Fornecedor</th>
+      <th style="padding:6px 8px;font-size:10px;width:22%;text-align:center;color:#C9A84C;font-weight:bold;">Nome legível</th>
+      <th style="padding:6px 8px;font-size:10px;width:16%;text-align:center;color:#C9A84C;font-weight:bold;">Horário de Chegada</th>
+      <th style="padding:6px 8px;font-size:10px;width:16%;text-align:center;color:#C9A84C;font-weight:bold;">Horário de Saída</th>
+      <th style="padding:6px 8px;font-size:10px;width:22%;text-align:center;color:#C9A84C;font-weight:bold;">Região</th>
     </tr>
   </thead>
   <tbody>
@@ -286,8 +308,9 @@ export default function Entregas() {
 <!-- EQUIPE -->
 <table style="margin-top:-1px;">
   <tr>
-    <td style="padding:6px 8px;">
+    <td style="padding:7px 10px;">
       <span style="font-size:10px;font-weight:bold;">EQUIPE:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:400px;margin-left:8px;"></span>
     </td>
   </tr>
 </table>
@@ -295,23 +318,23 @@ export default function Entregas() {
 <!-- KM / HORÁRIOS -->
 <table style="margin-top:-1px;">
   <tr>
-    <td style="padding:7px 8px;width:50%;">
+    <td style="padding:8px 10px;width:50%;">
       <span style="font-size:10px;font-weight:bold;">KM DE SAÍDA:</span>
-      <span style="display:inline-block;border-bottom:1px solid #000;width:140px;margin-left:6px;"></span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:180px;margin-left:8px;"></span>
     </td>
-    <td style="padding:7px 8px;width:50%;">
+    <td style="padding:8px 10px;width:50%;">
       <span style="font-size:10px;font-weight:bold;">HORÁRIO DE SAÍDA:</span>
-      <span style="display:inline-block;border-bottom:1px solid #000;width:120px;margin-left:6px;"></span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:160px;margin-left:8px;"></span>
     </td>
   </tr>
   <tr>
-    <td style="padding:7px 8px;">
+    <td style="padding:8px 10px;">
       <span style="font-size:10px;font-weight:bold;">KM DE CHEGADA:</span>
-      <span style="display:inline-block;border-bottom:1px solid #000;width:140px;margin-left:6px;"></span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:180px;margin-left:8px;"></span>
     </td>
-    <td style="padding:7px 8px;">
+    <td style="padding:8px 10px;">
       <span style="font-size:10px;font-weight:bold;">HORÁRIO DE CHEGADA:</span>
-      <span style="display:inline-block;border-bottom:1px solid #000;width:120px;margin-left:6px;"></span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:160px;margin-left:8px;"></span>
     </td>
   </tr>
 </table>
@@ -320,7 +343,7 @@ export default function Entregas() {
 </body>
 </html>`
 
-    const janela = window.open('', '_blank', 'width=860,height=700')
+    const janela = window.open('', '_blank', 'width=900,height=600')
     if (!janela) return
     janela.document.write(html)
     janela.document.close()
@@ -489,7 +512,9 @@ export default function Entregas() {
 
               {/* Campos de preenchimento */}
               <div style={{ padding: '20px 24px' }}>
-                <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>Preencha os campos abaixo antes de imprimir. O restante será preenchido à mão pelo motorista.</div>
+                <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>
+                  Preencha os campos abaixo antes de imprimir. Os dados ficam salvos automaticamente para o próximo itinerário.
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   {[
                     { label: 'Motorista', key: 'motorista', placeholder: 'Ex: JONES' },
@@ -501,7 +526,11 @@ export default function Entregas() {
                       <div style={{ fontSize: '10px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
                       <input
                         value={infoMotorista[key as keyof typeof infoMotorista]}
-                        onChange={e => setInfoMotorista({ ...infoMotorista, [key]: e.target.value })}
+                        onChange={e => {
+                          const novo = { ...infoMotorista, [key]: e.target.value }
+                          setInfoMotorista(novo)
+                          salvarInfoMotorista(novo)
+                        }}
                         placeholder={placeholder}
                         style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
                       />
