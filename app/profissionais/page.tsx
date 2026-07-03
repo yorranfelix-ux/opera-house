@@ -31,6 +31,7 @@ export default function Profissionais() {
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
   const [busca, setBusca] = useState('')
+  const [excluindoId, setExcluindoId] = useState<string | null>(null)
   const [filtroAtivo, setFiltroAtivo] = useState<'ativos' | 'todos'>('ativos')
 
   useEffect(() => { buscar() }, [])
@@ -62,6 +63,14 @@ export default function Profissionais() {
     setShowForm(true)
   }
 
+  async function excluir(id: string, nome: string) {
+    const { error } = await supabase.from('profissionais').delete().eq('id', id)
+    if (error) return alert('Erro ao excluir: ' + error.message)
+    await registrarHistorico({ tipo: 'profissional_editado', descricao: `Profissional ${nome} excluído` })
+    setExcluindoId(null)
+    buscar()
+  }
+
   async function salvar() {
     if (!form.nome.trim()) return alert('Nome é obrigatório')
     const payload = {
@@ -77,6 +86,7 @@ export default function Profissionais() {
       const { error } = await supabase.from('profissionais').update(payload).eq('id', editandoId)
       if (error) return alert('Erro: ' + error.message)
       await registrarHistorico({ tipo: 'profissional_editado', descricao: `Profissional ${form.nome} (${form.tipo}) editado` })
+
     } else {
       const { error } = await supabase.from('profissionais').insert([payload])
       if (error) return alert('Erro: ' + error.message)
@@ -135,7 +145,7 @@ export default function Profissionais() {
           </div>
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px 140px 60px 72px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px 140px 60px 130px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
               <span>Nome</span><span>Tipo</span><span>Telefone</span><span>E-mail</span><span>Status</span><span></span>
             </div>
 
@@ -143,7 +153,7 @@ export default function Profissionais() {
             {!loading && filtrados.length === 0 && <div style={{ padding: '24px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhum profissional cadastrado.</div>}
 
             {filtrados.map((p, i) => (
-              <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px 140px 60px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+              <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px 140px 60px 130px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{p.nome}</div>
                   {p.observacoes && <div style={{ fontSize: '11px', color: '#aaa', marginTop: '2px' }}>{p.observacoes}</div>}
@@ -157,15 +167,31 @@ export default function Profissionais() {
                 <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', fontWeight: '500', background: p.ativo ? '#EAF3DE' : '#f0efe9', color: p.ativo ? '#27500A' : '#888' }}>
                   {p.ativo ? 'Ativo' : 'Inativo'}
                 </span>
-                <button onClick={() => abrirEdicao(p)}
-                  style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>
-                  Editar
-                </button>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={() => abrirEdicao(p)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>Editar</button>
+                  <button onClick={() => setExcluindoId(p.id)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #f0c0c0', background: '#FCEBEB', fontSize: '12px', cursor: 'pointer', color: '#791F1F' }}>Excluir</button>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      {excluindoId && (() => {
+        const p = profissionais.find(x => x.id === excluindoId)!
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+            <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '380px' }}>
+              <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e', marginBottom: '8px' }}>Excluir {p?.nome}?</div>
+              <div style={{ fontSize: '13px', color: '#888', marginBottom: '24px' }}>Esta ação não pode ser desfeita.</div>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                <button onClick={() => setExcluindoId(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+                <button onClick={() => excluir(excluindoId, p?.nome)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#FCEBEB', color: '#791F1F', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Excluir</button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>

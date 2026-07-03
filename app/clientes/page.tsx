@@ -29,6 +29,7 @@ export default function Clientes() {
   const [busca, setBusca] = useState('')
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
+  const [excluindoId, setExcluindoId] = useState<string | null>(null)
 
   useEffect(() => { buscarClientes() }, [])
 
@@ -81,6 +82,14 @@ export default function Clientes() {
     buscarClientes()
   }
 
+  async function excluirCliente(id: string, nome: string) {
+    const { error } = await supabase.from('clientes').delete().eq('id', id)
+    if (error) return alert('Erro ao excluir: ' + error.message)
+    await registrarHistorico({ tipo: 'cliente_editado', descricao: `Cliente ${nome} excluído` })
+    setExcluindoId(null)
+    buscarClientes()
+  }
+
   const clientesFiltrados = clientes.filter(c =>
     c.nome?.toLowerCase().includes(busca.toLowerCase()) ||
     c.cidade?.toLowerCase().includes(busca.toLowerCase())
@@ -106,7 +115,7 @@ export default function Clientes() {
           />
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 130px 180px 120px 60px 72px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 130px 180px 120px 60px 130px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
               <span>Nome</span><span>Telefone</span><span>E-mail</span><span>Cidade</span><span>UF</span><span></span>
             </div>
 
@@ -119,23 +128,37 @@ export default function Clientes() {
             )}
 
             {clientesFiltrados.map((cliente, i) => (
-              <div key={cliente.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 130px 180px 120px 60px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+              <div key={cliente.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 130px 180px 120px 60px 130px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{cliente.nome}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{cliente.telefone || '—'}</span>
                 <span style={{ fontSize: '12px', color: '#555', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cliente.email || '—'}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{cliente.cidade || '—'}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{cliente.estado || '—'}</span>
-                <button
-                  onClick={() => abrirEdicao(cliente)}
-                  style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555', whiteSpace: 'nowrap' }}
-                >
-                  Editar
-                </button>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={() => abrirEdicao(cliente)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>Editar</button>
+                  <button onClick={() => setExcluindoId(cliente.id)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #f0c0c0', background: '#FCEBEB', fontSize: '12px', cursor: 'pointer', color: '#791F1F' }}>Excluir</button>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      {excluindoId && (() => {
+        const c = clientes.find(x => x.id === excluindoId)!
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+            <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '380px' }}>
+              <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e', marginBottom: '8px' }}>Excluir {c?.nome}?</div>
+              <div style={{ fontSize: '13px', color: '#888', marginBottom: '24px' }}>Esta ação não pode ser desfeita.</div>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                <button onClick={() => setExcluindoId(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+                <button onClick={() => excluirCliente(excluindoId, c?.nome)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#FCEBEB', color: '#791F1F', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Excluir</button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>

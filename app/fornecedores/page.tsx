@@ -29,6 +29,7 @@ export default function Fornecedores() {
   const [busca, setBusca] = useState('')
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
+  const [excluindoId, setExcluindoId] = useState<string | null>(null)
 
   useEffect(() => { buscarFornecedores() }, [])
 
@@ -59,6 +60,14 @@ export default function Fornecedores() {
       observacoes: (f as any).observacoes || '',
     })
     setShowForm(true)
+  }
+
+  async function excluirFornecedor(id: string, nome: string) {
+    const { error } = await supabase.from('fornecedores').delete().eq('id', id)
+    if (error) return alert('Erro ao excluir: ' + error.message)
+    await registrarHistorico({ tipo: 'fornecedor_editado', descricao: `Fornecedor ${nome} excluído` })
+    setExcluindoId(null)
+    buscarFornecedores()
   }
 
   async function salvarFornecedor() {
@@ -107,7 +116,7 @@ export default function Fornecedores() {
           />
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px 72px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px 130px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
               <span>Nome fantasia</span><span>Razão social</span><span>Telefone</span><span>Contato</span><span>Prazo</span><span></span>
             </div>
 
@@ -118,23 +127,38 @@ export default function Fornecedores() {
             )}
 
             {filtrados.map((f, i) => (
-              <div key={f.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+              <div key={f.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px 130px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{f.nome_fantasia || f.razao_social}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{f.razao_social}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{f.telefone || '—'}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{f.contato_comercial || '—'}</span>
                 <span style={{ fontSize: '12px', color: '#555', textAlign: 'center' }}>{f.prazo_medio_prometido ? `${f.prazo_medio_prometido}d` : '—'}</span>
-                <button
-                  onClick={() => abrirEdicao(f)}
-                  style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}
-                >
-                  Editar
-                </button>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={() => abrirEdicao(f)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>Editar</button>
+                  <button onClick={() => setExcluindoId(f.id)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #f0c0c0', background: '#FCEBEB', fontSize: '12px', cursor: 'pointer', color: '#791F1F' }}>Excluir</button>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      {excluindoId && (() => {
+        const f = fornecedores.find(x => x.id === excluindoId)!
+        const nome = f?.nome_fantasia || f?.razao_social || ''
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+            <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '380px' }}>
+              <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e', marginBottom: '8px' }}>Excluir {nome}?</div>
+              <div style={{ fontSize: '13px', color: '#888', marginBottom: '24px' }}>Esta ação não pode ser desfeita.</div>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                <button onClick={() => setExcluindoId(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+                <button onClick={() => excluirFornecedor(excluindoId, nome)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#FCEBEB', color: '#791F1F', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Excluir</button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
