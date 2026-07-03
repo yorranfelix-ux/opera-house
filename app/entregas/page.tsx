@@ -74,6 +74,11 @@ function formatarDataLabel(dataStr: string): string {
   return d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+interface ImpressaoInfo {
+  dia: string
+  entregas: Entrega[]
+}
+
 export default function Entregas() {
   const [entregas, setEntregas] = useState<Entrega[]>([])
   const [pedidos, setPedidos] = useState<Pedido[]>([])
@@ -81,6 +86,8 @@ export default function Entregas() {
   const [filtro, setFiltro] = useState<'pendentes' | 'realizadas' | 'todas'>('pendentes')
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
+  const [impressao, setImpressao] = useState<ImpressaoInfo | null>(null)
+  const [infoMotorista, setInfoMotorista] = useState({ motorista: '', veiculo: '', placa: '', rodizio: '' })
 
   useEffect(() => {
     buscarEntregas()
@@ -147,6 +154,176 @@ export default function Entregas() {
     setForm(formVazio)
     setEditandoId(null)
     buscarEntregas()
+  }
+
+  function abrirImpressao(dia: string, entregasDia: Entrega[]) {
+    setImpressao({ dia, entregas: entregasDia })
+    setInfoMotorista({ motorista: '', veiculo: '', placa: '', rodizio: '' })
+  }
+
+  function imprimir(info: ImpressaoInfo, motorista: typeof infoMotorista) {
+    const dataFormatada = (() => {
+      const d = new Date(info.dia + 'T12:00:00')
+      return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    })()
+
+    const TOTAL_LINHAS = 13
+    const linhasVazias = Math.max(0, TOTAL_LINHAS - info.entregas.length)
+
+    const rowsHtml = info.entregas.map(e => {
+      const c = e.pedidos?.clientes
+      const nomeAbrev = (c?.nome || '').substring(0, 12).toUpperCase()
+      const label = `P.${e.pedidos?.numero_pedido}-${nomeAbrev}`
+      const regiao = (c?.cidade || '').toUpperCase()
+      return `
+        <tr>
+          <td style="padding:4px 6px;border-right:1px solid #000;font-size:10px;font-weight:600;white-space:nowrap;overflow:hidden;">${label}</td>
+          <td style="padding:4px 6px;border-right:1px solid #000;"></td>
+          <td style="padding:4px 6px;border-right:1px solid #000;"></td>
+          <td style="padding:4px 6px;border-right:1px solid #000;"></td>
+          <td style="padding:4px 6px;font-size:10px;font-weight:500;">${regiao}</td>
+        </tr>`
+    }).join('')
+
+    const emptyRows = Array.from({ length: linhasVazias }).map(() => `
+      <tr style="height:26px;">
+        <td style="border-right:1px solid #000;"></td>
+        <td style="border-right:1px solid #000;"></td>
+        <td style="border-right:1px solid #000;"></td>
+        <td style="border-right:1px solid #000;"></td>
+        <td></td>
+      </tr>`).join('')
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Sequência de Entregas — ${dataFormatada}</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:Arial,sans-serif; font-size:11px; color:#000; background:#fff; padding:18px 22px; }
+    table { border-collapse:collapse; width:100%; }
+    td, th { border:1px solid #000; }
+  </style>
+</head>
+<body>
+
+<!-- LOGO -->
+<table style="margin-bottom:10px;">
+  <tr>
+    <td style="border:none;width:100%;text-align:center;padding:6px 0 10px;">
+      <table style="margin:0 auto;border:none;">
+        <tr>
+          <td style="border:2px solid #000;width:52px;height:52px;text-align:center;vertical-align:middle;font-size:26px;font-weight:bold;font-style:italic;">h</td>
+          <td style="border:none;padding-left:10px;vertical-align:middle;text-align:left;">
+            <div style="font-size:20px;font-weight:bold;letter-spacing:1px;line-height:1.15;">OPERA</div>
+            <div style="font-size:20px;font-weight:bold;letter-spacing:1px;line-height:1.15;">HOUSE</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- LINHA 1: Motorista | Rodízio | Data -->
+<table style="margin-bottom:-1px;">
+  <tr>
+    <td style="padding:5px 8px;width:30%;">
+      <span style="font-size:10px;font-weight:bold;">Motorista:</span>
+      <span style="font-size:11px;margin-left:4px;">${motorista.motorista}</span>
+    </td>
+    <td style="padding:5px 8px;width:46%;text-align:center;">
+      <span style="font-size:10px;font-weight:bold;">RODÍZIO:</span>
+      <span style="font-size:10px;font-weight:bold;margin-left:4px;">${motorista.rodizio || 'PLACA FINAL ___ ___-FEIRA'}</span>
+    </td>
+    <td style="padding:5px 8px;width:24%;text-align:right;">
+      <span style="font-size:10px;font-weight:bold;">DATA:</span>
+      <span style="font-size:11px;font-weight:bold;margin-left:4px;">${dataFormatada}</span>
+    </td>
+  </tr>
+</table>
+
+<!-- LINHA 2: Veículo | Placa | Combustível | Litros | KM -->
+<table style="margin-bottom:-1px;">
+  <tr>
+    <td style="padding:5px 8px;width:16%;">
+      <span style="font-size:10px;font-weight:bold;">Veículo:</span>
+      <span style="font-size:11px;margin-left:4px;">${motorista.veiculo}</span>
+    </td>
+    <td style="padding:5px 8px;width:20%;">
+      <span style="font-size:10px;font-weight:bold;">Placa:</span>
+      <span style="font-size:11px;margin-left:4px;">${motorista.placa}</span>
+    </td>
+    <td style="padding:5px 8px;width:24%;">
+      <span style="font-size:10px;font-weight:bold;">Combustível: R$:</span>
+    </td>
+    <td style="padding:5px 8px;width:16%;">
+      <span style="font-size:10px;font-weight:bold;">Litros:</span>
+    </td>
+    <td style="padding:5px 8px;width:24%;">
+      <span style="font-size:10px;font-weight:bold;">KM:</span>
+    </td>
+  </tr>
+</table>
+
+<!-- TABELA DE ENTREGAS -->
+<table>
+  <thead>
+    <tr style="background:#e8e8e8;">
+      <th style="padding:5px 6px;font-size:10px;width:26%;text-align:center;">Cliente / Fornecedor</th>
+      <th style="padding:5px 6px;font-size:10px;width:22%;text-align:center;">Nome legível</th>
+      <th style="padding:5px 6px;font-size:10px;width:16%;text-align:center;">Horario de Chegada</th>
+      <th style="padding:5px 6px;font-size:10px;width:16%;text-align:center;">Horário de Saída</th>
+      <th style="padding:5px 6px;font-size:10px;width:20%;text-align:center;">Região</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${rowsHtml}
+    ${emptyRows}
+  </tbody>
+</table>
+
+<!-- EQUIPE -->
+<table style="margin-top:-1px;">
+  <tr>
+    <td style="padding:6px 8px;">
+      <span style="font-size:10px;font-weight:bold;">EQUIPE:</span>
+    </td>
+  </tr>
+</table>
+
+<!-- KM / HORÁRIOS -->
+<table style="margin-top:-1px;">
+  <tr>
+    <td style="padding:7px 8px;width:50%;">
+      <span style="font-size:10px;font-weight:bold;">KM DE SAÍDA:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:140px;margin-left:6px;"></span>
+    </td>
+    <td style="padding:7px 8px;width:50%;">
+      <span style="font-size:10px;font-weight:bold;">HORÁRIO DE SAÍDA:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:120px;margin-left:6px;"></span>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:7px 8px;">
+      <span style="font-size:10px;font-weight:bold;">KM DE CHEGADA:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:140px;margin-left:6px;"></span>
+    </td>
+    <td style="padding:7px 8px;">
+      <span style="font-size:10px;font-weight:bold;">HORÁRIO DE CHEGADA:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:120px;margin-left:6px;"></span>
+    </td>
+  </tr>
+</table>
+
+<script>window.onload = function(){ window.print(); }<\/script>
+</body>
+</html>`
+
+    const janela = window.open('', '_blank', 'width=860,height=700')
+    if (!janela) return
+    janela.document.write(html)
+    janela.document.close()
   }
 
   async function deletarEntrega(id: string, numeroPedido: string) {
@@ -225,13 +402,21 @@ export default function Entregas() {
                     )}
                     <span style={{ fontSize: '11px', color: '#aaa' }}>{entregasDia.length} entrega{entregasDia.length !== 1 ? 's' : ''}</span>
                   </div>
-                  <button
-                    onClick={() => abrirRotaMaps(entregasDia)}
-                    title={temEndereco ? 'Abrir rota no Google Maps' : 'Cadastre os endereços dos clientes para usar esta função'}
-                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: '0.5px solid #C9A84C', background: '#fff', color: '#C9A84C', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}
-                  >
-                    <span>📍</span> Abrir rota no Maps
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => abrirImpressao(dia, entregasDia)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: '0.5px solid #e8e7e3', background: '#fff', color: '#555', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}
+                    >
+                      🖨️ Imprimir sequência
+                    </button>
+                    <button
+                      onClick={() => abrirRotaMaps(entregasDia)}
+                      title={temEndereco ? 'Abrir rota no Google Maps' : 'Cadastre os endereços dos clientes para usar esta função'}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: '0.5px solid #C9A84C', background: '#fff', color: '#C9A84C', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}
+                    >
+                      📍 Abrir rota no Maps
+                    </button>
+                  </div>
                 </div>
 
                 <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
@@ -286,6 +471,71 @@ export default function Entregas() {
           })}
         </div>
       </div>
+
+      {impressao && (() => {
+        const dataFormatada = (() => {
+          const d = new Date(impressao.dia + 'T12:00:00')
+          return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        })()
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '20px' }}>
+            <div style={{ background: '#fff', borderRadius: '16px', width: '620px', display: 'flex', flexDirection: 'column' }}>
+
+              {/* Cabeçalho do modal */}
+              <div style={{ padding: '16px 24px', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Imprimir Sequência — {dataFormatada}</span>
+                <button onClick={() => setImpressao(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+              </div>
+
+              {/* Campos de preenchimento */}
+              <div style={{ padding: '20px 24px' }}>
+                <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>Preencha os campos abaixo antes de imprimir. O restante será preenchido à mão pelo motorista.</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  {[
+                    { label: 'Motorista', key: 'motorista', placeholder: 'Ex: JONES' },
+                    { label: 'Veículo', key: 'veiculo', placeholder: 'Ex: VW' },
+                    { label: 'Placa', key: 'placa', placeholder: 'Ex: EYY5F33' },
+                    { label: 'Rodízio', key: 'rodizio', placeholder: 'Ex: PLACA FINAL 3 TERÇA-FEIRA' },
+                  ].map(({ label, key, placeholder }) => (
+                    <div key={key}>
+                      <div style={{ fontSize: '10px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
+                      <input
+                        value={infoMotorista[key as keyof typeof infoMotorista]}
+                        onChange={e => setInfoMotorista({ ...infoMotorista, [key]: e.target.value })}
+                        placeholder={placeholder}
+                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Resumo do que será impresso */}
+                <div style={{ marginTop: '16px', padding: '12px', background: '#f7f6f3', borderRadius: '8px', border: '0.5px solid #e8e7e3' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', marginBottom: '8px' }}>Entregas que aparecem na folha:</div>
+                  {impressao.entregas.map((e, i) => {
+                    const c = e.pedidos?.clientes
+                    return (
+                      <div key={e.id} style={{ display: 'flex', gap: '8px', fontSize: '12px', color: '#555', padding: '3px 0', borderTop: i > 0 ? '0.5px solid #e8e7e3' : 'none' }}>
+                        <span style={{ color: '#C9A84C', fontWeight: '600', minWidth: '16px' }}>{i + 1}.</span>
+                        <span style={{ fontWeight: '500' }}>P.{e.pedidos?.numero_pedido}</span>
+                        <span>—</span>
+                        <span>{c?.nome}</span>
+                        <span style={{ marginLeft: 'auto', color: '#888' }}>{c?.cidade}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Botões */}
+              <div style={{ padding: '16px 24px', borderTop: '0.5px solid #e8e7e3', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                <button onClick={() => setImpressao(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+                <button onClick={() => imprimir(impressao, infoMotorista)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>🖨️ Abrir folha para imprimir</button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
