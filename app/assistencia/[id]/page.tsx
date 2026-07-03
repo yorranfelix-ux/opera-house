@@ -184,16 +184,14 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
     setLoading(false)
   }
 
-  async function buscarHistorico(pedidoId?: string) {
-    const pid = pedidoId || at?.pedido_id
-    if (!pid) return
+  async function buscarHistorico(_pedidoId?: string) {
     const { data } = await supabase
       .from('historico_alteracoes')
       .select('*')
-      .eq('pedido_id', pid)
-      .eq('tipo', 'at_atualizada')
+      .eq('item_id', id)
+      .in('tipo', ['at_atualizada', 'at_criada'])
       .order('created_at', { ascending: false })
-      .limit(30)
+      .limit(50)
     setHistorico(data || [])
   }
 
@@ -411,6 +409,31 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
 
           {/* Right column — actions + history */}
           <div style={{ width: '280px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            {/* Status selector */}
+            <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '14px 16px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Status</div>
+              <select
+                value={at.status}
+                onChange={async e => {
+                  const novoStatus = e.target.value
+                  await supabase.from('assistencias_tecnicas').update({ status: novoStatus }).eq('id', id)
+                  await registrarHistorico(`Status alterado para: ${STATUS_COR[novoStatus]?.label || novoStatus}`, 'at_atualizada')
+                  buscarAT()
+                  buscarHistorico()
+                }}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: `1px solid ${status.color}`, background: status.bg, color: status.color, fontSize: '13px', fontWeight: '500', cursor: 'pointer', outline: 'none' }}
+              >
+                <option value="aberta">Aberta</option>
+                <option value="aguardando_retirada">Aguard. retirada</option>
+                <option value="em_reparo">Em reparo</option>
+                <option value="enviado_fornecedor">No fornecedor</option>
+                <option value="aguardando_devolucao">Aguard. devolução</option>
+                <option value="resolvida">Resolvida</option>
+                <option value="cancelada">Cancelada</option>
+              </select>
+            </div>
+
             {/* Action buttons */}
             <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '16px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Ações</div>
