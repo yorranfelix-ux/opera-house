@@ -70,6 +70,14 @@ const SEMAFORO_COLOR: Record<string, string> = {
   roxo: '#534AB7',
 }
 
+const SEMAFORO_LABEL: Record<string, string> = {
+  verde: 'No prazo',
+  amarelo: 'Atenção',
+  vermelho: 'Atrasado',
+  azul: 'Aguardando cliente',
+  roxo: 'Aguardando fornecedor',
+}
+
 const itemFormVazio = {
   descricao: '', quantidade: '1', medida: '', tecido: '', cor: '',
   acabamento: '', observacoes: '', fornecedor_id: '', requer_icamento: false,
@@ -366,7 +374,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             <div onClick={() => setShowSemaforo(!showSemaforo)}
               style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '4px 8px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: SEMAFORO_COLOR[pedido.semaforo] || '#888' }} />
-              <span style={{ fontSize: '12px', color: '#888' }}>{pedido.semaforo || '—'}</span>
+              <span style={{ fontSize: '12px', color: '#888' }}>{SEMAFORO_LABEL[pedido.semaforo] || pedido.semaforo || '—'}</span>
               <span style={{ fontSize: '10px', color: '#ccc' }}>▾</span>
             </div>
             {showSemaforo && (
@@ -377,7 +385,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                     <div key={cor} onClick={() => salvarSemaforo(cor)}
                       style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', cursor: 'pointer', background: pedido.semaforo === cor ? '#f7f6f3' : '#fff', borderBottom: '0.5px solid #f0efe9' }}>
                       <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: hex }} />
-                      <span style={{ fontSize: '13px', color: '#1a1a2e', textTransform: 'capitalize' }}>{cor}</span>
+                      <span style={{ fontSize: '13px', color: '#1a1a2e' }}>{SEMAFORO_LABEL[cor]}</span>
                     </div>
                   ))}
                 </div>
