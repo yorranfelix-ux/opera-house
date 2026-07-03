@@ -25,11 +25,16 @@ export default function Configuracoes() {
 
   async function salvar() {
     setSalvando(true)
-    await Promise.all([
+    const [r1, r2] = await Promise.all([
       supabase.from('configuracoes').upsert({ chave: 'endereco_saida', valor: enderecoSaida }, { onConflict: 'chave' }),
       supabase.from('configuracoes').upsert({ chave: 'nome_saida', valor: nomeSaida }, { onConflict: 'chave' }),
     ])
     setSalvando(false)
+    const erro = r1.error || r2.error
+    if (erro) {
+      alert('Erro ao salvar: ' + erro.message + '\n\nVerifique se a tabela "configuracoes" existe no Supabase com a coluna "chave" marcada como única.')
+      return
+    }
     setSalvo(true)
     setTimeout(() => setSalvo(false), 2500)
   }
