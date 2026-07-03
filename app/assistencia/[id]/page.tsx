@@ -158,8 +158,8 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
   }, [id])
 
   useEffect(() => {
-    if (at?.pedido_id) buscarHistorico()
-  }, [at?.pedido_id])
+    if (at?.id) buscarHistorico()
+  }, [at?.id])
 
   async function buscarAT() {
     const { data, error } = await supabase
