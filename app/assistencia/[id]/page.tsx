@@ -185,11 +185,12 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
   }
 
   async function buscarHistorico(_pedidoId?: string) {
+    if (!at?.pedido_id) return
     const { data } = await supabase
       .from('historico_alteracoes')
       .select('*')
-      .eq('item_id', id)
-      .in('tipo', ['at_atualizada', 'at_criada'])
+      .eq('pedido_id', at.pedido_id)
+      .like('tipo', 'at_%')
       .order('created_at', { ascending: false })
       .limit(50)
     setHistorico(data || [])
@@ -204,14 +205,15 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const { data: profile } = await supabase.from('profiles').select('nome').eq('id', user.id).single()
-    await supabase.from('historico_alteracoes').insert([{
+    const { error } = await supabase.from('historico_alteracoes').insert([{
       pedido_id: at?.pedido_id || null,
-      item_id: id,
+      item_id: null,
       usuario_id: user.id,
       usuario_nome: profile?.nome || user.email,
       tipo,
       descricao,
     }])
+    if (error) console.error('registrarHistorico AT error:', error.message)
   }
 
   async function iniciarProcesso() {
