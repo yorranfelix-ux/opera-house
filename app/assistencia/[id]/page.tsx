@@ -28,7 +28,7 @@ interface AT {
   fornecedor_id: string
   pedidos: {
     numero_pedido: string
-    clientes: { nome: string; endereco: string; cidade: string; estado: string; telefone: string }
+    clientes: { nome: string; endereco: string; numero: string; cidade: string; estado: string; telefone: string }
     profissionais: { nome: string; tipo: string } | null
   }
   fornecedores: { nome_fantasia: string; razao_social: string } | null
@@ -164,7 +164,7 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
   async function buscarAT() {
     const { data, error } = await supabase
       .from('assistencias_tecnicas')
-      .select('*, pedidos(numero_pedido, clientes(nome, endereco, cidade, estado, telefone), profissionais(nome, tipo)), fornecedores(nome_fantasia, razao_social)')
+      .select('*, pedidos(numero_pedido, clientes(nome, endereco, numero, cidade, estado, telefone), profissionais(nome, tipo)), fornecedores(nome_fantasia, razao_social)')
       .eq('id', id)
       .single()
     if (error) { console.error('buscarAT error:', error.message); setLoading(false); return }

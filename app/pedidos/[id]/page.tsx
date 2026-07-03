@@ -13,7 +13,7 @@ interface Pedido {
   status: string
   semaforo: string
   observacoes_gerais: string
-  clientes: { nome: string; endereco: string; cidade: string; estado: string; telefone: string }
+  clientes: { nome: string; endereco: string; numero: string; cidade: string; estado: string; telefone: string }
   profissionais: { nome: string; tipo: string } | null
 }
 
@@ -108,7 +108,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   async function buscarPedido() {
     const { data } = await supabase
       .from('pedidos')
-      .select('*, clientes(nome, endereco, cidade, estado, telefone), profissionais(nome, tipo)')
+      .select('*, clientes(nome, endereco, numero, cidade, estado, telefone), profissionais(nome, tipo)')
       .eq('id', id)
       .single()
     setPedido(data)
@@ -402,7 +402,13 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                   {pedido.clientes?.nome}
                   {[pedido.clientes?.endereco, pedido.clientes?.cidade, pedido.clientes?.estado].filter(Boolean).length > 0 && (
                     <span style={{ color: '#4a4a6a', marginLeft: '8px' }}>
-                      — {[pedido.clientes?.endereco, pedido.clientes?.cidade, pedido.clientes?.estado].filter(Boolean).join(', ')}
+                      — {[
+                          pedido.clientes?.endereco && pedido.clientes?.numero
+                            ? `${pedido.clientes.endereco}, ${pedido.clientes.numero}`
+                            : pedido.clientes?.endereco,
+                          pedido.clientes?.cidade,
+                          pedido.clientes?.estado,
+                        ].filter(Boolean).join(', ')}
                     </span>
                   )}
                 </div>
