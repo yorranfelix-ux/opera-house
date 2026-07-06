@@ -222,6 +222,9 @@ export default function AssistenciaTecnica() {
       })
       .eq('id', atSelecionada.id)
     if (error) return alert('Erro: ' + error.message)
+    const forn = fornecedores.find(f => f.id === fornecedorForm.fornecedor_id)
+    const nomeForn = forn?.nome_fantasia || forn?.razao_social || 'fornecedor'
+    await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Enviado ao fornecedor ${nomeForn}` })
     setShowFornecedorForm(false)
     setAtSelecionada(null)
     setFornecedorForm({ fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes_fornecedor: '', numero_nf_envio: '' })
@@ -232,6 +235,7 @@ export default function AssistenciaTecnica() {
     if (!atSelecionada) return
     const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'em_reparo', observacoes: processoObs }).eq('id', atSelecionada.id)
     if (error) return alert('Erro: ' + error.message)
+    await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Em reparo${processoObs ? ': ' + processoObs : ''}`, pedidoId: atSelecionada.pedidos?.numero_pedido ? undefined : undefined })
     setShowProcessoModal(false); setAtSelecionada(null); setProcessoObs(''); buscarATs()
   }
 
@@ -239,6 +243,7 @@ export default function AssistenciaTecnica() {
     if (!atSelecionada) return
     const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'aguardando_devolucao', observacoes_fornecedor: retornoObs }).eq('id', atSelecionada.id)
     if (error) return alert('Erro: ' + error.message)
+    await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Retornou do fornecedor${retornoObs ? ': ' + retornoObs : ''}` })
     setShowRetornoModal(false); setAtSelecionada(null); setRetornoObs(''); buscarATs()
   }
 
@@ -246,6 +251,7 @@ export default function AssistenciaTecnica() {
     if (!atSelecionada) return
     const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'resolvida', observacoes: resolvidaObs }).eq('id', atSelecionada.id)
     if (error) return alert('Erro: ' + error.message)
+    await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Resolvida${resolvidaObs ? ': ' + resolvidaObs : ''}` })
     setShowResolvidaModal(false); setAtSelecionada(null); setResolvidaObs(''); buscarATs()
   }
 

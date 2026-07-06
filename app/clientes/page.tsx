@@ -88,7 +88,7 @@ export default function Clientes() {
       if (error.message.includes('foreign key')) return alert(`Não é possível excluir "${nome}" pois existem pedidos vinculados a este cliente.`)
       return alert('Erro ao excluir: ' + error.message)
     }
-    await registrarHistorico({ tipo: 'cliente_editado', descricao: `Cliente ${nome} excluído` })
+    await registrarHistorico({ tipo: 'cliente_excluido', descricao: `Cliente ${nome} excluído` })
     setExcluindoId(null)
     buscarClientes()
   }

@@ -25,34 +25,24 @@ export default function Configuracoes() {
 
   async function salvar() {
     setSalvando(true)
-
-    // Apaga os registros atuais e insere novos (evita dependência de constraint UNIQUE)
-    for (const chave of ['endereco_saida', 'nome_saida']) {
-      const { error: delErr } = await supabase.from('configuracoes').delete().eq('chave', chave)
-      if (delErr && !delErr.message.includes('no rows')) {
+    const registros = [
+      { chave: 'endereco_saida', valor: enderecoSaida.trim() },
+      { chave: 'nome_saida', valor: nomeSaida.trim() },
+    ]
+    // Tenta upsert em cada registro individualmente para isolar falhas
+    for (const r of registros) {
+      // Verifica se já existe
+      const { data: existente } = await supabase.from('configuracoes').select('chave').eq('chave', r.chave).maybeSingle()
+      const { error } = existente
+        ? await supabase.from('configuracoes').update({ valor: r.valor }).eq('chave', r.chave)
+        : await supabase.from('configuracoes').insert({ chave: r.chave, valor: r.valor })
+      if (error) {
         setSalvando(false)
-        alert('Erro ao salvar (' + chave + '): ' + delErr.message)
+        alert('Erro ao salvar ' + r.chave + ': ' + error.message)
         return
       }
     }
-
-    const valor1 = enderecoSaida.trim()
-    const valor2 = nomeSaida.trim()
-
-    const inserts = [
-      valor1 ? supabase.from('configuracoes').insert({ chave: 'endereco_saida', valor: valor1 }) : Promise.resolve({ error: null }),
-      valor2 ? supabase.from('configuracoes').insert({ chave: 'nome_saida', valor: valor2 }) : Promise.resolve({ error: null }),
-    ]
-
-    const [r1, r2] = await Promise.all(inserts)
     setSalvando(false)
-
-    const erro = (r1 as any).error || (r2 as any).error
-    if (erro) {
-      alert('Erro ao salvar: ' + erro.message)
-      return
-    }
-
     setSalvo(true)
     setTimeout(() => setSalvo(false), 2500)
   }
