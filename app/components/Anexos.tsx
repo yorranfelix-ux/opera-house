@@ -58,7 +58,7 @@ export default function Anexos({ pedidoId, atId, titulo = 'Anexos' }: AnexosProp
       const { data: { user } } = await supabase.auth.getUser()
       const { data: perfil } = await supabase.from('profiles').select('nome').eq('id', user?.id || '').single()
 
-      await supabase.from('anexos').insert([{
+      const { error: insertError } = await supabase.from('anexos').insert([{
         pedido_id: pedidoId || null,
         at_id: atId || null,
         nome_arquivo: file.name,
@@ -67,6 +67,7 @@ export default function Anexos({ pedidoId, atId, titulo = 'Anexos' }: AnexosProp
         storage_path: path,
         usuario_nome: perfil?.nome || user?.email || null,
       }])
+      if (insertError) { alert('Erro ao registrar anexo: ' + insertError.message); return }
       buscarAnexos()
     } finally {
       setEnviando(false)
