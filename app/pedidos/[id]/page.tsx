@@ -106,7 +106,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const [confirmacaoExcluir, setConfirmacaoExcluir] = useState('')
   const [excluindo, setExcluindo] = useState(false)
   const [salvandoItem, setSalvandoItem] = useState(false)
-  const [pagamento, setPagamento] = useState({ status_pagamento: 'pendente', valor_total: '', valor_recebido: '' })
+  const [pagamento, setPagamento] = useState({ status_pagamento: 'pendente', observacao_pagamento: '' })
   const [historicoItemId, setHistoricoItemId] = useState<string | null>(null)
   const [historicoItens, setHistoricoItens] = useState<any[]>([])
 
@@ -128,8 +128,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     if (data) {
       setPagamento({
         status_pagamento: (data as any).status_pagamento || 'pendente',
-        valor_total: (data as any).valor_total != null ? String((data as any).valor_total) : '',
-        valor_recebido: (data as any).valor_recebido != null ? String((data as any).valor_recebido) : '',
+        observacao_pagamento: (data as any).observacao_pagamento || '',
       })
     }
     setPedido(data)
@@ -137,10 +136,10 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   }
 
   async function salvarPagamento() {
-    const payload: Record<string, unknown> = { status_pagamento: pagamento.status_pagamento }
-    if (pagamento.valor_total !== '') payload.valor_total = parseFloat(pagamento.valor_total) || null
-    if (pagamento.valor_recebido !== '') payload.valor_recebido = parseFloat(pagamento.valor_recebido) || null
-    await supabase.from('pedidos').update(payload).eq('id', id)
+    await supabase.from('pedidos').update({
+      status_pagamento: pagamento.status_pagamento,
+      observacao_pagamento: pagamento.observacao_pagamento || null,
+    }).eq('id', id)
   }
 
   async function verHistoricoItem(itemId: string) {
@@ -706,20 +705,16 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
               </select>
             </div>
 
-            <div style={{ marginBottom: '10px' }}>
-              <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Valor total (R$)</div>
-              <input type="number" step="0.01" placeholder="0,00" value={pagamento.valor_total}
-                onChange={e => setPagamento({ ...pagamento, valor_total: e.target.value })}
-                onBlur={salvarPagamento}
-                style={{ width: '100%', padding: '6px 10px', borderRadius: '7px', border: '0.5px solid #e8e7e3', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }} />
-            </div>
-
             <div>
-              <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Valor recebido (R$)</div>
-              <input type="number" step="0.01" placeholder="0,00" value={pagamento.valor_recebido}
-                onChange={e => setPagamento({ ...pagamento, valor_recebido: e.target.value })}
+              <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observação</div>
+              <textarea
+                placeholder="Ex: sinal pago, restante na entrega..."
+                value={pagamento.observacao_pagamento}
+                onChange={e => setPagamento({ ...pagamento, observacao_pagamento: e.target.value })}
                 onBlur={salvarPagamento}
-                style={{ width: '100%', padding: '6px 10px', borderRadius: '7px', border: '0.5px solid #e8e7e3', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }} />
+                rows={3}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '7px', border: '0.5px solid #e8e7e3', fontSize: '12px', outline: 'none', boxSizing: 'border-box', resize: 'none', fontFamily: 'sans-serif' }}
+              />
             </div>
 
             {pagamento.status_pagamento !== 'pendente' && (
