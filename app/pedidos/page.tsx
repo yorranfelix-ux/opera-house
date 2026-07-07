@@ -69,6 +69,25 @@ export default function Pedidos() {
   const [filtroStatus, setFiltroStatus] = useState<'abertos' | 'entregues' | 'todos'>('abertos')
   const [profissionais, setProfissionais] = useState<{ id: string; nome: string; tipo: string }[]>([])
   const [salvando, setSalvando] = useState(false)
+  const [pagina, setPagina] = useState(1)
+  const ITEMS_POR_PAGINA = 25
+
+  useEffect(() => {
+    try {
+      const salvo = sessionStorage.getItem('operare_filtros_pedidos')
+      if (salvo) {
+        const f = JSON.parse(salvo)
+        if (f.busca !== undefined) setBusca(f.busca)
+        if (f.filtroStatus !== undefined) setFiltroStatus(f.filtroStatus)
+      }
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    try { sessionStorage.setItem('operare_filtros_pedidos', JSON.stringify({ busca, filtroStatus })) } catch {}
+  }, [busca, filtroStatus])
+
+  useEffect(() => { setPagina(1) }, [busca, filtroStatus])
 
   useEffect(() => {
     buscarPedidos()
@@ -162,6 +181,32 @@ export default function Pedidos() {
     if (filtroStatus === 'entregues') return p.status === 'entregue' || p.status === 'cancelado'
     return true
   })
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / ITEMS_POR_PAGINA))
+  const paginados = filtrados.slice((pagina - 1) * ITEMS_POR_PAGINA, pagina * ITEMS_POR_PAGINA)
+
+  function exportarCSV() {
+    const linhas = [
+      ['Pedido', 'Cliente', 'Cidade', 'Status', 'Semáforo', 'Data criação'].join(';')
+    ]
+    pedidos.forEach(p => {
+      linhas.push([
+        p.numero_pedido || '',
+        (p.clientes as any)?.nome || '',
+        (p.clientes as any)?.cidade || '',
+        p.status || '',
+        p.semaforo || '',
+        (p as any).created_at ? new Date((p as any).created_at).toLocaleDateString('pt-BR') : '',
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(';'))
+    })
+    const csv = '﻿' + linhas.join('\r\n') // BOM para Excel reconhecer UTF-8
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `pedidos_${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
@@ -169,9 +214,15 @@ export default function Pedidos() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
           <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Pedidos</span>
-          <button onClick={abrirNovo} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-            + Novo pedido
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={exportarCSV}
+              style={{ background: '#fff', color: '#555', border: '0.5px solid #e8e7e3', padding: '7px 14px', borderRadius: '8px', fontSize: '12px', cursor: 'pointer' }}>
+              ↓ Exportar CSV
+            </button>
+            <button onClick={abrirNovo} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
+              + Novo pedido
+            </button>
+          </div>
         </div>
 
         <div style={{ padding: '24px', flex: 1, overflow: 'auto' }}>
@@ -211,7 +262,7 @@ export default function Pedidos() {
               <div style={{ padding: '24px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhum pedido cadastrado ainda.</div>
             )}
 
-            {filtrados.map((p, i) => (
+            {paginados.map((p, i) => (
               <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 140px 100px 100px 80px 120px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <a href={`/pedidos/${p.id}`} style={{ fontSize: '12px', fontWeight: '500', color: '#C9A84C', textDecoration: 'none' }}>{p.numero_pedido}</a>
                 <a href={`/pedidos/${p.id}`} style={{ textDecoration: 'none' }}>
@@ -244,6 +295,20 @@ export default function Pedidos() {
                 </button>
               </div>
             ))}
+
+            {totalPaginas > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9' }}>
+                <button onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}
+                  style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: pagina === 1 ? '#f7f6f3' : '#fff', fontSize: '12px', cursor: pagina === 1 ? 'default' : 'pointer', color: pagina === 1 ? '#ccc' : '#555' }}>
+                  ← Anterior
+                </button>
+                <span style={{ fontSize: '12px', color: '#888' }}>Página {pagina} de {totalPaginas}</span>
+                <button onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}
+                  style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: pagina === totalPaginas ? '#f7f6f3' : '#fff', fontSize: '12px', cursor: pagina === totalPaginas ? 'default' : 'pointer', color: pagina === totalPaginas ? '#ccc' : '#555' }}>
+                  Próxima →
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

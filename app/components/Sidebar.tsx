@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { LOGO_NEG } from '../lib/logos'
+import BuscaGlobal, { abrirBuscaGlobal } from './BuscaGlobal'
 
 const ICON: Record<string, React.ReactElement> = {
   '/dashboard': (
@@ -168,6 +169,46 @@ export default function Sidebar({ ativa }: { ativa: string }) {
         )}
       </div>
 
+      {/* Botão de busca */}
+      <div style={{ padding: collapsed ? '8px 6px' : '8px 8px 4px' }}>
+        <button
+          onClick={abrirBuscaGlobal}
+          title="Buscar (Ctrl+K)"
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            gap: '8px',
+            padding: collapsed ? '8px 0' : '7px 10px',
+            borderRadius: '8px',
+            border: '1px solid #242440',
+            background: 'transparent',
+            color: '#6a6a8a',
+            cursor: 'pointer',
+            transition: 'background 150ms, color 150ms',
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'
+            ;(e.currentTarget as HTMLElement).style.color = '#a0a0c0'
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLElement).style.background = 'transparent'
+            ;(e.currentTarget as HTMLElement).style.color = '#6a6a8a'
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ flexShrink: 0 }}>
+            <circle cx="6" cy="6" r="4"/><line x1="9.5" y1="9.5" x2="13" y2="13"/>
+          </svg>
+          {!collapsed && (
+            <>
+              <span style={{ flex: 1, fontSize: '12px', fontFamily: 'sans-serif', textAlign: 'left', color: '#4a4a6a' }}>Buscar...</span>
+              <span style={{ fontSize: '10px', fontFamily: 'sans-serif', color: '#3a3a58', background: '#242440', borderRadius: '4px', padding: '1px 5px' }}>Ctrl+K</span>
+            </>
+          )}
+        </button>
+      </div>
+
       {/* Nav */}
       <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px 0', scrollbarWidth: 'thin', scrollbarColor: '#242440 #1a1a2e' } as React.CSSProperties}>
         {GROUPS.map((group, gi) => (
@@ -298,6 +339,7 @@ export default function Sidebar({ ativa }: { ativa: string }) {
           </button>
         </div>
       )}
+      <BuscaGlobal />
     </div>
   )
 }

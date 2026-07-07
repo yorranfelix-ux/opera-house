@@ -347,6 +347,18 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const aptos = itens.filter(i => i.apto_entrega).length
   const icamento = itens.filter(i => i.requer_icamento).length
 
+  const formItemSujo = showItemForm && !editandoItemId && [
+    itemForm.descricao, itemForm.medida, itemForm.tecido, itemForm.cor,
+    itemForm.acabamento, itemForm.observacoes, itemForm.fornecedor_id,
+    itemForm.numero_nf, itemForm.data_recebimento, itemForm.previsao_chegada,
+  ].some(v => v !== '') || (showItemForm && !editandoItemId && (itemForm.requer_icamento || itemForm.requer_tecido_fornecido))
+
+  function fecharFormItem() {
+    if (formItemSujo && !confirm('Tem certeza? Os dados preenchidos serão perdidos.')) return
+    setShowItemForm(false)
+    setItemForm(itemFormVazio)
+  }
+
   function imprimirConferencia() {
     if (!pedido) return
     const now = new Date()
@@ -740,7 +752,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '520px', maxHeight: '88vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{editandoItemId ? 'Editar item' : 'Adicionar item ao pedido'}</span>
-              <button onClick={() => setShowItemForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+              <button onClick={fecharFormItem} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
             </div>
 
             <div style={{ marginBottom: '12px' }}>
@@ -830,7 +842,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             </div>
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowItemForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+              <button onClick={fecharFormItem} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
               <button onClick={salvarItem} disabled={salvandoItem} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: salvandoItem ? 'not-allowed' : 'pointer', opacity: salvandoItem ? 0.7 : 1 }}>
                 {salvandoItem ? 'Salvando...' : (editandoItemId ? 'Salvar alterações' : 'Salvar item')}
               </button>

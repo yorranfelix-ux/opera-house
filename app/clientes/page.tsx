@@ -31,6 +31,24 @@ export default function Clientes() {
   const [form, setForm] = useState(formVazio)
   const [excluindoId, setExcluindoId] = useState<string | null>(null)
   const [salvando, setSalvando] = useState(false)
+  const [pagina, setPagina] = useState(1)
+  const ITEMS_POR_PAGINA = 25
+
+  useEffect(() => {
+    try {
+      const salvo = sessionStorage.getItem('operare_filtros_clientes')
+      if (salvo) {
+        const f = JSON.parse(salvo)
+        if (f.busca !== undefined) setBusca(f.busca)
+      }
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    try { sessionStorage.setItem('operare_filtros_clientes', JSON.stringify({ busca })) } catch {}
+  }, [busca])
+
+  useEffect(() => { setPagina(1) }, [busca])
 
   useEffect(() => { buscarClientes() }, [])
 
@@ -103,6 +121,8 @@ export default function Clientes() {
     c.nome?.toLowerCase().includes(busca.toLowerCase()) ||
     c.cidade?.toLowerCase().includes(busca.toLowerCase())
   )
+  const totalPaginas = Math.max(1, Math.ceil(clientesFiltrados.length / ITEMS_POR_PAGINA))
+  const clientesPaginados = clientesFiltrados.slice((pagina - 1) * ITEMS_POR_PAGINA, pagina * ITEMS_POR_PAGINA)
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
@@ -136,7 +156,7 @@ export default function Clientes() {
               <div style={{ padding: '24px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhum cliente cadastrado ainda.</div>
             )}
 
-            {clientesFiltrados.map((cliente, i) => (
+            {clientesPaginados.map((cliente, i) => (
               <div key={cliente.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 130px 180px 120px 60px 130px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{cliente.nome}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{cliente.telefone || '—'}</span>
@@ -149,6 +169,20 @@ export default function Clientes() {
                 </div>
               </div>
             ))}
+
+            {totalPaginas > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9' }}>
+                <button onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}
+                  style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: pagina === 1 ? '#f7f6f3' : '#fff', fontSize: '12px', cursor: pagina === 1 ? 'default' : 'pointer', color: pagina === 1 ? '#ccc' : '#555' }}>
+                  ← Anterior
+                </button>
+                <span style={{ fontSize: '12px', color: '#888' }}>Página {pagina} de {totalPaginas}</span>
+                <button onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}
+                  style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: pagina === totalPaginas ? '#f7f6f3' : '#fff', fontSize: '12px', cursor: pagina === totalPaginas ? 'default' : 'pointer', color: pagina === totalPaginas ? '#ccc' : '#555' }}>
+                  Próxima →
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

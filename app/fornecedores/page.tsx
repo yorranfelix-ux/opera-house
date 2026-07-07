@@ -31,6 +31,24 @@ export default function Fornecedores() {
   const [form, setForm] = useState(formVazio)
   const [excluindoId, setExcluindoId] = useState<string | null>(null)
   const [salvando, setSalvando] = useState(false)
+  const [pagina, setPagina] = useState(1)
+  const ITEMS_POR_PAGINA = 25
+
+  useEffect(() => {
+    try {
+      const salvo = sessionStorage.getItem('operare_filtros_fornecedores')
+      if (salvo) {
+        const f = JSON.parse(salvo)
+        if (f.busca !== undefined) setBusca(f.busca)
+      }
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    try { sessionStorage.setItem('operare_filtros_fornecedores', JSON.stringify({ busca })) } catch {}
+  }, [busca])
+
+  useEffect(() => { setPagina(1) }, [busca])
 
   useEffect(() => { buscarFornecedores() }, [])
 
@@ -104,6 +122,8 @@ export default function Fornecedores() {
     f.nome_fantasia?.toLowerCase().includes(busca.toLowerCase()) ||
     f.razao_social?.toLowerCase().includes(busca.toLowerCase())
   )
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / ITEMS_POR_PAGINA))
+  const paginados = filtrados.slice((pagina - 1) * ITEMS_POR_PAGINA, pagina * ITEMS_POR_PAGINA)
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
@@ -135,7 +155,7 @@ export default function Fornecedores() {
               <div style={{ padding: '24px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhum fornecedor cadastrado ainda.</div>
             )}
 
-            {filtrados.map((f, i) => (
+            {paginados.map((f, i) => (
               <div key={f.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px 130px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{f.nome_fantasia || f.razao_social}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{f.razao_social}</span>
@@ -148,6 +168,20 @@ export default function Fornecedores() {
                 </div>
               </div>
             ))}
+
+            {totalPaginas > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9' }}>
+                <button onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}
+                  style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: pagina === 1 ? '#f7f6f3' : '#fff', fontSize: '12px', cursor: pagina === 1 ? 'default' : 'pointer', color: pagina === 1 ? '#ccc' : '#555' }}>
+                  ← Anterior
+                </button>
+                <span style={{ fontSize: '12px', color: '#888' }}>Página {pagina} de {totalPaginas}</span>
+                <button onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}
+                  style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: pagina === totalPaginas ? '#f7f6f3' : '#fff', fontSize: '12px', cursor: pagina === totalPaginas ? 'default' : 'pointer', color: pagina === totalPaginas ? '#ccc' : '#555' }}>
+                  Próxima →
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
