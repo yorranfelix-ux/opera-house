@@ -92,6 +92,8 @@ export default function AssistenciaTecnica() {
     observacoes_fornecedor: '',
     numero_nf_envio: '',
   })
+  const [loadingATs, setLoadingATs] = useState(true)
+  const [salvando, setSalvando] = useState(false)
   const [showProcessoModal, setShowProcessoModal] = useState(false)
   const [showRetornoModal, setShowRetornoModal] = useState(false)
   const [showResolvidaModal, setShowResolvidaModal] = useState(false)
@@ -124,11 +126,13 @@ export default function AssistenciaTecnica() {
   }, [form.pedido_id])
 
   async function buscarATs() {
+    setLoadingATs(true)
     const { data } = await supabase
       .from('assistencias_tecnicas')
       .select('*, pedidos(numero_pedido, clientes(nome, cidade)), fornecedores(nome_fantasia, razao_social)')
       .order('created_at', { ascending: false })
     setAts((data as unknown as AT[]) || [])
+    setLoadingATs(false)
   }
 
   async function buscarPedidos() {
@@ -155,55 +159,59 @@ export default function AssistenciaTecnica() {
   async function salvar() {
     if (!form.pedido_id) return alert('Selecione o pedido')
     if (!form.descricao_problema) return alert('Descricao do problema e obrigatoria')
+    setSalvando(true)
+    try {
+      let status = 'aberta'
+      if (form.tipo_at === 'devolucao_fornecedor') status = 'enviado_fornecedor'
+      else if (form.requer_retirada) status = 'aguardando_retirada'
 
-    let status = 'aberta'
-    if (form.tipo_at === 'devolucao_fornecedor') status = 'enviado_fornecedor'
-    else if (form.requer_retirada) status = 'aguardando_retirada'
+      const pedidoSelecionado = pedidos.find(p => p.id === form.pedido_id)
+      const ano = new Date().getFullYear()
+      const { data: atsExistentes } = await supabase
+        .from('assistencias_tecnicas')
+        .select('id')
+        .eq('pedido_id', form.pedido_id)
+      const sequencia = (atsExistentes?.length || 0) + 1
+      const numeroAt = `AT ${pedidoSelecionado?.numero_pedido}-${ano}-${sequencia}`
 
-    const pedidoSelecionado = pedidos.find(p => p.id === form.pedido_id)
-    const ano = new Date().getFullYear()
-    const { data: atsExistentes } = await supabase
-      .from('assistencias_tecnicas')
-      .select('id')
-      .eq('pedido_id', form.pedido_id)
-    const sequencia = (atsExistentes?.length || 0) + 1
-    const numeroAt = `AT ${pedidoSelecionado?.numero_pedido}-${ano}-${sequencia}`
+      const { error } = await supabase.from('assistencias_tecnicas').insert([{
+        numero_at: numeroAt,
+        pedido_id: form.pedido_id,
+        item_id: (form as any).item_id || null,
+        tipo_at: form.tipo_at,
+        descricao_problema: form.descricao_problema,
+        requer_retirada: form.requer_retirada,
+        endereco_retirada: form.endereco_retirada,
+        data_retirada_agendada: form.data_retirada_agendada || null,
+        fornecedor_id: form.fornecedor_id || null,
+        data_envio_fornecedor: form.data_envio_fornecedor || null,
+        previsao_retorno_fornecedor: form.previsao_retorno_fornecedor || null,
+        observacoes: form.observacoes,
+        status,
+      }])
+      if (error) return alert('Erro: ' + error.message)
+      await registrarHistorico({ tipo: 'at_criada', descricao: `AT ${numeroAt} aberta — ${form.descricao_problema}`, pedidoId: form.pedido_id })
 
-    const { error } = await supabase.from('assistencias_tecnicas').insert([{
-      numero_at: numeroAt,
-      pedido_id: form.pedido_id,
-      item_id: (form as any).item_id || null,
-      tipo_at: form.tipo_at,
-      descricao_problema: form.descricao_problema,
-      requer_retirada: form.requer_retirada,
-      endereco_retirada: form.endereco_retirada,
-      data_retirada_agendada: form.data_retirada_agendada || null,
-      fornecedor_id: form.fornecedor_id || null,
-      data_envio_fornecedor: form.data_envio_fornecedor || null,
-      previsao_retorno_fornecedor: form.previsao_retorno_fornecedor || null,
-      observacoes: form.observacoes,
-      status,
-    }])
-    if (error) return alert('Erro: ' + error.message)
-    await registrarHistorico({ tipo: 'at_criada', descricao: `AT ${numeroAt} aberta — ${form.descricao_problema}`, pedidoId: form.pedido_id })
-
-    // Se veio de uma ocorrência, fecha ela automaticamente
-    if (ocorrenciaOrigem) {
-      await supabase.from('ocorrencias').update({
-        status: 'resolvida',
-        observacoes: `Convertida em AT ${numeroAt}`,
-      }).eq('id', ocorrenciaOrigem)
-      setOcorrenciaOrigem(null)
-      // Limpa os params da URL sem recarregar
-      if (typeof window !== 'undefined') {
-        window.history.replaceState({}, '', '/assistencia')
+      // Se veio de uma ocorrência, fecha ela automaticamente
+      if (ocorrenciaOrigem) {
+        await supabase.from('ocorrencias').update({
+          status: 'resolvida',
+          observacoes: `Convertida em AT ${numeroAt}`,
+        }).eq('id', ocorrenciaOrigem)
+        setOcorrenciaOrigem(null)
+        // Limpa os params da URL sem recarregar
+        if (typeof window !== 'undefined') {
+          window.history.replaceState({}, '', '/assistencia')
+        }
       }
-    }
 
-    setShowForm(false)
-    setForm({ pedido_id: '', item_id: '', tipo_at: 'retirada_cliente', descricao_problema: '', requer_retirada: false, endereco_retirada: '', data_retirada_agendada: '', fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes: '' } as any)
-    setItensPedido([])
-    buscarATs()
+      setShowForm(false)
+      setForm({ pedido_id: '', item_id: '', tipo_at: 'retirada_cliente', descricao_problema: '', requer_retirada: false, endereco_retirada: '', data_retirada_agendada: '', fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes: '' } as any)
+      setItensPedido([])
+      buscarATs()
+    } finally {
+      setSalvando(false)
+    }
   }
 
   async function enviarAoFornecedor() {
@@ -313,7 +321,10 @@ export default function AssistenciaTecnica() {
               <span>Acoes</span>
             </div>
 
-            {filtradas.length === 0 && (
+            {loadingATs && (
+              <div style={{ padding: '32px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Carregando...</div>
+            )}
+            {!loadingATs && filtradas.length === 0 && (
               <div style={{ padding: '32px', textAlign: 'center', color: '#888', fontSize: '13px' }}>
                 Nenhuma AT encontrada.
               </div>
@@ -482,7 +493,7 @@ export default function AssistenciaTecnica() {
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-              <button onClick={salvar} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Salvar</button>
+              <button onClick={salvar} disabled={salvando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>{salvando ? 'Salvando...' : 'Salvar'}</button>
             </div>
           </div>
         </div>

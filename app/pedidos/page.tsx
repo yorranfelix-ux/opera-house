@@ -68,6 +68,7 @@ export default function Pedidos() {
   const [form, setForm] = useState(formVazio)
   const [filtroStatus, setFiltroStatus] = useState<'abertos' | 'entregues' | 'todos'>('abertos')
   const [profissionais, setProfissionais] = useState<{ id: string; nome: string; tipo: string }[]>([])
+  const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
     buscarPedidos()
@@ -121,30 +122,35 @@ export default function Pedidos() {
     if (!form.numero_pedido) return alert('Número do pedido é obrigatório')
     if (!form.cliente_id) return alert('Selecione um cliente')
     if (!form.data_venda) return alert('Data da venda é obrigatória')
-    const payload = { ...form, profissional_id: form.profissional_id || null }
-    if (editandoId) {
-      const { error } = await supabase.from('pedidos').update(payload).eq('id', editandoId)
-      if (error) return alert('Erro ao atualizar: ' + error.message)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data: profile } = await supabase.from('profiles').select('nome').eq('id', user.id).single()
-        await supabase.from('historico_alteracoes').insert([{
-          pedido_id: editandoId,
-          usuario_id: user.id,
-          usuario_nome: profile?.nome || user.email,
-          tipo: 'pedido_editado',
-          descricao: `Pedido ${form.numero_pedido} editado`,
-        }])
+    setSalvando(true)
+    try {
+      const payload = { ...form, profissional_id: form.profissional_id || null }
+      if (editandoId) {
+        const { error } = await supabase.from('pedidos').update(payload).eq('id', editandoId)
+        if (error) return alert('Erro ao atualizar: ' + error.message)
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: profile } = await supabase.from('profiles').select('nome').eq('id', user.id).single()
+          await supabase.from('historico_alteracoes').insert([{
+            pedido_id: editandoId,
+            usuario_id: user.id,
+            usuario_nome: profile?.nome || user.email,
+            tipo: 'pedido_editado',
+            descricao: `Pedido ${form.numero_pedido} editado`,
+          }])
+        }
+      } else {
+        const { data: novo, error } = await supabase.from('pedidos').insert([{ ...payload, semaforo: 'verde' }]).select('id').single()
+        if (error) return alert('Erro ao salvar: ' + error.message)
+        await registrarHistorico({ tipo: 'pedido_criado', descricao: `Pedido ${form.numero_pedido} criado`, pedidoId: novo?.id })
       }
-    } else {
-      const { data: novo, error } = await supabase.from('pedidos').insert([{ ...payload, semaforo: 'verde' }]).select('id').single()
-      if (error) return alert('Erro ao salvar: ' + error.message)
-      await registrarHistorico({ tipo: 'pedido_criado', descricao: `Pedido ${form.numero_pedido} criado`, pedidoId: novo?.id })
+      setShowForm(false)
+      setForm(formVazio)
+      setEditandoId(null)
+      buscarPedidos()
+    } finally {
+      setSalvando(false)
     }
-    setShowForm(false)
-    setForm(formVazio)
-    setEditandoId(null)
-    buscarPedidos()
   }
 
   const STATUS_ABERTOS = ['criado', 'aguardando_compra', 'em_producao', 'em_transporte', 'recebido', 'apto_agendamento', 'agendado', 'com_at']
@@ -304,8 +310,8 @@ export default function Pedidos() {
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-              <button onClick={salvarPedido} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-                {editandoId ? 'Salvar alterações' : 'Salvar pedido'}
+              <button onClick={salvarPedido} disabled={salvando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>
+                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Salvar pedido')}
               </button>
             </div>
           </div>

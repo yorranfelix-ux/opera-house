@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { registrarHistorico } from '../lib/historico'
 import Sidebar from '../components/Sidebar'
 
 interface ClienteEntrega {
@@ -87,6 +88,7 @@ export default function Entregas() {
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
   const [impressao, setImpressao] = useState<ImpressaoInfo | null>(null)
+  const [salvando, setSalvando] = useState(false)
   const [infoMotorista, setInfoMotorista] = useState({ motorista: '', veiculo: '', placa: '', rodizio: '' })
 
   useEffect(() => {
@@ -134,26 +136,35 @@ export default function Entregas() {
   async function salvar() {
     if (!form.pedido_id) return alert('Selecione o pedido')
     if (!form.data_agendada) return alert('Data agendada é obrigatória')
-    const payload = {
-      pedido_id: form.pedido_id,
-      data_agendada: form.data_agendada,
-      data_realizada: form.data_realizada || null,
-      status: form.status,
-      requer_icamento: form.requer_icamento,
-      observacoes_icamento: form.observacoes_icamento,
-      observacoes: form.observacoes,
+    setSalvando(true)
+    try {
+      const payload = {
+        pedido_id: form.pedido_id,
+        data_agendada: form.data_agendada,
+        data_realizada: form.data_realizada || null,
+        status: form.status,
+        requer_icamento: form.requer_icamento,
+        observacoes_icamento: form.observacoes_icamento,
+        observacoes: form.observacoes,
+      }
+      const pedidoSel = pedidos.find(p => p.id === form.pedido_id)
+      const numPedido = pedidoSel?.numero_pedido || '?'
+      if (editandoId) {
+        const { error } = await supabase.from('entregas').update(payload).eq('id', editandoId)
+        if (error) return alert('Erro: ' + error.message)
+        await registrarHistorico({ tipo: 'pedido_editado', descricao: `Entrega do Pedido ${numPedido} atualizada para ${form.data_agendada ? new Date(form.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}`, pedidoId: form.pedido_id })
+      } else {
+        const { error } = await supabase.from('entregas').insert([{ ...payload, status: 'agendada' }])
+        if (error) return alert('Erro: ' + error.message)
+        await registrarHistorico({ tipo: 'pedido_editado', descricao: `Entrega do Pedido ${numPedido} agendada para ${form.data_agendada ? new Date(form.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}`, pedidoId: form.pedido_id })
+      }
+      setShowForm(false)
+      setForm(formVazio)
+      setEditandoId(null)
+      buscarEntregas()
+    } finally {
+      setSalvando(false)
     }
-    if (editandoId) {
-      const { error } = await supabase.from('entregas').update(payload).eq('id', editandoId)
-      if (error) return alert('Erro: ' + error.message)
-    } else {
-      const { error } = await supabase.from('entregas').insert([{ ...payload, status: 'agendada' }])
-      if (error) return alert('Erro: ' + error.message)
-    }
-    setShowForm(false)
-    setForm(formVazio)
-    setEditandoId(null)
-    buscarEntregas()
   }
 
   const STORAGE_KEY_MOTORISTA = 'operare_motorista_info'
@@ -628,8 +639,8 @@ export default function Entregas() {
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-              <button onClick={salvar} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-                {editandoId ? 'Salvar alterações' : 'Agendar'}
+              <button onClick={salvar} disabled={salvando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>
+                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Agendar')}
               </button>
             </div>
           </div>

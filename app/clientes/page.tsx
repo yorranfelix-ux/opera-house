@@ -30,6 +30,7 @@ export default function Clientes() {
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
   const [excluindoId, setExcluindoId] = useState<string | null>(null)
+  const [salvando, setSalvando] = useState(false)
 
   useEffect(() => { buscarClientes() }, [])
 
@@ -67,19 +68,24 @@ export default function Clientes() {
 
   async function salvarCliente() {
     if (!form.nome) return alert('Nome é obrigatório')
-    if (editandoId) {
-      const { error } = await supabase.from('clientes').update(form).eq('id', editandoId)
-      if (error) return alert('Erro ao atualizar: ' + error.message)
-      await registrarHistorico({ tipo: 'cliente_editado', descricao: `Cliente ${form.nome} editado` })
-    } else {
-      const { error } = await supabase.from('clientes').insert([form])
-      if (error) return alert('Erro ao salvar: ' + error.message)
-      await registrarHistorico({ tipo: 'cliente_criado', descricao: `Cliente ${form.nome} cadastrado` })
+    setSalvando(true)
+    try {
+      if (editandoId) {
+        const { error } = await supabase.from('clientes').update(form).eq('id', editandoId)
+        if (error) return alert('Erro ao atualizar: ' + error.message)
+        await registrarHistorico({ tipo: 'cliente_editado', descricao: `Cliente ${form.nome} editado` })
+      } else {
+        const { error } = await supabase.from('clientes').insert([form])
+        if (error) return alert('Erro ao salvar: ' + error.message)
+        await registrarHistorico({ tipo: 'cliente_criado', descricao: `Cliente ${form.nome} cadastrado` })
+      }
+      setShowForm(false)
+      setForm(formVazio)
+      setEditandoId(null)
+      buscarClientes()
+    } finally {
+      setSalvando(false)
     }
-    setShowForm(false)
-    setForm(formVazio)
-    setEditandoId(null)
-    buscarClientes()
   }
 
   async function excluirCliente(id: string, nome: string) {
@@ -206,8 +212,8 @@ export default function Clientes() {
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-              <button onClick={salvarCliente} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-                {editandoId ? 'Salvar alterações' : 'Salvar cliente'}
+              <button onClick={salvarCliente} disabled={salvando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>
+                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Salvar cliente')}
               </button>
             </div>
           </div>

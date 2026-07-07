@@ -62,6 +62,7 @@ export default function Dashboard() {
   const [novoUrgente, setNovoUrgente] = useState(false)
   const [diasSemana, setDiasSemana] = useState<{ data: string; diaSemana: string; diaNum: number; hoje: boolean }[]>([])
   const [periodoCalendario, setPeriodoCalendario] = useState(7)
+  const [loading, setLoading] = useState(true)
 
   function gerarDias(total: number) {
     const hoje = new Date()
@@ -96,6 +97,7 @@ export default function Dashboard() {
   }
 
   async function buscar() {
+    setLoading(true)
     const hoje = new Date()
     const hojeStr = hoje.toISOString().split('T')[0]
     const amanha = new Date(hoje); amanha.setDate(amanha.getDate() + 1)
@@ -239,6 +241,7 @@ export default function Dashboard() {
       entregasAmanha: entregasData.length,
       entreguesMes: (entreguesMes || []).length,
     })
+    setLoading(false)
   }
 
   function adicionarLembrete() {
@@ -352,6 +355,15 @@ export default function Dashboard() {
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
+
+          {loading && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '120px', color: '#aaa', fontSize: '13px', gap: '8px' }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M8 1v3M8 12v3M1 8h3M12 8h3M3.1 3.1l2.1 2.1M10.8 10.8l2.1 2.1M3.1 12.9l2.1-2.1M10.8 5.2l2.1-2.1"/>
+              </svg>
+              Carregando...
+            </div>
+          )}
 
           {/* Cards topo */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>

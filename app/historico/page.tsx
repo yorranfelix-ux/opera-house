@@ -33,6 +33,9 @@ const TIPO_COR: Record<string, { bg: string; color: string; label: string }> = {
   fornecedor_editado:    { bg: '#E6F1FB', color: '#0C447C', label: 'Fornecedor editado' },
   profissional_criado:   { bg: '#EAF3DE', color: '#27500A', label: 'Profissional cadastrado' },
   profissional_editado:  { bg: '#E6F1FB', color: '#0C447C', label: 'Profissional editado' },
+  cliente_excluido:      { bg: '#FCEBEB', color: '#791F1F', label: 'Cliente excluído' },
+  fornecedor_excluido:   { bg: '#FCEBEB', color: '#791F1F', label: 'Fornecedor excluído' },
+  profissional_excluido: { bg: '#FCEBEB', color: '#791F1F', label: 'Profissional excluído' },
 }
 
 export default function Historico() {
@@ -115,6 +118,12 @@ export default function Historico() {
             <span style={{ fontSize: '12px', color: '#aaa', alignSelf: 'center' }}>{filtrados.length} registro{filtrados.length !== 1 ? 's' : ''}</span>
           </div>
 
+          {registros.length === 200 && !loading && (
+            <div style={{ background: '#FAEEDA', border: '0.5px solid #f0d4a0', borderRadius: '8px', padding: '10px 14px', marginBottom: '14px', fontSize: '12px', color: '#633806' }}>
+              Exibindo os 200 registros mais recentes. Use os filtros para localizar registros mais antigos.
+            </div>
+          )}
+
           {loading && (
             <div style={{ textAlign: 'center', color: '#888', fontSize: '13px', padding: '40px' }}>Carregando...</div>
           )}
@@ -138,10 +147,14 @@ export default function Historico() {
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px', flexWrap: 'wrap' }}>
-                        <a href={`/pedidos/${r.pedido_id}`} style={{ fontSize: '12px', fontWeight: '600', color: '#C9A84C', textDecoration: 'none' }}>
-                          Pedido {r.pedidos?.numero_pedido}
-                        </a>
-                        <span style={{ fontSize: '11px', color: '#888' }}>· {r.pedidos?.clientes?.nome}</span>
+                        {r.pedidos?.numero_pedido ? (
+                          <a href={`/pedidos/${r.pedido_id}`} style={{ fontSize: '12px', fontWeight: '600', color: '#C9A84C', textDecoration: 'none' }}>
+                            Pedido {r.pedidos.numero_pedido}
+                          </a>
+                        ) : null}
+                        {r.pedidos?.clientes?.nome && (
+                          <span style={{ fontSize: '11px', color: '#888' }}>· {r.pedidos.clientes.nome}</span>
+                        )}
                         {r.tipo && (
                           <span style={{ fontSize: '10px', padding: '1px 7px', borderRadius: '6px', fontWeight: '500', background: TIPO_COR[r.tipo]?.bg || '#f0efe9', color: TIPO_COR[r.tipo]?.color || '#555' }}>
                             {TIPO_COR[r.tipo]?.label || r.tipo}

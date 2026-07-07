@@ -272,10 +272,14 @@ export default function Sidebar({ ativa }: { ativa: string }) {
       </div>
 
       {/* User */}
-      {!collapsed && usuario && (
+      {!collapsed && (
         <div style={{ padding: '10px 14px 14px', borderTop: '1px solid #242440' }}>
-          <div style={{ fontSize: '12px', fontWeight: '500', color: '#c8c8e0', marginBottom: '1px', fontFamily: 'sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{usuario.nome}</div>
-          <div style={{ fontSize: '11px', color: '#3a3a58', marginBottom: '8px', fontFamily: 'sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{usuario.cargo}</div>
+          {usuario && (
+            <>
+              <div style={{ fontSize: '12px', fontWeight: '500', color: '#c8c8e0', marginBottom: '1px', fontFamily: 'sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{usuario.nome}</div>
+              <div style={{ fontSize: '11px', color: '#3a3a58', marginBottom: '8px', fontFamily: 'sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{usuario.cargo}</div>
+            </>
+          )}
           <button onClick={sair} style={{ width: '100%', padding: '6px', borderRadius: '6px', border: '1px solid #242440', background: 'transparent', color: '#3a3a58', fontSize: '12px', cursor: 'pointer', textAlign: 'left', fontFamily: 'sans-serif', transition: 'color 150ms' }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#6a6a8a' }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#3a3a58' }}>
@@ -284,7 +288,7 @@ export default function Sidebar({ ativa }: { ativa: string }) {
         </div>
       )}
 
-      {collapsed && usuario && (
+      {collapsed && (
         <div style={{ padding: '8px 6px 12px', borderTop: '1px solid #242440', display: 'flex', justifyContent: 'center' }}>
           <button onClick={sair} title="Sair" style={{ width: '36px', height: '36px', borderRadius: '7px', border: '1px solid #242440', background: 'transparent', color: '#3a3a58', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

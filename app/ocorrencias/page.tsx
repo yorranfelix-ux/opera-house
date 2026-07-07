@@ -65,6 +65,7 @@ export default function Ocorrencias() {
   const [expandidoId, setExpandidoId] = useState<string | null>(null)
   const [excluindoId, setExcluindoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
+  const [salvando, setSalvando] = useState(false)
 
   useEffect(() => { buscarOcorrencias(); buscarPedidos() }, [])
 
@@ -133,6 +134,8 @@ export default function Ocorrencias() {
       observacoes: o.observacoes || '',
       status: o.status || 'aberta',
     })
+    // Carrega os itens do pedido imediatamente para o select não ficar vazio
+    if (o.pedido_id) buscarItensPedido(o.pedido_id)
     setShowForm(true)
   }
 
@@ -148,28 +151,33 @@ export default function Ocorrencias() {
   async function salvar() {
     if (!form.pedido_id) return alert('Selecione o pedido')
     if (!form.descricao) return alert('Descrição é obrigatória')
-    const payload = {
-      pedido_id: form.pedido_id,
-      item_id: form.item_id || null,
-      quantidade_afetada: form.quantidade_afetada ? parseInt(form.quantidade_afetada) : null,
-      tipo: form.tipo,
-      descricao: form.descricao,
-      observacoes: form.observacoes,
-      status: form.status,
+    setSalvando(true)
+    try {
+      const payload = {
+        pedido_id: form.pedido_id,
+        item_id: form.item_id || null,
+        quantidade_afetada: form.quantidade_afetada ? parseInt(form.quantidade_afetada) : null,
+        tipo: form.tipo,
+        descricao: form.descricao,
+        observacoes: form.observacoes,
+        status: form.status,
+      }
+      if (editandoId) {
+        const { error } = await supabase.from('ocorrencias').update(payload).eq('id', editandoId)
+        if (error) return alert('Erro: ' + error.message)
+        await registrarHistorico({ tipo: 'ocorrencia_editada', descricao: `Ocorrência editada — Pedido ${pedidos.find(p => p.id === form.pedido_id)?.numero_pedido}: ${form.descricao}`, pedidoId: form.pedido_id })
+      } else {
+        const { error } = await supabase.from('ocorrencias').insert([{ ...payload, status: 'aberta' }])
+        if (error) return alert('Erro: ' + error.message)
+        await registrarHistorico({ tipo: 'ocorrencia_criada', descricao: `Ocorrência aberta — Pedido ${pedidos.find(p => p.id === form.pedido_id)?.numero_pedido}: ${form.descricao}`, pedidoId: form.pedido_id })
+      }
+      setShowForm(false)
+      setForm(formVazio)
+      setEditandoId(null)
+      buscarOcorrencias()
+    } finally {
+      setSalvando(false)
     }
-    if (editandoId) {
-      const { error } = await supabase.from('ocorrencias').update(payload).eq('id', editandoId)
-      if (error) return alert('Erro: ' + error.message)
-      await registrarHistorico({ tipo: 'ocorrencia_editada', descricao: `Ocorrência editada — Pedido ${pedidos.find(p => p.id === form.pedido_id)?.numero_pedido}: ${form.descricao}`, pedidoId: form.pedido_id })
-    } else {
-      const { error } = await supabase.from('ocorrencias').insert([{ ...payload, status: 'aberta' }])
-      if (error) return alert('Erro: ' + error.message)
-      await registrarHistorico({ tipo: 'ocorrencia_criada', descricao: `Ocorrência aberta — Pedido ${pedidos.find(p => p.id === form.pedido_id)?.numero_pedido}: ${form.descricao}`, pedidoId: form.pedido_id })
-    }
-    setShowForm(false)
-    setForm(formVazio)
-    setEditandoId(null)
-    buscarOcorrencias()
   }
 
   const STATUS_ABERTAS = ['aberta', 'em_tratativa']
@@ -411,8 +419,8 @@ export default function Ocorrencias() {
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-              <button onClick={salvar} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-                {editandoId ? 'Salvar alterações' : 'Salvar'}
+              <button onClick={salvar} disabled={salvando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>
+                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Salvar')}
               </button>
             </div>
           </div>

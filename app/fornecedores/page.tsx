@@ -30,6 +30,7 @@ export default function Fornecedores() {
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
   const [excluindoId, setExcluindoId] = useState<string | null>(null)
+  const [salvando, setSalvando] = useState(false)
 
   useEffect(() => { buscarFornecedores() }, [])
 
@@ -75,23 +76,28 @@ export default function Fornecedores() {
 
   async function salvarFornecedor() {
     if (!form.razao_social) return alert('Razão social é obrigatória')
-    const payload = {
-      ...form,
-      prazo_medio_prometido: form.prazo_medio_prometido ? parseInt(form.prazo_medio_prometido) : null
+    setSalvando(true)
+    try {
+      const payload = {
+        ...form,
+        prazo_medio_prometido: form.prazo_medio_prometido ? parseInt(form.prazo_medio_prometido) : null
+      }
+      if (editandoId) {
+        const { error } = await supabase.from('fornecedores').update(payload).eq('id', editandoId)
+        if (error) return alert('Erro ao atualizar: ' + error.message)
+        await registrarHistorico({ tipo: 'fornecedor_editado', descricao: `Fornecedor ${form.nome_fantasia || form.razao_social} editado` })
+      } else {
+        const { error } = await supabase.from('fornecedores').insert([payload])
+        if (error) return alert('Erro ao salvar: ' + error.message)
+        await registrarHistorico({ tipo: 'fornecedor_criado', descricao: `Fornecedor ${form.nome_fantasia || form.razao_social} cadastrado` })
+      }
+      setShowForm(false)
+      setForm(formVazio)
+      setEditandoId(null)
+      buscarFornecedores()
+    } finally {
+      setSalvando(false)
     }
-    if (editandoId) {
-      const { error } = await supabase.from('fornecedores').update(payload).eq('id', editandoId)
-      if (error) return alert('Erro ao atualizar: ' + error.message)
-      await registrarHistorico({ tipo: 'fornecedor_editado', descricao: `Fornecedor ${form.nome_fantasia || form.razao_social} editado` })
-    } else {
-      const { error } = await supabase.from('fornecedores').insert([payload])
-      if (error) return alert('Erro ao salvar: ' + error.message)
-      await registrarHistorico({ tipo: 'fornecedor_criado', descricao: `Fornecedor ${form.nome_fantasia || form.razao_social} cadastrado` })
-    }
-    setShowForm(false)
-    setForm(formVazio)
-    setEditandoId(null)
-    buscarFornecedores()
   }
 
   const filtrados = fornecedores.filter(f =>
@@ -203,8 +209,8 @@ export default function Fornecedores() {
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-              <button onClick={salvarFornecedor} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-                {editandoId ? 'Salvar alterações' : 'Salvar fornecedor'}
+              <button onClick={salvarFornecedor} disabled={salvando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>
+                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Salvar fornecedor')}
               </button>
             </div>
           </div>

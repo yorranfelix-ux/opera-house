@@ -20,6 +20,7 @@ export default function Usuarios() {
 
   const [form, setForm] = useState({ nome: '', cargo: '', email: '', senha: '', confirmarSenha: '' })
   const [novaSenha, setNovaSenha] = useState('')
+  const [confirmarNovaSenha, setConfirmarNovaSenha] = useState('')
 
   useEffect(() => { buscarUsuarios() }, [])
 
@@ -54,6 +55,7 @@ export default function Usuarios() {
 
   async function redefinirSenha() {
     if (!novaSenha || novaSenha.length < 6) return alert('A senha deve ter no mínimo 6 caracteres')
+    if (novaSenha !== confirmarNovaSenha) return alert('As senhas não coincidem')
     setSalvando(true)
     const res = await fetch('/api/usuarios/senha', {
       method: 'POST',
@@ -65,6 +67,7 @@ export default function Usuarios() {
     if (data.error) return alert('Erro: ' + data.error)
     setShowSenhaModal(null)
     setNovaSenha('')
+    setConfirmarNovaSenha('')
     alert('Senha alterada com sucesso!')
   }
 
@@ -156,7 +159,7 @@ export default function Usuarios() {
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Redefinir senha</span>
               <button onClick={() => setShowSenhaModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
             </div>
-            <div style={{ marginBottom: '16px' }}>
+            <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Nova senha</div>
               <input
                 type="password"
@@ -165,6 +168,19 @@ export default function Usuarios() {
                 placeholder="Mínimo 6 caracteres"
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
               />
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Confirmar nova senha</div>
+              <input
+                type="password"
+                value={confirmarNovaSenha}
+                onChange={e => setConfirmarNovaSenha(e.target.value)}
+                placeholder="Digite a senha novamente"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: `0.5px solid ${confirmarNovaSenha && confirmarNovaSenha !== novaSenha ? '#f0c0c0' : '#e8e7e3'}`, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+              />
+              {confirmarNovaSenha && confirmarNovaSenha !== novaSenha && (
+                <div style={{ fontSize: '11px', color: '#A32D2D', marginTop: '4px' }}>As senhas não coincidem</div>
+              )}
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowSenhaModal(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>

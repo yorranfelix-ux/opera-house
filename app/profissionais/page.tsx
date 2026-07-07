@@ -33,6 +33,7 @@ export default function Profissionais() {
   const [busca, setBusca] = useState('')
   const [excluindoId, setExcluindoId] = useState<string | null>(null)
   const [filtroAtivo, setFiltroAtivo] = useState<'ativos' | 'todos'>('ativos')
+  const [salvando, setSalvando] = useState(false)
 
   useEffect(() => { buscar() }, [])
 
@@ -76,29 +77,33 @@ export default function Profissionais() {
 
   async function salvar() {
     if (!form.nome.trim()) return alert('Nome é obrigatório')
-    const payload = {
-      nome: form.nome.trim(),
-      tipo: form.tipo,
-      telefone: form.telefone || null,
-      whatsapp: form.whatsapp || null,
-      email: form.email || null,
-      observacoes: form.observacoes || null,
-      ativo: form.ativo,
+    setSalvando(true)
+    try {
+      const payload = {
+        nome: form.nome.trim(),
+        tipo: form.tipo,
+        telefone: form.telefone || null,
+        whatsapp: form.whatsapp || null,
+        email: form.email || null,
+        observacoes: form.observacoes || null,
+        ativo: form.ativo,
+      }
+      if (editandoId) {
+        const { error } = await supabase.from('profissionais').update(payload).eq('id', editandoId)
+        if (error) return alert('Erro: ' + error.message)
+        await registrarHistorico({ tipo: 'profissional_editado', descricao: `Profissional ${form.nome} (${form.tipo}) editado` })
+      } else {
+        const { error } = await supabase.from('profissionais').insert([payload])
+        if (error) return alert('Erro: ' + error.message)
+        await registrarHistorico({ tipo: 'profissional_criado', descricao: `Profissional ${form.nome} (${form.tipo}) cadastrado` })
+      }
+      setShowForm(false)
+      setForm(formVazio)
+      setEditandoId(null)
+      buscar()
+    } finally {
+      setSalvando(false)
     }
-    if (editandoId) {
-      const { error } = await supabase.from('profissionais').update(payload).eq('id', editandoId)
-      if (error) return alert('Erro: ' + error.message)
-      await registrarHistorico({ tipo: 'profissional_editado', descricao: `Profissional ${form.nome} (${form.tipo}) editado` })
-
-    } else {
-      const { error } = await supabase.from('profissionais').insert([payload])
-      if (error) return alert('Erro: ' + error.message)
-      await registrarHistorico({ tipo: 'profissional_criado', descricao: `Profissional ${form.nome} (${form.tipo}) cadastrado` })
-    }
-    setShowForm(false)
-    setForm(formVazio)
-    setEditandoId(null)
-    buscar()
   }
 
   const filtrados = profissionais.filter(p => {
@@ -247,8 +252,8 @@ export default function Profissionais() {
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-              <button onClick={salvar} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-                {editandoId ? 'Salvar alterações' : 'Cadastrar'}
+              <button onClick={salvar} disabled={salvando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>
+                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Cadastrar')}
               </button>
             </div>
           </div>
