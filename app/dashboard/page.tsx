@@ -102,8 +102,8 @@ export default function Dashboard() {
     const hojeStr = hoje.toISOString().split('T')[0]
     const amanha = new Date(hoje); amanha.setDate(amanha.getDate() + 1)
     const amanhaStr = amanha.toISOString().split('T')[0]
-    const sete = new Date(hoje); sete.setDate(sete.getDate() + 21)
-    const seteStr = sete.toISOString().split('T')[0]
+    const horizonte = new Date(hoje); horizonte.setDate(horizonte.getDate() + 21)
+    const horizonteStr = horizonte.toISOString().split('T')[0]
     const seteDiasAtras = new Date(hoje); seteDiasAtras.setDate(seteDiasAtras.getDate() - 7)
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0]
 
@@ -127,8 +127,8 @@ export default function Dashboard() {
       supabase.from('ocorrencias').select('id, created_at, pedidos(numero_pedido, clientes(nome))').eq('status', 'aberta').lt('created_at', new Date(hoje.getTime() - 3 * 86400000).toISOString()),
       supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_tecido_fornecido', true).not('status', 'in', '(entregue,cancelado)'),
       supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').is('previsao_chegada', null).not('status', 'in', '(entregue,apto_entrega,conferido_ok,recebido)'),
-      supabase.from('entregas').select('data_agendada, pedidos(numero_pedido)').gte('data_agendada', hojeStr).lte('data_agendada', seteStr),
-      supabase.from('assistencias_tecnicas').select('data_retirada_agendada, pedidos(numero_pedido)').not('data_retirada_agendada', 'is', null).gte('data_retirada_agendada', hojeStr).lte('data_retirada_agendada', seteStr),
+      supabase.from('entregas').select('data_agendada, pedidos(numero_pedido)').gte('data_agendada', hojeStr).lte('data_agendada', horizonteStr),
+      supabase.from('assistencias_tecnicas').select('data_retirada_agendada, pedidos(numero_pedido)').not('data_retirada_agendada', 'is', null).gte('data_retirada_agendada', hojeStr).lte('data_retirada_agendada', horizonteStr),
     ])
 
     const pedidosAtivos = (pedidos || []) as any[]

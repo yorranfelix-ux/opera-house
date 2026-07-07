@@ -180,9 +180,14 @@ export default function AssistenciaTecnica() {
       const ano = new Date().getFullYear()
       const { data: atsExistentes } = await supabase
         .from('assistencias_tecnicas')
-        .select('id')
+        .select('numero_at')
         .eq('pedido_id', form.pedido_id)
-      const sequencia = (atsExistentes?.length || 0) + 1
+      const maxSeq = (atsExistentes || []).reduce((max: number, a: any) => {
+        const parts = (a.numero_at || '').split('-')
+        const seq = parseInt(parts[parts.length - 1]) || 0
+        return Math.max(max, seq)
+      }, 0)
+      const sequencia = maxSeq + 1
       const numeroAt = `AT ${pedidoSelecionado?.numero_pedido}-${ano}-${sequencia}`
 
       const { error } = await supabase.from('assistencias_tecnicas').insert([{
@@ -259,7 +264,7 @@ export default function AssistenciaTecnica() {
     if (!atSelecionada) return
     setProcessando(true)
     try {
-      const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'em_reparo', observacoes: processoObs }).eq('id', atSelecionada.id)
+      const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'em_reparo' }).eq('id', atSelecionada.id)
       if (error) return alert('Erro: ' + error.message)
       await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Em reparo${processoObs ? ': ' + processoObs : ''}`, pedidoId: (atSelecionada as any).pedido_id })
       setShowProcessoModal(false); setAtSelecionada(null); setProcessoObs(''); buscarATs()
@@ -285,7 +290,7 @@ export default function AssistenciaTecnica() {
     if (!atSelecionada) return
     setProcessando(true)
     try {
-      const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'resolvida', observacoes: resolvidaObs }).eq('id', atSelecionada.id)
+      const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'resolvida' }).eq('id', atSelecionada.id)
       if (error) return alert('Erro: ' + error.message)
       await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Resolvida${resolvidaObs ? ': ' + resolvidaObs : ''}`, pedidoId: (atSelecionada as any).pedido_id })
       setShowResolvidaModal(false); setAtSelecionada(null); setResolvidaObs(''); buscarATs()

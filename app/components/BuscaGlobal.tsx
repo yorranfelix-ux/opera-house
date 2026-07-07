@@ -11,6 +11,7 @@ interface ResultadoItem {
   titulo: string
   detalhe?: string
   url: string
+  _status?: string
 }
 
 interface GrupoResultado {
@@ -50,9 +51,8 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
       const [pedidosRes, clientesRes, fornecedoresRes, atsRes] = await Promise.all([
         supabase
           .from('pedidos')
-          .select('id, numero_pedido, clientes(nome, cidade)')
+          .select('id, numero_pedido, status, clientes(nome, cidade)')
           .or(`numero_pedido.ilike.%${q}%`)
-          .not('status', 'in', '(entregue,cancelado)')
           .limit(5),
         supabase
           .from('clientes')
@@ -85,6 +85,7 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
               titulo: `Pedido ${p.numero_pedido}`,
               detalhe: cliente ? `${cliente.nome} · ${cliente.cidade}` : undefined,
               url: `/pedidos/${p.id}`,
+              _status: p.status,
             }
           }),
         })
@@ -224,8 +225,16 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#f7f6f3' }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
                   >
-                    <div>
-                      <div style={{ fontSize: '13px', color: '#1a1a2e', fontFamily: 'sans-serif' }}>{item.titulo}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '13px', color: '#1a1a2e', fontFamily: 'sans-serif' }}>{item.titulo}</span>
+                        {item._status === 'entregue' && (
+                          <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '5px', background: '#EAF3DE', color: '#27500A', fontWeight: '500', fontFamily: 'sans-serif' }}>entregue</span>
+                        )}
+                        {item._status === 'cancelado' && (
+                          <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '5px', background: '#f0efe9', color: '#888', fontWeight: '500', fontFamily: 'sans-serif' }}>cancelado</span>
+                        )}
+                      </div>
                       {item.detalhe && (
                         <div style={{ fontSize: '11px', color: '#888', fontFamily: 'sans-serif' }}>{item.detalhe}</div>
                       )}

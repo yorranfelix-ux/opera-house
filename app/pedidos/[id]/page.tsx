@@ -180,10 +180,14 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     if (confirmacaoExcluir !== pedido?.numero_pedido) return
     setExcluindo(true)
 
-    await supabase.from('itens_pedido').delete().eq('pedido_id', id)
-    await supabase.from('assistencias_tecnicas').delete().eq('pedido_id', id)
-    await supabase.from('ocorrencias').delete().eq('pedido_id', id)
-    await supabase.from('entregas').delete().eq('pedido_id', id)
+    const { error: errItens } = await supabase.from('itens_pedido').delete().eq('pedido_id', id)
+    if (errItens) { alert('Erro ao excluir itens: ' + errItens.message); setExcluindo(false); return }
+    const { error: errATs } = await supabase.from('assistencias_tecnicas').delete().eq('pedido_id', id)
+    if (errATs) { alert('Erro ao excluir ATs: ' + errATs.message); setExcluindo(false); return }
+    const { error: errOcorrencias } = await supabase.from('ocorrencias').delete().eq('pedido_id', id)
+    if (errOcorrencias) { alert('Erro ao excluir ocorrências: ' + errOcorrencias.message); setExcluindo(false); return }
+    const { error: errEntregas } = await supabase.from('entregas').delete().eq('pedido_id', id)
+    if (errEntregas) { alert('Erro ao excluir entregas: ' + errEntregas.message); setExcluindo(false); return }
     const { error } = await supabase.from('pedidos').delete().eq('id', id)
     if (error) { alert('Erro ao excluir: ' + error.message); setExcluindo(false); return }
 

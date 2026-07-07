@@ -31,9 +31,12 @@ export default function Anexos({ pedidoId, atId, titulo = 'Anexos' }: AnexosProp
   const [enviando, setEnviando] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => { buscarAnexos() }, [pedidoId, atId])
+  useEffect(() => {
+    if (pedidoId || atId) buscarAnexos()
+  }, [pedidoId, atId])
 
   async function buscarAnexos() {
+    if (!pedidoId && !atId) { setAnexos([]); return }
     let q = supabase.from('anexos').select('*').order('created_at', { ascending: false })
     if (pedidoId) q = q.eq('pedido_id', pedidoId)
     else if (atId) q = q.eq('at_id', atId)

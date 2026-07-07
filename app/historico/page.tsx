@@ -86,7 +86,10 @@ export default function Historico() {
     acc[dia].push(r)
     return acc
   }, {})
-  const dias = Object.keys(porDia)
+  const dias = Object.keys(porDia).sort((a, b) => {
+    const toISO = (d: string) => d.split('/').reverse().join('-')
+    return toISO(b).localeCompare(toISO(a))
+  })
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>

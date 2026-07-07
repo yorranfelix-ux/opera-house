@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { registrarHistorico } from '../lib/historico'
 import Sidebar from '../components/Sidebar'
@@ -95,7 +95,7 @@ export default function Entregas() {
   const [infoMotorista, setInfoMotorista] = useState({ motorista: '', veiculo: '', placa: '', rodizio: '' })
   const [showMotivoModal, setShowMotivoModal] = useState(false)
   const [motivoReagendamento, setMotivoReagendamento] = useState('')
-  const [pendingSave, setPendingSave] = useState(false)
+  const pendingSaveRef = useRef(false)
 
   useEffect(() => {
     buscarEntregas()
@@ -143,7 +143,7 @@ export default function Entregas() {
     if (!form.pedido_id) return alert('Selecione o pedido')
     if (!form.data_agendada) return alert('Data agendada é obrigatória')
 
-    if (editandoId && !pendingSave) {
+    if (editandoId && !pendingSaveRef.current) {
       const entregaAtual = entregas.find(e => e.id === editandoId)
       const dataAtual = entregaAtual?.data_agendada
       if (dataAtual && dataAtual !== form.data_agendada) {
@@ -181,7 +181,7 @@ export default function Entregas() {
       }
       setShowMotivoModal(false)
       setMotivoReagendamento('')
-      setPendingSave(false)
+      pendingSaveRef.current = false
       setShowForm(false)
       setForm(formVazio)
       setEditandoId(null)
@@ -604,11 +604,11 @@ export default function Entregas() {
               style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: '16px' }}
             />
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-              <button onClick={() => { setShowMotivoModal(false); setMotivoReagendamento('') }}
+              <button onClick={() => { pendingSaveRef.current = false; setShowMotivoModal(false); setMotivoReagendamento('') }}
                 style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>
                 Cancelar
               </button>
-              <button onClick={() => { setPendingSave(true); salvar() }}
+              <button onClick={() => { pendingSaveRef.current = true; salvar() }}
                 style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
                 Confirmar reagendamento
               </button>
