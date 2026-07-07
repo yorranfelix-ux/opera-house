@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import Sidebar from '../../components/Sidebar'
+import { LOGO_DARK } from '../../lib/logos'
 import { use } from 'react'
 
 interface Pedido {
@@ -401,9 +402,6 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: sans-serif; color: #1a1a2e; background: white; }
       .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 2px solid #1a1a2e; }
-      .logo-box { background: #1a1a2e; border-radius: 8px; padding: 7px 13px; display: flex; align-items: center; gap: 6px; }
-      .logo-h { color: #C9A84C; font-size: 18px; font-weight: 700; line-height: 1; }
-      .logo-label { color: #C9A84C; font-size: 8px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; line-height: 1.3; }
       .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
       .info-block { background: #f7f6f3; border-radius: 7px; padding: 9px 13px; }
       .info-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.6px; color: #aaa; margin-bottom: 3px; font-weight: 500; }
@@ -426,10 +424,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     </style></head><body>
 
     <div class="header">
-      <div class="logo-box">
-        <div class="logo-h">h</div>
-        <div class="logo-label">Opera<br>House</div>
-      </div>
+      <img src="${LOGO_DARK}" alt="Opera House" style="height:48px;object-fit:contain">
       <div style="text-align:right">
         <div style="font-size:16px;font-weight:500">Pedido ${pedido.numero_pedido}</div>
         <div style="font-size:10px;color:#888;margin-top:2px">Impresso em ${dataImpressao}</div>

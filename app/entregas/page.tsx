@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { registrarHistorico } from '../lib/historico'
 import Sidebar from '../components/Sidebar'
+import { LOGO_DARK } from '../lib/logos'
 
 interface ClienteEntrega {
   nome: string
@@ -240,17 +241,7 @@ export default function Entregas() {
 <table style="margin-bottom:10px;border:none;">
   <tr>
     <td style="border:none;text-align:center;padding:4px 0 10px;">
-      <table style="margin:0 auto;border:none;border-collapse:separate;border-spacing:0;">
-        <tr>
-          <td style="background:#1a1a2e;border:2px solid #1a1a2e;width:56px;height:56px;text-align:center;vertical-align:middle;border-radius:6px;">
-            <span style="color:#C9A84C;font-size:28px;font-weight:900;font-style:italic;font-family:Georgia,serif;">h</span>
-          </td>
-          <td style="border:none;padding-left:12px;vertical-align:middle;text-align:left;">
-            <div style="font-size:22px;font-weight:900;letter-spacing:2px;line-height:1.15;color:#1a1a2e;">OPERA</div>
-            <div style="font-size:22px;font-weight:900;letter-spacing:2px;line-height:1.15;color:#1a1a2e;">HOUSE</div>
-          </td>
-        </tr>
-      </table>
+      <img src="${LOGO_DARK}" alt="Opera House" style="height:56px;object-fit:contain;">
     </td>
   </tr>
 </table>
