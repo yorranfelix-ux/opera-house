@@ -51,15 +51,6 @@ const STATUS_COR: Record<string, { bg: string; color: string; label: string }> =
   cancelada: { bg: '#f0efe9', color: '#888', label: 'Cancelada' },
 }
 
-const navItems = [
-  { label: 'Dashboard', href: '/dashboard' },
-  { label: 'Pedidos', href: '/pedidos' },
-  { label: 'Clientes', href: '/clientes' },
-  { label: 'Fornecedores', href: '/fornecedores' },
-  { label: 'Assistencia Tecnica', href: '/assistencia' },
-  { label: 'Ocorrencias', href: '/ocorrencias' },
-  { label: 'Entregas', href: '/entregas' },
-]
 
 export default function AssistenciaTecnica() {
   const [ats, setAts] = useState<AT[]>([])
@@ -94,6 +85,7 @@ export default function AssistenciaTecnica() {
   })
   const [loadingATs, setLoadingATs] = useState(true)
   const [salvando, setSalvando] = useState(false)
+  const [processando, setProcessando] = useState(false)
   const [showProcessoModal, setShowProcessoModal] = useState(false)
   const [showRetornoModal, setShowRetornoModal] = useState(false)
   const [showResolvidaModal, setShowResolvidaModal] = useState(false)
@@ -129,7 +121,7 @@ export default function AssistenciaTecnica() {
     setLoadingATs(true)
     const { data } = await supabase
       .from('assistencias_tecnicas')
-      .select('*, pedidos(numero_pedido, clientes(nome, cidade)), fornecedores(nome_fantasia, razao_social)')
+      .select('*, pedidos(numero_pedido, clientes(nome, cidade)), fornecedores(nome_fantasia, razao_social), itens_pedido(descricao)')
       .order('created_at', { ascending: false })
     setAts((data as unknown as AT[]) || [])
     setLoadingATs(false)
@@ -218,49 +210,69 @@ export default function AssistenciaTecnica() {
     if (!atSelecionada) return
     if (!fornecedorForm.fornecedor_id) return alert('Selecione o fornecedor')
     if (!fornecedorForm.data_envio_fornecedor) return alert('Informe a data de envio')
-    const { error } = await supabase
-      .from('assistencias_tecnicas')
-      .update({
-        fornecedor_id: fornecedorForm.fornecedor_id,
-        data_envio_fornecedor: fornecedorForm.data_envio_fornecedor,
-        previsao_retorno_fornecedor: fornecedorForm.previsao_retorno_fornecedor || null,
-        observacoes_fornecedor: fornecedorForm.observacoes_fornecedor,
-        numero_nf_envio: fornecedorForm.numero_nf_envio || null,
-        status: 'enviado_fornecedor',
-      })
-      .eq('id', atSelecionada.id)
-    if (error) return alert('Erro: ' + error.message)
-    const forn = fornecedores.find(f => f.id === fornecedorForm.fornecedor_id)
-    const nomeForn = forn?.nome_fantasia || forn?.razao_social || 'fornecedor'
-    await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Enviado ao fornecedor ${nomeForn}` })
-    setShowFornecedorForm(false)
-    setAtSelecionada(null)
-    setFornecedorForm({ fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes_fornecedor: '', numero_nf_envio: '' })
-    buscarATs()
+    setProcessando(true)
+    try {
+      const { error } = await supabase
+        .from('assistencias_tecnicas')
+        .update({
+          fornecedor_id: fornecedorForm.fornecedor_id,
+          data_envio_fornecedor: fornecedorForm.data_envio_fornecedor,
+          previsao_retorno_fornecedor: fornecedorForm.previsao_retorno_fornecedor || null,
+          observacoes_fornecedor: fornecedorForm.observacoes_fornecedor,
+          numero_nf_envio: fornecedorForm.numero_nf_envio || null,
+          status: 'enviado_fornecedor',
+        })
+        .eq('id', atSelecionada.id)
+      if (error) return alert('Erro: ' + error.message)
+      const forn = fornecedores.find(f => f.id === fornecedorForm.fornecedor_id)
+      const nomeForn = forn?.nome_fantasia || forn?.razao_social || 'fornecedor'
+      await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Enviado ao fornecedor ${nomeForn}`, pedidoId: (atSelecionada as any).pedido_id })
+      setShowFornecedorForm(false)
+      setAtSelecionada(null)
+      setFornecedorForm({ fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes_fornecedor: '', numero_nf_envio: '' })
+      buscarATs()
+    } finally {
+      setProcessando(false)
+    }
   }
 
   async function iniciarProcesso() {
     if (!atSelecionada) return
-    const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'em_reparo', observacoes: processoObs }).eq('id', atSelecionada.id)
-    if (error) return alert('Erro: ' + error.message)
-    await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Em reparo${processoObs ? ': ' + processoObs : ''}`, pedidoId: atSelecionada.pedidos?.numero_pedido ? undefined : undefined })
-    setShowProcessoModal(false); setAtSelecionada(null); setProcessoObs(''); buscarATs()
+    setProcessando(true)
+    try {
+      const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'em_reparo', observacoes: processoObs }).eq('id', atSelecionada.id)
+      if (error) return alert('Erro: ' + error.message)
+      await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Em reparo${processoObs ? ': ' + processoObs : ''}`, pedidoId: (atSelecionada as any).pedido_id })
+      setShowProcessoModal(false); setAtSelecionada(null); setProcessoObs(''); buscarATs()
+    } finally {
+      setProcessando(false)
+    }
   }
 
   async function registrarRetorno() {
     if (!atSelecionada) return
-    const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'aguardando_devolucao', observacoes_fornecedor: retornoObs }).eq('id', atSelecionada.id)
-    if (error) return alert('Erro: ' + error.message)
-    await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Retornou do fornecedor${retornoObs ? ': ' + retornoObs : ''}` })
-    setShowRetornoModal(false); setAtSelecionada(null); setRetornoObs(''); buscarATs()
+    setProcessando(true)
+    try {
+      const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'aguardando_devolucao', observacoes_fornecedor: retornoObs }).eq('id', atSelecionada.id)
+      if (error) return alert('Erro: ' + error.message)
+      await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Retornou do fornecedor${retornoObs ? ': ' + retornoObs : ''}`, pedidoId: (atSelecionada as any).pedido_id })
+      setShowRetornoModal(false); setAtSelecionada(null); setRetornoObs(''); buscarATs()
+    } finally {
+      setProcessando(false)
+    }
   }
 
   async function marcarResolvida() {
     if (!atSelecionada) return
-    const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'resolvida', observacoes: resolvidaObs }).eq('id', atSelecionada.id)
-    if (error) return alert('Erro: ' + error.message)
-    await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Resolvida${resolvidaObs ? ': ' + resolvidaObs : ''}` })
-    setShowResolvidaModal(false); setAtSelecionada(null); setResolvidaObs(''); buscarATs()
+    setProcessando(true)
+    try {
+      const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'resolvida', observacoes: resolvidaObs }).eq('id', atSelecionada.id)
+      if (error) return alert('Erro: ' + error.message)
+      await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Resolvida${resolvidaObs ? ': ' + resolvidaObs : ''}`, pedidoId: (atSelecionada as any).pedido_id })
+      setShowResolvidaModal(false); setAtSelecionada(null); setResolvidaObs(''); buscarATs()
+    } finally {
+      setProcessando(false)
+    }
   }
 
   const STATUS_ATIVAS = ['aberta', 'aguardando_retirada', 'em_reparo', 'enviado_fornecedor', 'aguardando_devolucao']
@@ -513,7 +525,7 @@ export default function AssistenciaTecnica() {
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowProcessoModal(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-              <button onClick={iniciarProcesso} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Confirmar</button>
+              <button onClick={iniciarProcesso} disabled={processando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: processando ? 0.7 : 1 }}>Confirmar</button>
             </div>
           </div>
         </div>
@@ -533,7 +545,7 @@ export default function AssistenciaTecnica() {
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowRetornoModal(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-              <button onClick={registrarRetorno} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Confirmar retorno</button>
+              <button onClick={registrarRetorno} disabled={processando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: processando ? 0.7 : 1 }}>Confirmar retorno</button>
             </div>
           </div>
         </div>
@@ -553,7 +565,7 @@ export default function AssistenciaTecnica() {
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowResolvidaModal(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-              <button onClick={marcarResolvida} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#3B6D11', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Marcar resolvida</button>
+              <button onClick={marcarResolvida} disabled={processando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#3B6D11', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: processando ? 0.7 : 1 }}>Marcar resolvida</button>
             </div>
           </div>
         </div>
@@ -601,7 +613,7 @@ export default function AssistenciaTecnica() {
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowFornecedorForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-              <button onClick={enviarAoFornecedor} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Confirmar envio</button>
+              <button onClick={enviarAoFornecedor} disabled={processando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: processando ? 0.7 : 1 }}>Confirmar envio</button>
             </div>
           </div>
         </div>

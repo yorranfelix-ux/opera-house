@@ -104,6 +104,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const [showExcluirModal, setShowExcluirModal] = useState(false)
   const [confirmacaoExcluir, setConfirmacaoExcluir] = useState('')
   const [excluindo, setExcluindo] = useState(false)
+  const [salvandoItem, setSalvandoItem] = useState(false)
 
   useEffect(() => {
     buscarPedido()
@@ -155,6 +156,13 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     if (confirmacaoExcluir !== pedido?.numero_pedido) return
     setExcluindo(true)
 
+    await supabase.from('itens_pedido').delete().eq('pedido_id', id)
+    await supabase.from('assistencias_tecnicas').delete().eq('pedido_id', id)
+    await supabase.from('ocorrencias').delete().eq('pedido_id', id)
+    await supabase.from('entregas').delete().eq('pedido_id', id)
+    const { error } = await supabase.from('pedidos').delete().eq('id', id)
+    if (error) { alert('Erro ao excluir: ' + error.message); setExcluindo(false); return }
+
     const { data: { user } } = await supabase.auth.getUser()
     const { data: profile } = await supabase.from('profiles').select('nome').eq('id', user?.id || '').single()
     await supabase.from('historico_alteracoes').insert([{
@@ -166,13 +174,6 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       descricao: `Pedido ${pedido?.numero_pedido} (${pedido?.clientes?.nome}) foi excluído permanentemente`,
     }])
 
-    await supabase.from('historico_alteracoes').delete().eq('pedido_id', id)
-    await supabase.from('itens_pedido').delete().eq('pedido_id', id)
-    await supabase.from('assistencias_tecnicas').delete().eq('pedido_id', id)
-    await supabase.from('ocorrencias').delete().eq('pedido_id', id)
-    await supabase.from('entregas').delete().eq('pedido_id', id)
-    const { error } = await supabase.from('pedidos').delete().eq('id', id)
-    if (error) { alert('Erro ao excluir: ' + error.message); setExcluindo(false); return }
     window.location.href = '/pedidos'
   }
 
@@ -251,6 +252,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
 
   async function salvarItem() {
     if (!itemForm.descricao) return alert('Descrição é obrigatória')
+    setSalvandoItem(true)
+    try {
     const payload = {
       descricao: itemForm.descricao,
       quantidade: parseInt(itemForm.quantidade) || 1,
@@ -336,6 +339,9 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     setItemAnterior(null)
     buscarItens()
     buscarHistorico()
+    } finally {
+      setSalvandoItem(false)
+    }
   }
 
   const aptos = itens.filter(i => i.apto_entrega).length
@@ -825,8 +831,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowItemForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-              <button onClick={salvarItem} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-                {editandoItemId ? 'Salvar alterações' : 'Salvar item'}
+              <button onClick={salvarItem} disabled={salvandoItem} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: salvandoItem ? 'not-allowed' : 'pointer', opacity: salvandoItem ? 0.7 : 1 }}>
+                {salvandoItem ? 'Salvando...' : (editandoItemId ? 'Salvar alterações' : 'Salvar item')}
               </button>
             </div>
           </div>

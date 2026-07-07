@@ -56,6 +56,9 @@ const STATUS_COR: Record<string, { bg: string; color: string; label: string }> =
 function EditableDateCard({ label, value, highlight, onSave }: { label: string; value: string | null; highlight?: boolean; onSave: (val: string) => void }) {
   const [editando, setEditando] = useState(false)
   const [valorLocal, setValorLocal] = useState(value || '')
+  useEffect(() => {
+    setValorLocal(value || '')
+  }, [value])
   const formatted = value ? new Date(value + 'T12:00:00').toLocaleDateString('pt-BR') : '—'
   const isPast = value && new Date(value) < new Date() && highlight
   function confirmar() {
@@ -87,6 +90,9 @@ function EditableDateCard({ label, value, highlight, onSave }: { label: string; 
 function EditableTextCard({ label, value, multiline, onSave }: { label: string; value: string | null; multiline?: boolean; onSave: (val: string) => void }) {
   const [editando, setEditando] = useState(false)
   const [valorLocal, setValorLocal] = useState(value || '')
+  useEffect(() => {
+    setValorLocal(value || '')
+  }, [value])
   function confirmar() {
     setEditando(false)
     if (valorLocal !== (value || '')) onSave(valorLocal)

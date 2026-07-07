@@ -342,7 +342,7 @@ export default function Dashboard() {
                     </div>
                     <a href="/usuarios" onClick={() => setShowAvatar(false)} style={{ display: 'block', padding: '11px 16px', fontSize: '13px', color: '#555', textDecoration: 'none', borderBottom: '0.5px solid #f0efe9' }}>Gerenciar usuários</a>
                     <a href="/configuracoes" onClick={() => setShowAvatar(false)} style={{ display: 'block', padding: '11px 16px', fontSize: '13px', color: '#555', textDecoration: 'none', borderBottom: '0.5px solid #f0efe9' }}>Configurações</a>
-                    <button onClick={async () => { const { createBrowserClient } = await import('@supabase/ssr'); const sb = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!); await sb.auth.signOut(); window.location.href = '/login' }}
+                    <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }}
                       style={{ display: 'block', width: '100%', padding: '11px 16px', fontSize: '13px', color: '#A32D2D', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer' }}>
                       Sair
                     </button>

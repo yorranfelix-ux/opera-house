@@ -36,6 +36,9 @@ const TIPO_COR: Record<string, { bg: string; color: string; label: string }> = {
   cliente_excluido:      { bg: '#FCEBEB', color: '#791F1F', label: 'Cliente excluído' },
   fornecedor_excluido:   { bg: '#FCEBEB', color: '#791F1F', label: 'Fornecedor excluído' },
   profissional_excluido: { bg: '#FCEBEB', color: '#791F1F', label: 'Profissional excluído' },
+  entrega_agendada:      { bg: '#EAF3DE', color: '#27500A', label: 'Entrega agendada' },
+  entrega_atualizada:    { bg: '#E6F1FB', color: '#0C447C', label: 'Entrega atualizada' },
+  entrega_excluida:      { bg: '#FCEBEB', color: '#791F1F', label: 'Entrega removida' },
 }
 
 export default function Historico() {

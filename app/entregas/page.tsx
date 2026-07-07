@@ -153,11 +153,11 @@ export default function Entregas() {
       if (editandoId) {
         const { error } = await supabase.from('entregas').update(payload).eq('id', editandoId)
         if (error) return alert('Erro: ' + error.message)
-        await registrarHistorico({ tipo: 'pedido_editado', descricao: `Entrega do Pedido ${numPedido} atualizada para ${form.data_agendada ? new Date(form.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}`, pedidoId: form.pedido_id })
+        await registrarHistorico({ tipo: 'entrega_atualizada', descricao: `Entrega do Pedido ${numPedido} atualizada para ${form.data_agendada ? new Date(form.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}`, pedidoId: form.pedido_id })
       } else {
         const { error } = await supabase.from('entregas').insert([{ ...payload, status: 'agendada' }])
         if (error) return alert('Erro: ' + error.message)
-        await registrarHistorico({ tipo: 'pedido_editado', descricao: `Entrega do Pedido ${numPedido} agendada para ${form.data_agendada ? new Date(form.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}`, pedidoId: form.pedido_id })
+        await registrarHistorico({ tipo: 'entrega_agendada', descricao: `Entrega do Pedido ${numPedido} agendada para ${form.data_agendada ? new Date(form.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}`, pedidoId: form.pedido_id })
       }
       setShowForm(false)
       setForm(formVazio)
@@ -346,8 +346,10 @@ export default function Entregas() {
 
   async function deletarEntrega(id: string, numeroPedido: string) {
     if (!confirm(`Remover o agendamento do Pedido ${numeroPedido}? O pedido não será excluído, apenas o agendamento de entrega.`)) return
+    const entrega = entregas.find(e => e.id === id)
     const { error } = await supabase.from('entregas').delete().eq('id', id)
     if (error) return alert('Erro: ' + error.message)
+    await registrarHistorico({ tipo: 'entrega_excluida', descricao: `Agendamento de entrega do Pedido ${numeroPedido} removido`, pedidoId: entrega?.pedido_id })
     buscarEntregas()
   }
 
