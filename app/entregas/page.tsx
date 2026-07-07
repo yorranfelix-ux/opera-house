@@ -25,6 +25,8 @@ interface Entrega {
   requer_icamento: boolean
   observacoes_icamento: string
   observacoes: string
+  motivo_reagendamento: string | null
+  data_anterior: string | null
   pedidos: {
     numero_pedido: string
     clientes: ClienteEntrega
@@ -91,6 +93,9 @@ export default function Entregas() {
   const [impressao, setImpressao] = useState<ImpressaoInfo | null>(null)
   const [salvando, setSalvando] = useState(false)
   const [infoMotorista, setInfoMotorista] = useState({ motorista: '', veiculo: '', placa: '', rodizio: '' })
+  const [showMotivoModal, setShowMotivoModal] = useState(false)
+  const [motivoReagendamento, setMotivoReagendamento] = useState('')
+  const [pendingSave, setPendingSave] = useState(false)
 
   useEffect(() => {
     buscarEntregas()
@@ -100,7 +105,7 @@ export default function Entregas() {
   async function buscarEntregas() {
     const { data } = await supabase
       .from('entregas')
-      .select('*, pedidos(numero_pedido, clientes(nome, cidade, estado, endereco, numero, bairro, cep))')
+      .select('*, motivo_reagendamento, data_anterior, pedidos(numero_pedido, clientes(nome, cidade, estado, endereco, numero, bairro, cep))')
       .order('data_agendada', { ascending: true })
     setEntregas((data as unknown as Entrega[]) || [])
   }
@@ -137,9 +142,19 @@ export default function Entregas() {
   async function salvar() {
     if (!form.pedido_id) return alert('Selecione o pedido')
     if (!form.data_agendada) return alert('Data agendada é obrigatória')
+
+    if (editandoId && !pendingSave) {
+      const entregaAtual = entregas.find(e => e.id === editandoId)
+      const dataAtual = entregaAtual?.data_agendada
+      if (dataAtual && dataAtual !== form.data_agendada) {
+        setShowMotivoModal(true)
+        return
+      }
+    }
+
     setSalvando(true)
     try {
-      const payload = {
+      const payload: any = {
         pedido_id: form.pedido_id,
         data_agendada: form.data_agendada,
         data_realizada: form.data_realizada || null,
@@ -151,6 +166,11 @@ export default function Entregas() {
       const pedidoSel = pedidos.find(p => p.id === form.pedido_id)
       const numPedido = pedidoSel?.numero_pedido || '?'
       if (editandoId) {
+        const entregaAtual = entregas.find(e => e.id === editandoId)
+        if (entregaAtual?.data_agendada !== form.data_agendada) {
+          payload.motivo_reagendamento = motivoReagendamento || null
+          payload.data_anterior = entregaAtual?.data_agendada || null
+        }
         const { error } = await supabase.from('entregas').update(payload).eq('id', editandoId)
         if (error) return alert('Erro: ' + error.message)
         await registrarHistorico({ tipo: 'entrega_atualizada', descricao: `Entrega do Pedido ${numPedido} atualizada para ${form.data_agendada ? new Date(form.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}`, pedidoId: form.pedido_id })
@@ -159,6 +179,9 @@ export default function Entregas() {
         if (error) return alert('Erro: ' + error.message)
         await registrarHistorico({ tipo: 'entrega_agendada', descricao: `Entrega do Pedido ${numPedido} agendada para ${form.data_agendada ? new Date(form.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}`, pedidoId: form.pedido_id })
       }
+      setShowMotivoModal(false)
+      setMotivoReagendamento('')
+      setPendingSave(false)
       setShowForm(false)
       setForm(formVazio)
       setEditandoId(null)
@@ -467,6 +490,11 @@ export default function Entregas() {
                           {e.observacoes && (
                             <div style={{ fontSize: '11px', color: '#aaa', marginTop: '2px', fontStyle: 'italic' }}>{e.observacoes}</div>
                           )}
+                          {e.motivo_reagendamento && (
+                            <div style={{ fontSize: '10px', color: '#888', marginTop: '2px', fontStyle: 'italic' }}>
+                              ↺ {e.motivo_reagendamento}
+                            </div>
+                          )}
                         </div>
                         <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                           <button
@@ -562,6 +590,32 @@ export default function Entregas() {
           </div>
         )
       })()}
+
+      {showMotivoModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '24px', width: '400px' }}>
+            <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a1a2e', marginBottom: '6px' }}>Reagendamento</div>
+            <div style={{ fontSize: '13px', color: '#888', marginBottom: '16px' }}>A data de entrega foi alterada. Informe o motivo (opcional).</div>
+            <textarea
+              placeholder="Ex: cliente solicitou nova data, equipe indisponível..."
+              value={motivoReagendamento}
+              onChange={e => setMotivoReagendamento(e.target.value)}
+              rows={3}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', resize: 'none', boxSizing: 'border-box', marginBottom: '16px' }}
+            />
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button onClick={() => { setShowMotivoModal(false); setMotivoReagendamento('') }}
+                style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>
+                Cancelar
+              </button>
+              <button onClick={() => { setPendingSave(true); salvar() }}
+                style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
+                Confirmar reagendamento
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>

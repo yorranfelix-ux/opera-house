@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import Sidebar from '../../components/Sidebar'
+import Anexos from '../../components/Anexos'
 import { LOGO_DARK } from '../../lib/logos'
 import { use } from 'react'
 
@@ -105,6 +106,9 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const [confirmacaoExcluir, setConfirmacaoExcluir] = useState('')
   const [excluindo, setExcluindo] = useState(false)
   const [salvandoItem, setSalvandoItem] = useState(false)
+  const [pagamento, setPagamento] = useState({ status_pagamento: 'pendente', valor_total: '', valor_recebido: '' })
+  const [historicoItemId, setHistoricoItemId] = useState<string | null>(null)
+  const [historicoItens, setHistoricoItens] = useState<any[]>([])
 
   useEffect(() => {
     buscarPedido()
@@ -121,8 +125,28 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       .select('*, clientes(nome, endereco, numero, cidade, estado, telefone), profissionais(nome, tipo)')
       .eq('id', id)
       .single()
+    if (data) {
+      setPagamento({
+        status_pagamento: (data as any).status_pagamento || 'pendente',
+        valor_total: (data as any).valor_total != null ? String((data as any).valor_total) : '',
+        valor_recebido: (data as any).valor_recebido != null ? String((data as any).valor_recebido) : '',
+      })
+    }
     setPedido(data)
     setLoading(false)
+  }
+
+  async function salvarPagamento() {
+    const payload: Record<string, unknown> = { status_pagamento: pagamento.status_pagamento }
+    if (pagamento.valor_total !== '') payload.valor_total = parseFloat(pagamento.valor_total) || null
+    if (pagamento.valor_recebido !== '') payload.valor_recebido = parseFloat(pagamento.valor_recebido) || null
+    await supabase.from('pedidos').update(payload).eq('id', id)
+  }
+
+  async function verHistoricoItem(itemId: string) {
+    setHistoricoItemId(itemId)
+    const { data } = await supabase.from('historico_itens').select('*').eq('item_id', itemId).order('created_at', { ascending: false })
+    setHistoricoItens(data || [])
   }
 
   async function buscarATs() {
@@ -327,6 +351,18 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       }
       const descricao = `Item "${itemForm.descricao}" editado${mudancas.length ? ': ' + mudancas.join(' · ') : ''}`
       await registrarHistorico(descricao, 'item_editado', editandoItemId)
+
+      if (itemAnterior && itemAnterior.status !== itemForm.status) {
+        const { data: { user } } = await supabase.auth.getUser()
+        const { data: perfil } = await supabase.from('profiles').select('nome').eq('id', user?.id || '').single()
+        await supabase.from('historico_itens').insert([{
+          item_id: editandoItemId,
+          pedido_id: id,
+          status_anterior: itemAnterior.status,
+          status_novo: itemForm.status,
+          usuario_nome: perfil?.nome || user?.email || 'Usuário',
+        }])
+      }
     } else {
       const { error } = await supabase.from('itens_pedido').insert([{ ...payload, pedido_id: id, status: 'aguardando_compra' }])
       if (error) return alert('Erro: ' + error.message)
@@ -653,6 +689,48 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             ))}
           </div>
 
+          <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '16px 18px', marginBottom: '12px' }}>
+            <div style={{ fontSize: '11px', color: '#888', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.4px', fontWeight: '600' }}>Pagamento</div>
+
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Status</div>
+              <select value={pagamento.status_pagamento} onChange={e => setPagamento({ ...pagamento, status_pagamento: e.target.value })} onBlur={salvarPagamento}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '7px', border: '0.5px solid #e8e7e3', fontSize: '12px', outline: 'none', color: '#1a1a2e', background: '#fff' }}>
+                <option value="pendente">Pendente</option>
+                <option value="parcial">Parcial</option>
+                <option value="pago">Pago</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+              <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Valor total (R$)</div>
+              <input type="number" step="0.01" placeholder="0,00" value={pagamento.valor_total}
+                onChange={e => setPagamento({ ...pagamento, valor_total: e.target.value })}
+                onBlur={salvarPagamento}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '7px', border: '0.5px solid #e8e7e3', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+
+            <div>
+              <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Valor recebido (R$)</div>
+              <input type="number" step="0.01" placeholder="0,00" value={pagamento.valor_recebido}
+                onChange={e => setPagamento({ ...pagamento, valor_recebido: e.target.value })}
+                onBlur={salvarPagamento}
+                style={{ width: '100%', padding: '6px 10px', borderRadius: '7px', border: '0.5px solid #e8e7e3', fontSize: '12px', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+
+            {pagamento.status_pagamento !== 'pendente' && (
+              <div style={{ marginTop: '10px' }}>
+                <span style={{
+                  fontSize: '11px', padding: '2px 9px', borderRadius: '6px', fontWeight: '500',
+                  background: pagamento.status_pagamento === 'pago' ? '#EAF3DE' : '#FAEEDA',
+                  color: pagamento.status_pagamento === 'pago' ? '#27500A' : '#633806',
+                }}>
+                  {pagamento.status_pagamento === 'pago' ? 'Pago' : 'Parcialmente pago'}
+                </span>
+              </div>
+            )}
+          </div>
+
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
               <span style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Produtos do pedido</span>
@@ -667,11 +745,11 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
 
             {itens.length > 0 && (
               <div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 50px 110px 120px 90px 40px 72px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
-                  <span>Item</span><span>Qtd</span><span>Fornecedor</span><span>Status</span><span>Previsão</span><span>Apto</span><span></span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 50px 110px 120px 90px 40px 36px 72px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
+                  <span>Item</span><span>Qtd</span><span>Fornecedor</span><span>Status</span><span>Previsão</span><span>Apto</span><span></span><span></span>
                 </div>
                 {itens.map((item, i) => (
-                  <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 50px 110px 120px 90px 40px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: item.tipo === 'tecido' ? '#F5F0FF' : item.tipo === 'outro' ? '#F5F5F5' : i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+                  <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 50px 110px 120px 90px 40px 36px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: item.tipo === 'tecido' ? '#F5F0FF' : item.tipo === 'outro' ? '#F5F5F5' : i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         {item.tipo === 'tecido' && (
@@ -710,6 +788,11 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                     <span style={{ fontSize: '13px', textAlign: 'center', color: item.apto_entrega ? '#3B6D11' : '#ccc' }}>
                       {item.apto_entrega ? '✓' : '—'}
                     </span>
+                    <button onClick={() => verHistoricoItem(item.id)}
+                      title="Ver histórico de status"
+                      style={{ padding: '4px 8px', borderRadius: '5px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '11px', cursor: 'pointer', color: '#888' }}>
+                      ↺
+                    </button>
                     <button onClick={() => abrirEdicaoItem(item)} style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>
                       Editar
                     </button>
@@ -717,6 +800,10 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                 ))}
               </div>
             )}
+          </div>
+
+          <div style={{ marginBottom: '16px' }}>
+            <Anexos pedidoId={id} />
           </div>
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
@@ -847,6 +934,36 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                 {salvandoItem ? 'Salvando...' : (editandoItemId ? 'Salvar alterações' : 'Salvar item')}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {historicoItemId && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '24px', width: '440px', maxHeight: '80vh', overflow: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a2e' }}>Histórico de status</span>
+              <button onClick={() => setHistoricoItemId(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+            </div>
+            {historicoItens.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#888', fontSize: '13px', padding: '24px 0' }}>Nenhuma alteração de status registrada.</div>
+            ) : (
+              historicoItens.map((h, i) => (
+                <div key={h.id} style={{ display: 'flex', gap: '12px', paddingBottom: '12px', marginBottom: '12px', borderBottom: i < historicoItens.length - 1 ? '0.5px solid #f0efe9' : 'none' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#C9A84C', flexShrink: 0, marginTop: '5px' }} />
+                  <div>
+                    <div style={{ fontSize: '12px', color: '#1a1a2e', marginBottom: '2px' }}>
+                      <span style={{ color: '#888' }}>{h.status_anterior || '—'}</span>
+                      {' → '}
+                      <span style={{ fontWeight: '500' }}>{h.status_novo}</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#aaa' }}>
+                      {h.usuario_nome} · {new Date(h.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
