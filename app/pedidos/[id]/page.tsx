@@ -340,6 +340,185 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const aptos = itens.filter(i => i.apto_entrega).length
   const icamento = itens.filter(i => i.requer_icamento).length
 
+  function imprimirConferencia() {
+    if (!pedido) return
+    const now = new Date()
+    const dataImpressao = now.toLocaleDateString('pt-BR') + ' · ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    const totalPecas = itens.reduce((sum, i) => sum + (i.quantidade || 1), 0)
+    const recebidos = itens.filter(i => i.status === 'recebido' || i.status === 'conferido_ok' || i.status === 'apto_entrega' || i.status === 'entregue').length
+    const comIcamento = itens.filter(i => i.requer_icamento).length
+
+    const STATUS_PRINT: Record<string, { label: string; bg: string; color: string }> = {
+      aguardando_compra: { label: 'Aguard. compra', bg: '#FAECE7', color: '#712B13' },
+      compra_enviada:    { label: 'Compra enviada', bg: '#FAEEDA', color: '#633806' },
+      compra_confirmada: { label: 'Confirmado',     bg: '#FAEEDA', color: '#633806' },
+      em_producao:       { label: 'Em produção',    bg: '#E6F1FB', color: '#0C447C' },
+      em_transporte:     { label: 'Em transporte',  bg: '#FAEEDA', color: '#633806' },
+      recebido:          { label: 'Recebido',        bg: '#EAF3DE', color: '#27500A' },
+      conferido_ok:      { label: 'Conferido OK',   bg: '#EAF3DE', color: '#27500A' },
+      conferido_com_problema: { label: 'Com problema', bg: '#FCEBEB', color: '#791F1F' },
+      em_at:             { label: 'Em AT',           bg: '#EEEDFE', color: '#3C3489' },
+      apto_entrega:      { label: 'Apto entrega',   bg: '#EAF3DE', color: '#27500A' },
+      entregue:          { label: 'Entregue',        bg: '#EAF3DE', color: '#27500A' },
+    }
+
+    const linhasVazias = Math.max(0, 14 - itens.length)
+    const linhasExtras = Array.from({ length: linhasVazias })
+
+    const linhasHTML = itens.map(item => {
+      const st = STATUS_PRINT[item.status] || { label: item.status, bg: '#f0efe9', color: '#555' }
+      const forn = item.fornecedores?.nome_fantasia || item.fornecedores?.razao_social || '—'
+      const detalhe = [item.medida, item.tecido, item.cor, item.acabamento].filter(Boolean).join(' · ')
+      const qtd = String(item.quantidade || 1).padStart(2, '0')
+      return `
+        <tr>
+          <td style="width:48px;text-align:center"><span style="display:inline-block;background:#1a1a2e;color:#C9A84C;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;min-width:28px;text-align:center">${qtd}</span></td>
+          <td>
+            <div style="font-size:12px;font-weight:500;color:#1a1a2e">${item.descricao}</div>
+            ${detalhe ? `<div style="font-size:10px;color:#888;margin-top:2px">${detalhe}</div>` : ''}
+          </td>
+          <td style="width:80px;font-size:11px;color:#555">${forn}</td>
+          <td style="width:80px"><span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;background:${st.bg};color:${st.color}">${st.label}</span></td>
+          <td style="width:76px;text-align:center">${item.requer_icamento
+            ? '<span style="display:inline-flex;align-items:center;gap:3px;background:#FCEBEB;color:#791F1F;font-size:10px;font-weight:500;padding:2px 7px;border-radius:4px">⚠ Sim</span>'
+            : '<span style="display:inline-flex;align-items:center;background:#f0efe9;color:#888;font-size:10px;font-weight:500;padding:2px 7px;border-radius:4px">Não</span>'
+          }</td>
+          <td style="width:30px;text-align:center"><div style="width:16px;height:16px;border:1.5px solid #ccc;border-radius:3px;display:inline-block"></div></td>
+        </tr>`
+    }).join('')
+
+    const vaziosHTML = linhasExtras.map(() => `
+      <tr style="height:34px">
+        <td></td><td></td><td></td><td></td><td></td>
+        <td style="text-align:center"><div style="width:16px;height:16px;border:1.5px solid #ccc;border-radius:3px;display:inline-block"></div></td>
+      </tr>`
+    ).join('')
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>Conferência — Pedido ${pedido.numero_pedido}</title>
+    <style>
+      @page { size: A4 portrait; margin: 12mm 14mm; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: sans-serif; color: #1a1a2e; background: white; }
+      .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 2px solid #1a1a2e; }
+      .logo-box { background: #1a1a2e; border-radius: 8px; padding: 7px 13px; display: flex; align-items: center; gap: 6px; }
+      .logo-h { color: #C9A84C; font-size: 18px; font-weight: 700; line-height: 1; }
+      .logo-label { color: #C9A84C; font-size: 8px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; line-height: 1.3; }
+      .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+      .info-block { background: #f7f6f3; border-radius: 7px; padding: 9px 13px; }
+      .info-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.6px; color: #aaa; margin-bottom: 3px; font-weight: 500; }
+      .info-value { font-size: 12px; font-weight: 500; color: #1a1a2e; }
+      .info-sub { font-size: 11px; color: #555; }
+      .section-title { font-size: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: #888; margin-bottom: 7px; }
+      table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+      thead tr { background: #1a1a2e; }
+      thead th { color: #C9A84C; font-size: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 7px 9px; text-align: left; }
+      tbody tr { border-bottom: 0.5px solid #f0efe9; }
+      tbody tr:nth-child(even) { background: #faf9f7; }
+      tbody td { padding: 8px 9px; vertical-align: middle; }
+      .obs-box { border: 0.5px solid #e8e7e3; border-radius: 6px; padding: 7px 11px; min-height: 36px; font-size: 11px; color: #888; font-style: italic; }
+      .resumo { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+      .resumo-card { border-radius: 7px; padding: 9px 12px; text-align: center; }
+      .resumo-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; margin-bottom: 3px; font-weight: 500; }
+      .resumo-value { font-size: 18px; font-weight: 500; }
+      .footer { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 0.5px solid #e8e7e3; }
+      .assinatura { border-top: 1px solid #bbb; padding-top: 5px; font-size: 9px; color: #aaa; text-align: center; margin-top: 28px; }
+    </style></head><body>
+
+    <div class="header">
+      <div class="logo-box">
+        <div class="logo-h">h</div>
+        <div class="logo-label">Opera<br>House</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:16px;font-weight:500">Pedido ${pedido.numero_pedido}</div>
+        <div style="font-size:10px;color:#888;margin-top:2px">Impresso em ${dataImpressao}</div>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-block">
+        <div class="info-label">Cliente</div>
+        <div class="info-value">${pedido.clientes?.nome || '—'}</div>
+        <div class="info-sub">${[pedido.clientes?.cidade, pedido.clientes?.estado].filter(Boolean).join(' — ') || ''}</div>
+      </div>
+      <div class="info-block">
+        <div class="info-label">Profissional responsável</div>
+        <div class="info-value">${pedido.profissionais?.nome || '—'}</div>
+        <div class="info-sub">${pedido.profissionais?.tipo || ''}</div>
+      </div>
+    </div>
+    <div class="info-grid" style="margin-bottom:14px">
+      <div class="info-block">
+        <div class="info-label">Data da venda</div>
+        <div class="info-value">${pedido.data_venda ? new Date(pedido.data_venda + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}</div>
+      </div>
+      <div class="info-block">
+        <div class="info-label">Prazo prometido</div>
+        <div class="info-value">${pedido.prazo_prometido ? new Date(pedido.prazo_prometido + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}</div>
+      </div>
+    </div>
+
+    <div class="section-title">Itens do pedido</div>
+    <table>
+      <colgroup>
+        <col style="width:48px">
+        <col>
+        <col style="width:80px">
+        <col style="width:80px">
+        <col style="width:76px">
+        <col style="width:30px">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Qtd.</th>
+          <th>Descrição do item</th>
+          <th>Fornecedor</th>
+          <th>Status</th>
+          <th>Içamento</th>
+          <th>✓</th>
+        </tr>
+      </thead>
+      <tbody>${linhasHTML}${vaziosHTML}</tbody>
+    </table>
+
+    <div style="margin-top:14px;margin-bottom:14px">
+      <div class="section-title">Observações gerais</div>
+      <div class="obs-box">${pedido.observacoes_gerais || ''}</div>
+    </div>
+
+    <div class="resumo">
+      <div class="resumo-card" style="background:#f7f6f3">
+        <div class="resumo-label">Total de itens</div>
+        <div class="resumo-value" style="color:#1a1a2e">${itens.length}</div>
+      </div>
+      <div class="resumo-card" style="background:#f7f6f3">
+        <div class="resumo-label">Total de peças</div>
+        <div class="resumo-value" style="color:#1a1a2e">${totalPecas}</div>
+      </div>
+      <div class="resumo-card" style="background:#FCEBEB">
+        <div class="resumo-label" style="color:#A32D2D">Requer içamento</div>
+        <div class="resumo-value" style="color:#791F1F">${comIcamento} ${comIcamento === 1 ? 'item' : 'itens'}</div>
+      </div>
+      <div class="resumo-card" style="background:#EAF3DE">
+        <div class="resumo-label" style="color:#3B6D11">Recebidos</div>
+        <div class="resumo-value" style="color:#27500A">${recebidos}</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div><div class="assinatura">Conferido por</div></div>
+      <div><div class="assinatura">Responsável expedição</div></div>
+      <div><div class="assinatura">Motorista / entregador</div></div>
+    </div>
+
+    <script>window.onload = function() { window.print() }</script>
+    </body></html>`
+
+    const w = window.open('', '_blank')
+    if (w) { w.document.write(html); w.document.close() }
+  }
+
   if (loading) {
     return (
       <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif' }}>
@@ -392,6 +571,10 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
               </>
             )}
           </div>
+          <button onClick={imprimirConferencia} disabled={itens.length === 0}
+            style={{ padding: '6px 14px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', color: '#555', fontSize: '12px', cursor: itens.length === 0 ? 'not-allowed' : 'pointer', opacity: itens.length === 0 ? 0.5 : 1 }}>
+            Imprimir conferência
+          </button>
           <button onClick={() => { setShowExcluirModal(true); setConfirmacaoExcluir('') }}
             style={{ padding: '6px 14px', borderRadius: '8px', border: '0.5px solid #f5c6c6', background: '#fff', color: '#A32D2D', fontSize: '12px', cursor: 'pointer' }}>
             Excluir pedido
