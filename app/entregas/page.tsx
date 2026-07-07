@@ -195,26 +195,26 @@ export default function Entregas() {
       return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
     })()
 
-    const TOTAL_LINHAS = 16
+    const TOTAL_LINHAS = 13
     const linhasVazias = Math.max(0, TOTAL_LINHAS - info.entregas.length)
 
     const rowsHtml = info.entregas.map(e => {
       const c = e.pedidos?.clientes
-      const nomeAbrev = (c?.nome || '').substring(0, 14).toUpperCase()
-      const label = `P.${e.pedidos?.numero_pedido}-${nomeAbrev}`
+      const nomeAbrev = (c?.nome || '').substring(0, 16).toUpperCase()
+      const label = `P.${e.pedidos?.numero_pedido} — ${nomeAbrev}`
       const regiao = (c?.cidade || '').toUpperCase()
       return `
-        <tr style="height:32px;">
-          <td style="padding:4px 8px;border-right:1px solid #000;font-size:10px;font-weight:600;">${label}</td>
-          <td style="padding:4px 8px;border-right:1px solid #000;"></td>
-          <td style="padding:4px 8px;border-right:1px solid #000;"></td>
-          <td style="padding:4px 8px;border-right:1px solid #000;"></td>
-          <td style="padding:4px 8px;font-size:10px;font-weight:500;">${regiao}</td>
+        <tr style="height:26px;">
+          <td style="padding:3px 7px;border-right:1px solid #000;font-size:10px;font-weight:600;">${label}</td>
+          <td style="padding:3px 7px;border-right:1px solid #000;"></td>
+          <td style="padding:3px 7px;border-right:1px solid #000;"></td>
+          <td style="padding:3px 7px;border-right:1px solid #000;"></td>
+          <td style="padding:3px 7px;font-size:10px;font-weight:500;">${regiao}</td>
         </tr>`
     }).join('')
 
     const emptyRows = Array.from({ length: linhasVazias }).map(() => `
-      <tr style="height:32px;">
+      <tr style="height:26px;">
         <td style="border-right:1px solid #000;"></td>
         <td style="border-right:1px solid #000;"></td>
         <td style="border-right:1px solid #000;"></td>
@@ -228,9 +228,10 @@ export default function Entregas() {
   <meta charset="utf-8"/>
   <title>Sequência de Entregas — ${dataFormatada}</title>
   <style>
-    @page { size: A4 landscape; margin: 12mm 14mm; }
+    @page { size: A4 landscape; margin: 8mm 12mm; }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:Arial,sans-serif; font-size:11px; color:#000; background:#fff; }
+    html, body { height:100%; overflow:hidden; }
+    body { font-family:Arial,sans-serif; font-size:10px; color:#000; background:#fff; }
     table { border-collapse:collapse; width:100%; }
     td, th { border:1px solid #000; }
   </style>
@@ -238,10 +239,10 @@ export default function Entregas() {
 <body>
 
 <!-- LOGO -->
-<table style="margin-bottom:10px;border:none;">
+<table style="margin-bottom:6px;border:none;">
   <tr>
-    <td style="border:none;text-align:center;padding:4px 0 10px;">
-      <img src="${LOGO_DARK}" alt="Opera House" style="height:56px;object-fit:contain;">
+    <td style="border:none;text-align:center;padding:2px 0 6px;">
+      <img src="${LOGO_DARK}" alt="Opera House" style="height:40px;object-fit:contain;">
     </td>
   </tr>
 </table>
@@ -249,17 +250,17 @@ export default function Entregas() {
 <!-- LINHA 1: Motorista | Rodízio | Data -->
 <table style="margin-bottom:-1px;">
   <tr>
-    <td style="padding:6px 10px;width:30%;">
-      <span style="font-size:10px;font-weight:bold;">Motorista:</span>
-      <span style="font-size:12px;font-weight:bold;margin-left:6px;">${motorista.motorista}</span>
+    <td style="padding:4px 8px;width:30%;">
+      <span style="font-size:9px;font-weight:bold;">Motorista:</span>
+      <span style="font-size:11px;font-weight:bold;margin-left:5px;">${motorista.motorista}</span>
     </td>
-    <td style="padding:6px 10px;width:46%;text-align:center;background:#f5f5f5;">
-      <span style="font-size:10px;font-weight:bold;">RODÍZIO:</span>
-      <span style="font-size:10px;font-weight:bold;margin-left:6px;">${motorista.rodizio || 'PLACA FINAL ___ ___-FEIRA'}</span>
+    <td style="padding:4px 8px;width:46%;text-align:center;background:#f5f5f5;">
+      <span style="font-size:9px;font-weight:bold;">RODÍZIO:</span>
+      <span style="font-size:9px;font-weight:bold;margin-left:5px;">${motorista.rodizio || 'PLACA FINAL ___ ___-FEIRA'}</span>
     </td>
-    <td style="padding:6px 10px;width:24%;text-align:right;">
-      <span style="font-size:10px;font-weight:bold;">DATA:</span>
-      <span style="font-size:12px;font-weight:bold;margin-left:6px;">${dataFormatada}</span>
+    <td style="padding:4px 8px;width:24%;text-align:right;">
+      <span style="font-size:9px;font-weight:bold;">DATA:</span>
+      <span style="font-size:11px;font-weight:bold;margin-left:5px;">${dataFormatada}</span>
     </td>
   </tr>
 </table>
@@ -267,25 +268,25 @@ export default function Entregas() {
 <!-- LINHA 2: Veículo | Placa | Combustível | Litros | KM -->
 <table style="margin-bottom:-1px;">
   <tr>
-    <td style="padding:6px 10px;width:18%;">
-      <span style="font-size:10px;font-weight:bold;">Veículo:</span>
-      <span style="font-size:11px;margin-left:6px;">${motorista.veiculo}</span>
+    <td style="padding:4px 8px;width:18%;">
+      <span style="font-size:9px;font-weight:bold;">Veículo:</span>
+      <span style="font-size:10px;margin-left:5px;">${motorista.veiculo}</span>
     </td>
-    <td style="padding:6px 10px;width:22%;">
-      <span style="font-size:10px;font-weight:bold;">Placa:</span>
-      <span style="font-size:11px;margin-left:6px;">${motorista.placa}</span>
+    <td style="padding:4px 8px;width:22%;">
+      <span style="font-size:9px;font-weight:bold;">Placa:</span>
+      <span style="font-size:10px;margin-left:5px;">${motorista.placa}</span>
     </td>
-    <td style="padding:6px 10px;width:22%;">
-      <span style="font-size:10px;font-weight:bold;">Combustível: R$:</span>
-      <span style="display:inline-block;border-bottom:1px solid #000;width:60px;margin-left:4px;"></span>
+    <td style="padding:4px 8px;width:22%;">
+      <span style="font-size:9px;font-weight:bold;">Combustível: R$:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:55px;margin-left:3px;"></span>
     </td>
-    <td style="padding:6px 10px;width:18%;">
-      <span style="font-size:10px;font-weight:bold;">Litros:</span>
-      <span style="display:inline-block;border-bottom:1px solid #000;width:50px;margin-left:4px;"></span>
+    <td style="padding:4px 8px;width:18%;">
+      <span style="font-size:9px;font-weight:bold;">Litros:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:45px;margin-left:3px;"></span>
     </td>
-    <td style="padding:6px 10px;width:20%;">
-      <span style="font-size:10px;font-weight:bold;">KM:</span>
-      <span style="display:inline-block;border-bottom:1px solid #000;width:70px;margin-left:4px;"></span>
+    <td style="padding:4px 8px;width:20%;">
+      <span style="font-size:9px;font-weight:bold;">KM:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:65px;margin-left:3px;"></span>
     </td>
   </tr>
 </table>
@@ -294,11 +295,11 @@ export default function Entregas() {
 <table>
   <thead>
     <tr style="background:#1a1a2e;">
-      <th style="padding:6px 8px;font-size:10px;width:24%;text-align:center;color:#C9A84C;font-weight:bold;">Cliente / Fornecedor</th>
-      <th style="padding:6px 8px;font-size:10px;width:22%;text-align:center;color:#C9A84C;font-weight:bold;">Nome legível</th>
-      <th style="padding:6px 8px;font-size:10px;width:16%;text-align:center;color:#C9A84C;font-weight:bold;">Horário de Chegada</th>
-      <th style="padding:6px 8px;font-size:10px;width:16%;text-align:center;color:#C9A84C;font-weight:bold;">Horário de Saída</th>
-      <th style="padding:6px 8px;font-size:10px;width:22%;text-align:center;color:#C9A84C;font-weight:bold;">Região</th>
+      <th style="padding:5px 7px;font-size:9px;width:24%;text-align:center;color:#C9A84C;font-weight:bold;">Cliente / Fornecedor</th>
+      <th style="padding:5px 7px;font-size:9px;width:22%;text-align:center;color:#C9A84C;font-weight:bold;">Nome legível</th>
+      <th style="padding:5px 7px;font-size:9px;width:16%;text-align:center;color:#C9A84C;font-weight:bold;">Horário de Chegada</th>
+      <th style="padding:5px 7px;font-size:9px;width:16%;text-align:center;color:#C9A84C;font-weight:bold;">Horário de Saída</th>
+      <th style="padding:5px 7px;font-size:9px;width:22%;text-align:center;color:#C9A84C;font-weight:bold;">Região</th>
     </tr>
   </thead>
   <tbody>
@@ -310,9 +311,9 @@ export default function Entregas() {
 <!-- EQUIPE -->
 <table style="margin-top:-1px;">
   <tr>
-    <td style="padding:7px 10px;">
-      <span style="font-size:10px;font-weight:bold;">EQUIPE:</span>
-      <span style="display:inline-block;border-bottom:1px solid #000;width:400px;margin-left:8px;"></span>
+    <td style="padding:5px 8px;">
+      <span style="font-size:9px;font-weight:bold;">EQUIPE:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:400px;margin-left:6px;"></span>
     </td>
   </tr>
 </table>
@@ -320,23 +321,23 @@ export default function Entregas() {
 <!-- KM / HORÁRIOS -->
 <table style="margin-top:-1px;">
   <tr>
-    <td style="padding:8px 10px;width:50%;">
-      <span style="font-size:10px;font-weight:bold;">KM DE SAÍDA:</span>
-      <span style="display:inline-block;border-bottom:1px solid #000;width:180px;margin-left:8px;"></span>
+    <td style="padding:6px 8px;width:50%;">
+      <span style="font-size:9px;font-weight:bold;">KM DE SAÍDA:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:170px;margin-left:6px;"></span>
     </td>
-    <td style="padding:8px 10px;width:50%;">
-      <span style="font-size:10px;font-weight:bold;">HORÁRIO DE SAÍDA:</span>
-      <span style="display:inline-block;border-bottom:1px solid #000;width:160px;margin-left:8px;"></span>
+    <td style="padding:6px 8px;width:50%;">
+      <span style="font-size:9px;font-weight:bold;">HORÁRIO DE SAÍDA:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:150px;margin-left:6px;"></span>
     </td>
   </tr>
   <tr>
-    <td style="padding:8px 10px;">
-      <span style="font-size:10px;font-weight:bold;">KM DE CHEGADA:</span>
-      <span style="display:inline-block;border-bottom:1px solid #000;width:180px;margin-left:8px;"></span>
+    <td style="padding:6px 8px;">
+      <span style="font-size:9px;font-weight:bold;">KM DE CHEGADA:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:170px;margin-left:6px;"></span>
     </td>
-    <td style="padding:8px 10px;">
-      <span style="font-size:10px;font-weight:bold;">HORÁRIO DE CHEGADA:</span>
-      <span style="display:inline-block;border-bottom:1px solid #000;width:160px;margin-left:8px;"></span>
+    <td style="padding:6px 8px;">
+      <span style="font-size:9px;font-weight:bold;">HORÁRIO DE CHEGADA:</span>
+      <span style="display:inline-block;border-bottom:1px solid #000;width:150px;margin-left:6px;"></span>
     </td>
   </tr>
 </table>
