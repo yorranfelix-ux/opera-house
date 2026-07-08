@@ -35,19 +35,17 @@ const TIPO_STYLE = {
 
 const DIAS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
-function chaveHoje() {
-  return 'operare_lembretes_' + new Date().toISOString().split('T')[0]
-}
+const CHAVE_LEMBRETES = 'operare_lembretes'
 
 function lerLembretes(): Lembrete[] {
   try {
-    const raw = localStorage.getItem(chaveHoje())
+    const raw = localStorage.getItem(CHAVE_LEMBRETES)
     return raw ? JSON.parse(raw) : []
   } catch { return [] }
 }
 
 function salvarLembretes(lista: Lembrete[]) {
-  localStorage.setItem(chaveHoje(), JSON.stringify(lista))
+  localStorage.setItem(CHAVE_LEMBRETES, JSON.stringify(lista))
 }
 
 export default function Dashboard() {
