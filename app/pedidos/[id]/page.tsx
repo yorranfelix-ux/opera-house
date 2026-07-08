@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import Sidebar from '../../components/Sidebar'
-import Anexos from '../../components/Anexos'
 import { LOGO_DARK } from '../../lib/logos'
 import { use } from 'react'
 
@@ -801,9 +800,6 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             )}
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
-            <Anexos pedidoId={id} />
-          </div>
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
             <div style={{ padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { registrarHistorico as registrarHistoricoGlobal } from '../../lib/historico'
 import Sidebar from '../../components/Sidebar'
-import Anexos from '../../components/Anexos'
 import { use } from 'react'
 
 interface AT {
@@ -415,9 +414,6 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
               <EditableTextCard label="Endereço de retirada" value={at.endereco_retirada} onSave={v => atualizarCampo('endereco_retirada', v)} />
             )}
 
-            <div style={{ marginTop: '16px' }}>
-              <Anexos atId={id} titulo="Anexos da AT" />
-            </div>
           </div>
 
           {/* Right column — actions + history */}
