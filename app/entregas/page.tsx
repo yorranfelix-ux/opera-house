@@ -98,6 +98,20 @@ export default function Entregas() {
   const pendingSaveRef = useRef(false)
 
   useEffect(() => {
+    try {
+      const salvo = sessionStorage.getItem('operare_filtros_entregas')
+      if (salvo) {
+        const f = JSON.parse(salvo)
+        if (f.filtro) setFiltro(f.filtro)
+      }
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    try { sessionStorage.setItem('operare_filtros_entregas', JSON.stringify({ filtro })) } catch {}
+  }, [filtro])
+
+  useEffect(() => {
     buscarEntregas()
     buscarPedidos()
   }, [])

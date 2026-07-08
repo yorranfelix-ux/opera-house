@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { registrarHistorico as registrarHistoricoGlobal } from '../../lib/historico'
+import { registrarHistorico } from '../../lib/historico'
 import Sidebar from '../../components/Sidebar'
 import { use } from 'react'
 
@@ -190,7 +190,7 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
     setLoading(false)
   }
 
-  async function buscarHistorico(_pedidoId?: string) {
+  async function buscarHistorico() {
     if (!at?.pedido_id) return
     const { data } = await supabase
       .from('historico_alteracoes')
@@ -207,24 +207,10 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
     setFornecedores(data || [])
   }
 
-  async function registrarHistorico(descricao: string, tipo: string) {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const { data: profile } = await supabase.from('profiles').select('nome').eq('id', user.id).single()
-    const { error } = await supabase.from('historico_alteracoes').insert([{
-      pedido_id: at?.pedido_id || null,
-      item_id: null,
-      usuario_id: user.id,
-      usuario_nome: profile?.nome || user.email,
-      tipo,
-      descricao,
-    }])
-    if (error) console.error('registrarHistorico AT error:', error.message)
-  }
 
   async function iniciarProcesso() {
     await supabase.from('assistencias_tecnicas').update({ status: 'em_reparo', observacoes: processoObs || null }).eq('id', id)
-    await registrarHistorico(`AT iniciada em processo de reparo interno. ${processoObs ? 'Obs: ' + processoObs : ''}`, 'at_atualizada')
+    await registrarHistorico({ tipo: 'at_atualizada', descricao: `AT iniciada em processo de reparo interno. ${processoObs ? 'Obs: ' + processoObs : ''}`, pedidoId: at?.pedido_id })
     setShowProcessoModal(false)
     setProcessoObs('')
     buscarAT()
@@ -241,7 +227,7 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
       numero_nf_envio: fornecedorForm.numero_nf_envio || null,
       observacoes_fornecedor: fornecedorForm.observacoes_fornecedor || null,
     }).eq('id', id)
-    await registrarHistorico(`AT enviada ao fornecedor. ${fornecedorForm.observacoes_fornecedor ? 'Obs: ' + fornecedorForm.observacoes_fornecedor : ''}`, 'at_atualizada')
+    await registrarHistorico({ tipo: 'at_atualizada', descricao: `AT enviada ao fornecedor. ${fornecedorForm.observacoes_fornecedor ? 'Obs: ' + fornecedorForm.observacoes_fornecedor : ''}`, pedidoId: at?.pedido_id })
     setShowFornecedorModal(false)
     setFornecedorForm({ fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', numero_nf_envio: '', observacoes_fornecedor: '' })
     buscarAT()
@@ -255,7 +241,7 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
       previsao_entrega_cliente: retornoForm.previsao_entrega_cliente || null,
       observacoes: retornoForm.observacoes || null,
     }).eq('id', id)
-    await registrarHistorico(`Retorno do fornecedor registrado. ${retornoForm.observacoes ? 'Obs: ' + retornoForm.observacoes : ''}`, 'at_atualizada')
+    await registrarHistorico({ tipo: 'at_atualizada', descricao: `Retorno do fornecedor registrado. ${retornoForm.observacoes ? 'Obs: ' + retornoForm.observacoes : ''}`, pedidoId: at?.pedido_id })
     setShowRetornoModal(false)
     setRetornoForm({ data_retorno_fornecedor: '', previsao_entrega_cliente: '', observacoes: '' })
     buscarAT()
@@ -264,7 +250,7 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
 
   async function marcarResolvida() {
     await supabase.from('assistencias_tecnicas').update({ status: 'resolvida', observacoes: resolvidaObs || null }).eq('id', id)
-    await registrarHistorico(`AT marcada como resolvida. ${resolvidaObs ? 'Obs: ' + resolvidaObs : ''}`, 'at_atualizada')
+    await registrarHistorico({ tipo: 'at_atualizada', descricao: `AT marcada como resolvida. ${resolvidaObs ? 'Obs: ' + resolvidaObs : ''}`, pedidoId: at?.pedido_id })
     setShowResolvidaModal(false)
     setResolvidaObs('')
     buscarAT()
@@ -274,7 +260,7 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
   async function excluirAT() {
     const { error } = await supabase.from('assistencias_tecnicas').delete().eq('id', id)
     if (error) return alert('Erro ao excluir: ' + error.message)
-    await registrarHistoricoGlobal({ tipo: 'at_excluida', descricao: `AT ${at?.numero_at} excluída permanentemente`, pedidoId: at?.pedido_id })
+    await registrarHistorico({ tipo: 'at_excluida', descricao: `AT ${at?.numero_at} excluída permanentemente`, pedidoId: at?.pedido_id })
     window.location.href = '/assistencia'
   }
 
@@ -291,14 +277,14 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
 
   async function atualizarCampo(campo: string, valor: string) {
     await supabase.from('assistencias_tecnicas').update({ [campo]: valor || null }).eq('id', id)
-    await registrarHistorico(`${CAMPO_LABEL[campo] || campo} atualizado`, 'at_atualizada')
+    await registrarHistorico({ tipo: 'at_atualizada', descricao: `${CAMPO_LABEL[campo] || campo} atualizado`, pedidoId: at?.pedido_id })
     buscarAT()
     buscarHistorico()
   }
 
   async function cancelarAT() {
     await supabase.from('assistencias_tecnicas').update({ status: 'cancelada', observacoes: cancelarObs || null }).eq('id', id)
-    await registrarHistorico(`AT cancelada. ${cancelarObs ? 'Motivo: ' + cancelarObs : ''}`, 'at_atualizada')
+    await registrarHistorico({ tipo: 'at_atualizada', descricao: `AT cancelada. ${cancelarObs ? 'Motivo: ' + cancelarObs : ''}`, pedidoId: at?.pedido_id })
     setShowCancelarModal(false)
     setCancelarObs('')
     buscarAT()
@@ -427,7 +413,7 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
                 onChange={async e => {
                   const novoStatus = e.target.value
                   await supabase.from('assistencias_tecnicas').update({ status: novoStatus }).eq('id', id)
-                  await registrarHistorico(`Status alterado para: ${STATUS_COR[novoStatus]?.label || novoStatus}`, 'at_atualizada')
+                  await registrarHistorico({ tipo: 'at_atualizada', descricao: `Status alterado para: ${STATUS_COR[novoStatus]?.label || novoStatus}`, pedidoId: at?.pedido_id })
                   buscarAT()
                   buscarHistorico()
                 }}

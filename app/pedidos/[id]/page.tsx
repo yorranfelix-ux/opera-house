@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
+import { registrarHistorico } from '../../lib/historico'
 import Sidebar from '../../components/Sidebar'
 import { LOGO_DARK } from '../../lib/logos'
 import { use } from 'react'
@@ -172,7 +173,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     await supabase.from('pedidos').update({ semaforo: cor }).eq('id', id)
     setPedido(prev => prev ? { ...prev, semaforo: cor } : prev)
     setShowSemaforo(false)
-    await registrarHistorico(`Semáforo alterado para ${cor}`, 'pedido_editado')
+    await registrarHistorico({ tipo: 'pedido_editado', descricao: `Semáforo alterado para ${cor}`, pedidoId: id })
   }
 
   async function excluirPedido() {
@@ -231,20 +232,6 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     setHistorico(data || [])
   }
 
-  async function registrarHistorico(descricao: string, tipo: string, itemId?: string) {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { console.error('historico: sem usuario'); return }
-    const { data: profile } = await supabase.from('profiles').select('nome').eq('id', user.id).single()
-    const { error } = await supabase.from('historico_alteracoes').insert([{
-      pedido_id: id,
-      item_id: itemId || null,
-      usuario_id: user.id,
-      usuario_nome: profile?.nome || user.email,
-      tipo,
-      descricao,
-    }])
-    if (error) console.error('historico error:', error.message)
-  }
 
   function abrirNovoItem() {
     setEditandoItemId(null)
@@ -353,7 +340,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
         mudancas.push(`Içamento: ${itemForm.requer_icamento ? 'Sim' : 'Não'}`)
       }
       const descricao = `Item "${itemForm.descricao}" editado${mudancas.length ? ': ' + mudancas.join(' · ') : ''}`
-      await registrarHistorico(descricao, 'item_editado', editandoItemId)
+      await registrarHistorico({ tipo: 'item_editado', descricao, pedidoId: id, itemId: editandoItemId || undefined })
 
       if (itemAnterior && itemAnterior.status !== itemForm.status) {
         const { data: { user } } = await supabase.auth.getUser()
@@ -369,7 +356,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     } else {
       const { error } = await supabase.from('itens_pedido').insert([{ ...payload, pedido_id: id, status: 'aguardando_compra' }])
       if (error) return alert('Erro: ' + error.message)
-      await registrarHistorico(`Item "${itemForm.descricao}" adicionado ao pedido`, 'item_adicionado')
+      await registrarHistorico({ tipo: 'item_adicionado', descricao: `Item "${itemForm.descricao}" adicionado ao pedido`, pedidoId: id })
     }
 
     setShowItemForm(false)
