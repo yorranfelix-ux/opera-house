@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { LOGO_NEG } from '../lib/logos'
+import { LOGO_NEG, LOGO_ICON } from '../lib/logos'
 import BuscaGlobal, { abrirBuscaGlobal } from './BuscaGlobal'
 
 const ICON: Record<string, React.ReactElement> = {
@@ -163,7 +163,7 @@ export default function Sidebar({ ativa }: { ativa: string }) {
         borderBottom: '1px solid #242440',
       }}>
         {collapsed ? (
-          <img src="/logo.png" alt="Opera House" style={{ width: '36px', height: '36px', objectFit: 'contain', flexShrink: 0 }} />
+          <img src={LOGO_ICON} alt="Opera House" style={{ width: '36px', height: '36px', objectFit: 'contain', flexShrink: 0 }} />
         ) : (
           <img src={LOGO_NEG} alt="Opera House" style={{ width: '110px', objectFit: 'contain' }} />
         )}
