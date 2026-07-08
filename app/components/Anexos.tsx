@@ -77,8 +77,10 @@ export default function Anexos({ pedidoId, atId, titulo = 'Anexos' }: AnexosProp
 
   async function excluirAnexo(anexo: Anexo) {
     if (!confirm(`Excluir "${anexo.nome_arquivo}"?`)) return
-    await supabase.storage.from('anexos').remove([anexo.storage_path])
-    await supabase.from('anexos').delete().eq('id', anexo.id)
+    const { error: storageError } = await supabase.storage.from('anexos').remove([anexo.storage_path])
+    if (storageError) { alert('Erro ao excluir arquivo: ' + storageError.message); return }
+    const { error: dbError } = await supabase.from('anexos').delete().eq('id', anexo.id)
+    if (dbError) { alert('Erro ao excluir registro: ' + dbError.message); return }
     buscarAnexos()
   }
 
