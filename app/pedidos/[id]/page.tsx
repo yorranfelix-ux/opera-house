@@ -106,6 +106,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const [excluindo, setExcluindo] = useState(false)
   const [salvandoItem, setSalvandoItem] = useState(false)
   const [pagamento, setPagamento] = useState({ status_pagamento: 'pendente', observacao_pagamento: '' })
+  const [pagamentoAberto, setPagamentoAberto] = useState(false)
   const [historicoItemId, setHistoricoItemId] = useState<string | null>(null)
   const [historicoItens, setHistoricoItens] = useState<any[]>([])
 
@@ -691,38 +692,51 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             ))}
           </div>
 
-          <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '16px 18px', marginBottom: '12px' }}>
-            <div style={{ fontSize: '11px', color: '#888', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.4px', fontWeight: '600' }}>Pagamento</div>
+          <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', marginBottom: '12px', overflow: 'hidden' }}>
+            <button onClick={() => setPagamentoAberto(a => !a)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', fontWeight: '600' }}>Pagamento</span>
+                {!pagamentoAberto && pagamento.status_pagamento !== 'pendente' && (
+                  <span style={{ fontSize: '10px', padding: '1px 7px', borderRadius: '5px', fontWeight: '500', background: pagamento.status_pagamento === 'pago' ? '#EAF3DE' : '#FAEEDA', color: pagamento.status_pagamento === 'pago' ? '#27500A' : '#633806' }}>
+                    {pagamento.status_pagamento === 'pago' ? 'Pago' : 'Parcial'}
+                  </span>
+                )}
+              </div>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#aaa" strokeWidth="1.5" strokeLinecap="round"
+                style={{ transform: pagamentoAberto ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms' }}>
+                <polyline points="2,4 6,8 10,4"/>
+              </svg>
+            </button>
 
-            <div style={{ marginBottom: '10px' }}>
-              <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Status</div>
-              <select value={pagamento.status_pagamento} onChange={e => setPagamento({ ...pagamento, status_pagamento: e.target.value })} onBlur={salvarPagamento}
-                style={{ width: '100%', padding: '6px 10px', borderRadius: '7px', border: '0.5px solid #e8e7e3', fontSize: '12px', outline: 'none', color: '#1a1a2e', background: '#fff' }}>
-                <option value="pendente">Pendente</option>
-                <option value="parcial">Parcial</option>
-                <option value="pago">Pago</option>
-              </select>
-            </div>
+            {pagamentoAberto && (
+              <div style={{ padding: '0 16px 16px' }}>
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Status</div>
+                  <select value={pagamento.status_pagamento} onChange={e => setPagamento({ ...pagamento, status_pagamento: e.target.value })} onBlur={salvarPagamento}
+                    style={{ width: '100%', padding: '6px 10px', borderRadius: '7px', border: '0.5px solid #e8e7e3', fontSize: '12px', outline: 'none', color: '#1a1a2e', background: '#fff' }}>
+                    <option value="pendente">Pendente</option>
+                    <option value="parcial">Parcial</option>
+                    <option value="pago">Pago</option>
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observação</div>
+                  <textarea
+                    placeholder="Ex: sinal pago, restante na entrega..."
+                    value={pagamento.observacao_pagamento}
+                    onChange={e => setPagamento({ ...pagamento, observacao_pagamento: e.target.value })}
+                    onBlur={salvarPagamento}
+                    rows={3}
+                    style={{ width: '100%', padding: '6px 10px', borderRadius: '7px', border: '0.5px solid #e8e7e3', fontSize: '12px', outline: 'none', boxSizing: 'border-box', resize: 'none', fontFamily: 'sans-serif' }}
+                  />
+                </div>
+              </div>
+            )}
 
-            <div>
-              <div style={{ fontSize: '10px', color: '#aaa', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observação</div>
-              <textarea
-                placeholder="Ex: sinal pago, restante na entrega..."
-                value={pagamento.observacao_pagamento}
-                onChange={e => setPagamento({ ...pagamento, observacao_pagamento: e.target.value })}
-                onBlur={salvarPagamento}
-                rows={3}
-                style={{ width: '100%', padding: '6px 10px', borderRadius: '7px', border: '0.5px solid #e8e7e3', fontSize: '12px', outline: 'none', boxSizing: 'border-box', resize: 'none', fontFamily: 'sans-serif' }}
-              />
-            </div>
-
-            {pagamento.status_pagamento !== 'pendente' && (
-              <div style={{ marginTop: '10px' }}>
-                <span style={{
-                  fontSize: '11px', padding: '2px 9px', borderRadius: '6px', fontWeight: '500',
-                  background: pagamento.status_pagamento === 'pago' ? '#EAF3DE' : '#FAEEDA',
-                  color: pagamento.status_pagamento === 'pago' ? '#27500A' : '#633806',
-                }}>
+            {pagamentoAberto && pagamento.status_pagamento !== 'pendente' && (
+              <div style={{ padding: '0 16px 12px' }}>
+                <span style={{ fontSize: '11px', padding: '2px 9px', borderRadius: '6px', fontWeight: '500', background: pagamento.status_pagamento === 'pago' ? '#EAF3DE' : '#FAEEDA', color: pagamento.status_pagamento === 'pago' ? '#27500A' : '#633806' }}>
                   {pagamento.status_pagamento === 'pago' ? 'Pago' : 'Parcialmente pago'}
                 </span>
               </div>
