@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { registrarHistorico } from '../../lib/historico'
 import Sidebar from '../../components/Sidebar'
+import { LOGO_DARK } from '../../lib/logos'
 import { use } from 'react'
 
 interface AT {
@@ -291,6 +292,135 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
     buscarHistorico()
   }
 
+  function imprimirAT() {
+    if (!at) return
+    const now = new Date()
+    const dataImpressao = now.toLocaleDateString('pt-BR') + ' · ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+
+    const STATUS_LABEL: Record<string, string> = {
+      aberta: 'Aberta', aguardando_retirada: 'Aguard. retirada', em_reparo: 'Em reparo',
+      enviado_fornecedor: 'No fornecedor', aguardando_devolucao: 'Aguard. devolução',
+      resolvida: 'Resolvida', cancelada: 'Cancelada',
+    }
+
+    function linha(label: string, valor: string | null | undefined) {
+      if (!valor) return ''
+      return `<tr>
+        <td style="padding:7px 12px;font-size:10px;color:#888;font-weight:500;text-transform:uppercase;letter-spacing:0.4px;width:160px;white-space:nowrap">${label}</td>
+        <td style="padding:7px 12px;font-size:12px;color:#1a1a2e;font-weight:500">${valor}</td>
+      </tr>`
+    }
+
+    function formatarData(d: string | null | undefined) {
+      if (!d) return null
+      return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR')
+    }
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>AT ${at.numero_at}</title>
+    <style>
+      @page { size: A4 portrait; margin: 12mm 14mm; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: sans-serif; color: #1a1a2e; background: white; }
+      table { width: 100%; border-collapse: collapse; }
+      tr:nth-child(even) { background: #faf9f7; }
+      .section { margin-bottom: 14px; }
+      .section-title { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: #aaa; margin-bottom: 6px; padding-left: 2px; }
+      .obs-box { border: 0.5px solid #e8e7e3; border-radius: 7px; padding: 10px 13px; font-size: 12px; color: #555; line-height: 1.6; min-height: 40px; }
+      .assinatura { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 28px; padding-top: 14px; border-top: 0.5px solid #e8e7e3; }
+      .assinatura-linha { border-top: 1px solid #bbb; padding-top: 5px; font-size: 9px; color: #aaa; text-align: center; margin-top: 40px; }
+    </style></head><body>
+
+    <!-- Cabeçalho -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #1a1a2e">
+      <img src="${LOGO_DARK}" alt="Opera House" style="height:44px;object-fit:contain">
+      <div style="text-align:right">
+        <div style="font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Assistência Técnica</div>
+        <div style="font-size:20px;font-weight:600;color:#1a1a2e">${at.numero_at}</div>
+        <div style="font-size:10px;color:#888;margin-top:2px">Impresso em ${dataImpressao}</div>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div style="margin-bottom:14px">
+      <span style="display:inline-block;padding:4px 12px;border-radius:8px;font-size:12px;font-weight:600;background:${STATUS_COR[at.status]?.bg || '#f0efe9'};color:${STATUS_COR[at.status]?.color || '#555'}">
+        ${STATUS_LABEL[at.status] || at.status}
+      </span>
+    </div>
+
+    <!-- Dados principais -->
+    <div class="section">
+      <div class="section-title">Dados da AT</div>
+      <table style="border:0.5px solid #e8e7e3;border-radius:8px;overflow:hidden">
+        ${linha('Pedido', at.pedidos?.numero_pedido)}
+        ${linha('Cliente', at.pedidos?.clientes?.nome)}
+        ${linha('Cidade', at.pedidos?.clientes?.cidade ? `${at.pedidos.clientes.cidade}${at.pedidos.clientes.estado ? ', ' + at.pedidos.clientes.estado : ''}` : null)}
+        ${linha('Telefone', at.pedidos?.clientes?.telefone)}
+        ${linha('Tipo de AT', at.tipo_at)}
+        ${linha('Item', at.itens_pedido?.descricao ? `${at.itens_pedido.descricao}${at.itens_pedido.quantidade ? ' · Qtd: ' + at.itens_pedido.quantidade : ''}` : null)}
+        ${linha('NF do item', at.itens_pedido?.numero_nf)}
+        ${linha('Fornecedor', at.fornecedores?.nome_fantasia || at.fornecedores?.razao_social)}
+        ${linha('NF envio ao fornecedor', at.numero_nf_envio)}
+        ${at.pedidos?.profissionais ? linha('Profissional', `${at.pedidos.profissionais.nome} — ${at.pedidos.profissionais.tipo}`) : ''}
+      </table>
+    </div>
+
+    <!-- Datas -->
+    <div class="section">
+      <div class="section-title">Datas</div>
+      <table style="border:0.5px solid #e8e7e3;border-radius:8px;overflow:hidden">
+        ${linha('Abertura', at.created_at ? new Date(at.created_at).toLocaleDateString('pt-BR') : null)}
+        ${linha('Retirada agendada', formatarData(at.data_retirada_agendada))}
+        ${linha('Envio ao fornecedor', formatarData(at.data_envio_fornecedor))}
+        ${linha('Previsão retorno', formatarData(at.previsao_retorno_fornecedor))}
+        ${linha('Retorno efetivo', formatarData(at.data_retorno_fornecedor))}
+        ${linha('Previsão entrega ao cliente', formatarData((at as any).previsao_entrega_cliente))}
+      </table>
+    </div>
+
+    <!-- Descrição do problema -->
+    ${at.descricao_problema ? `<div class="section">
+      <div class="section-title">Descrição do problema</div>
+      <div class="obs-box">${at.descricao_problema}</div>
+    </div>` : ''}
+
+    <!-- Observações gerais -->
+    ${at.observacoes ? `<div class="section">
+      <div class="section-title">Observações gerais</div>
+      <div class="obs-box">${at.observacoes}</div>
+    </div>` : ''}
+
+    <!-- Observações fornecedor -->
+    ${at.observacoes_fornecedor ? `<div class="section">
+      <div class="section-title">Observações do fornecedor</div>
+      <div class="obs-box">${at.observacoes_fornecedor}</div>
+    </div>` : ''}
+
+    <!-- Endereço de retirada -->
+    ${at.requer_retirada && at.endereco_retirada ? `<div class="section">
+      <div class="section-title">Endereço de retirada</div>
+      <div class="obs-box">${at.endereco_retirada}</div>
+    </div>` : ''}
+
+    <!-- Assinaturas -->
+    <div class="assinatura">
+      <div>
+        <div class="assinatura-linha">Responsável técnico</div>
+      </div>
+      <div>
+        <div class="assinatura-linha">Cliente / Recebedor</div>
+      </div>
+    </div>
+
+    <script>window.onload = function(){ window.print(); }<\/script>
+    </body></html>`
+
+    const janela = window.open('', '_blank', 'width=800,height=700')
+    if (!janela) return
+    janela.document.write(html)
+    janela.document.close()
+  }
+
   const inputStyle = { width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' as const }
   const labelStyle = { fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase' as const, letterSpacing: '0.4px', display: 'block' as const }
 
@@ -323,9 +453,15 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
             <span style={{ color: '#ddd' }}>/</span>
             <span style={{ fontSize: '14px', fontWeight: '500', color: '#1a1a2e' }}>{at.numero_at || 'AT'}</span>
           </div>
-          <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '8px', background: status.bg, color: status.color, fontWeight: '500' }}>
-            {status.label}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button onClick={imprimirAT}
+              style={{ padding: '6px 14px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              🖨️ Imprimir AT
+            </button>
+            <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '8px', background: status.bg, color: status.color, fontWeight: '500' }}>
+              {status.label}
+            </span>
+          </div>
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: '24px', display: 'flex', gap: '20px' }}>
