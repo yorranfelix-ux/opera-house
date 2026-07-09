@@ -152,7 +152,7 @@ export default function Sidebar({ ativa }: { ativa: string }) {
       overflow: 'hidden',
     }}>
 
-      {/* Logo */}
+      {/* Logo / Toggle topo */}
       <div style={{
         height: '56px',
         display: 'flex',
@@ -163,7 +163,28 @@ export default function Sidebar({ ativa }: { ativa: string }) {
         borderBottom: '1px solid #242440',
       }}>
         {collapsed ? (
-          <img src="/logo-icon.svg" alt="Opera House" style={{ width: '36px', height: '36px', flexShrink: 0 }} />
+          <button
+            onClick={toggleCollapsed}
+            title="Expandir menu"
+            style={{
+              width: '36px', height: '36px', borderRadius: '8px', border: '1px solid #242440',
+              background: 'transparent', color: '#6a6a8a', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'color 150ms, background 150ms',
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'
+              ;(e.currentTarget as HTMLElement).style.color = '#C9A84C'
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.background = 'transparent'
+              ;(e.currentTarget as HTMLElement).style.color = '#6a6a8a'
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="5,2 10,7 5,12"/>
+            </svg>
+          </button>
         ) : (
           <img src={LOGO_NEG} alt="Opera House" style={{ width: '110px', objectFit: 'contain' }} />
         )}
@@ -284,33 +305,34 @@ export default function Sidebar({ ativa }: { ativa: string }) {
         ))}
       </div>
 
-      {/* Toggle button */}
-      <div style={{ padding: '6px', borderTop: '1px solid #242440' }}>
-        <button
-          onClick={toggleCollapsed}
-          title={collapsed ? 'Expandir menu' : 'Recolher menu'}
-          style={{
-            width: '100%',
-            padding: '7px',
-            borderRadius: '7px',
-            border: 'none',
-            background: 'transparent',
-            color: '#3a3a58',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: collapsed ? 'center' : 'flex-end',
-            transition: 'color 150ms',
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#6a6a8a' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#3a3a58' }}
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-            style={{ transform: collapsed ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms ease' }}>
-            <polyline points="9,2 4,7 9,12"/>
-          </svg>
-        </button>
-      </div>
+      {/* Toggle button — só aparece expandido */}
+      {!collapsed && (
+        <div style={{ padding: '6px', borderTop: '1px solid #242440' }}>
+          <button
+            onClick={toggleCollapsed}
+            title="Recolher menu"
+            style={{
+              width: '100%',
+              padding: '7px',
+              borderRadius: '7px',
+              border: 'none',
+              background: 'transparent',
+              color: '#3a3a58',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              transition: 'color 150ms',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#6a6a8a' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#3a3a58' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9,2 4,7 9,12"/>
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* User */}
       {!collapsed && (
