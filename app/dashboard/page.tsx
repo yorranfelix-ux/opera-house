@@ -105,18 +105,7 @@ export default function Dashboard() {
     const seteDiasAtras = new Date(hoje); seteDiasAtras.setDate(seteDiasAtras.getDate() - 7)
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0]
 
-    const [
-      { data: pedidos },
-      { data: itens },
-      { data: ats },
-      { data: entregas },
-      { data: entreguesMes },
-      { data: ocorrencias },
-      { data: itensTecido },
-      { data: itensSemPrevisao },
-      { data: entregasCalendario },
-      { data: atsCalendario },
-    ] = await Promise.all([
+    const resultados = await Promise.all([
       supabase.from('pedidos').select('id, numero_pedido, prazo_prometido, semaforo, clientes(nome, cidade)').not('status', 'in', '(entregue,cancelado)'),
       supabase.from('itens_pedido').select('id, apto_entrega, pedido_id, tem_at, status'),
       supabase.from('assistencias_tecnicas').select('id, status, updated_at, pedidos(numero_pedido)').in('status', ['aberta', 'aguardando_retirada', 'em_reparo', 'enviado_fornecedor', 'aguardando_devolucao']),
@@ -128,6 +117,15 @@ export default function Dashboard() {
       supabase.from('entregas').select('data_agendada, pedidos(numero_pedido)').gte('data_agendada', hojeStr).lte('data_agendada', horizonteStr),
       supabase.from('assistencias_tecnicas').select('data_retirada_agendada, pedidos(numero_pedido)').not('data_retirada_agendada', 'is', null).gte('data_retirada_agendada', hojeStr).lte('data_retirada_agendada', horizonteStr),
     ])
+
+    const nomes = ['pedidos', 'itens', 'ats', 'entregas', 'entreguesMes', 'ocorrencias', 'itensTecido', 'itensSemPrevisao', 'entregasCalendario', 'atsCalendario']
+    resultados.forEach((r, i) => { if (r.error) console.error(`Erro na query do dashboard (${nomes[i]}):`, r.error) })
+
+    const [
+      { data: pedidos }, { data: itens }, { data: ats }, { data: entregas },
+      { data: entreguesMes }, { data: ocorrencias }, { data: itensTecido },
+      { data: itensSemPrevisao }, { data: entregasCalendario }, { data: atsCalendario },
+    ] = resultados
 
     const pedidosAtivos = (pedidos || []) as any[]
     const itensData = (itens || []) as any[]

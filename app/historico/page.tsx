@@ -55,17 +55,19 @@ export default function Historico() {
 
   async function buscarRegistros() {
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('historico_alteracoes')
       .select('*, pedidos(numero_pedido, clientes(nome))')
       .order('created_at', { ascending: false })
       .limit(200)
+    if (error) console.error('Erro ao buscar histórico:', error)
     setRegistros((data as unknown as Registro[]) || [])
     setLoading(false)
   }
 
   async function buscarPedidos() {
-    const { data } = await supabase.from('pedidos').select('id, numero_pedido').order('numero_pedido', { ascending: false })
+    const { data, error } = await supabase.from('pedidos').select('id, numero_pedido').order('numero_pedido', { ascending: false })
+    if (error) console.error('Erro ao buscar pedidos (histórico):', error)
     setPedidos(data || [])
   }
 

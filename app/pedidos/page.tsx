@@ -97,21 +97,24 @@ export default function Pedidos() {
 
   async function buscarPedidos() {
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('pedidos')
       .select('*, clientes(nome, cidade, estado), profissionais(nome, tipo)')
       .order('created_at', { ascending: false })
+    if (error) console.error('Erro ao buscar pedidos:', error)
     setPedidos(data || [])
     setLoading(false)
   }
 
   async function buscarClientes() {
-    const { data } = await supabase.from('clientes').select('id, nome').order('nome')
+    const { data, error } = await supabase.from('clientes').select('id, nome').order('nome')
+    if (error) console.error('Erro ao buscar clientes:', error)
     setClientes(data || [])
   }
 
   async function buscarProfissionais() {
-    const { data } = await supabase.from('profissionais').select('id, nome, tipo').eq('ativo', true).order('nome')
+    const { data, error } = await supabase.from('profissionais').select('id, nome, tipo').eq('ativo', true).order('nome')
+    if (error) console.error('Erro ao buscar profissionais:', error)
     setProfissionais(data || [])
   }
 

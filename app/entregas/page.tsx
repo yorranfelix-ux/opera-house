@@ -65,7 +65,8 @@ async function abrirRotaMaps(entregas: Entrega[]) {
     .filter(Boolean)
   if (enderecos.length === 0) return alert('Nenhum endereço cadastrado para os clientes deste dia.')
 
-  const { data } = await supabase.from('configuracoes').select('valor').eq('chave', 'endereco_saida').single()
+  const { data, error: errConf } = await supabase.from('configuracoes').select('valor').eq('chave', 'endereco_saida').single()
+  if (errConf && errConf.code !== 'PGRST116') console.error('Erro ao buscar endereço de saída:', errConf)
   const saida = data?.valor?.trim()
 
   const pontos = saida ? [saida, ...enderecos] : enderecos
@@ -117,19 +118,21 @@ export default function Entregas() {
   }, [])
 
   async function buscarEntregas() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('entregas')
       .select('*, motivo_reagendamento, data_anterior, pedidos(numero_pedido, clientes(nome, cidade, estado, endereco, numero, bairro, cep))')
       .order('data_agendada', { ascending: true })
+    if (error) console.error('Erro ao buscar entregas:', error)
     setEntregas((data as unknown as Entrega[]) || [])
   }
 
   async function buscarPedidos() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('pedidos')
       .select('id, numero_pedido, clientes(nome, cidade)')
       .not('status', 'in', '(entregue,cancelado)')
       .order('numero_pedido', { ascending: false })
+    if (error) console.error('Erro ao buscar pedidos (entregas):', error)
     setPedidos((data as unknown as Pedido[]) || [])
   }
 

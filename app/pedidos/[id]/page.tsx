@@ -121,11 +121,12 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   }, [id])
 
   async function buscarPedido() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('pedidos')
       .select('*, clientes(nome, endereco, numero, cidade, estado, telefone), profissionais(nome, tipo)')
       .eq('id', id)
       .single()
+    if (error) console.error('Erro ao buscar pedido:', error)
     if (data) {
       setPagamento({
         status_pagamento: (data as any).status_pagamento || 'pendente',

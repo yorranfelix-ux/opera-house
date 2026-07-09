@@ -73,6 +73,11 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
 
       if (cancelado) return
 
+      if (pedidosRes.error) console.error('BuscaGlobal pedidos:', pedidosRes.error)
+      if (clientesRes.error) console.error('BuscaGlobal clientes:', clientesRes.error)
+      if (fornecedoresRes.error) console.error('BuscaGlobal fornecedores:', fornecedoresRes.error)
+      if (atsRes.error) console.error('BuscaGlobal ATs:', atsRes.error)
+
       const novosGrupos: GrupoResultado[] = []
 
       if (pedidosRes.data && pedidosRes.data.length > 0) {

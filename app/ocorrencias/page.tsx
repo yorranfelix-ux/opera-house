@@ -75,19 +75,21 @@ export default function Ocorrencias() {
   }, [form.pedido_id])
 
   async function buscarOcorrencias() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('ocorrencias')
       .select('*, pedidos(numero_pedido, clientes(nome))')
       .order('created_at', { ascending: false })
+    if (error) console.error('Erro ao buscar ocorrências:', error)
     const ocorrenciasData = (data as unknown as Ocorrencia[]) || []
 
     // Busca itens separadamente para evitar falha silenciosa no join
     const itemIds = ocorrenciasData.map(o => o.item_id).filter(Boolean) as string[]
     if (itemIds.length > 0) {
-      const { data: itens } = await supabase
+      const { data: itens, error: errItens } = await supabase
         .from('itens_pedido')
         .select('id, descricao')
         .in('id', itemIds)
+      if (errItens) console.error('Erro ao buscar itens (ocorrências):', errItens)
       const itensMap = Object.fromEntries((itens || []).map(it => [it.id, it]))
       ocorrenciasData.forEach(o => {
         if (o.item_id && itensMap[o.item_id]) {
@@ -100,19 +102,21 @@ export default function Ocorrencias() {
   }
 
   async function buscarPedidos() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('pedidos')
       .select('id, numero_pedido, clientes(nome)')
       .order('numero_pedido', { ascending: false })
+    if (error) console.error('Erro ao buscar pedidos (ocorrências):', error)
     setPedidos((data as unknown as Pedido[]) || [])
   }
 
   async function buscarItensPedido(pedidoId: string) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('itens_pedido')
       .select('id, descricao, quantidade')
       .eq('pedido_id', pedidoId)
       .order('created_at')
+    if (error) console.error('Erro ao buscar itens do pedido:', error)
     setItensPedido((data as unknown as ItemPedido[]) || [])
   }
 
