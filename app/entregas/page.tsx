@@ -384,6 +384,116 @@ export default function Entregas() {
     janela.document.close()
   }
 
+  function imprimirObservacoes(dia: string, entregasDia: Entrega[]) {
+    const dataFormatada = (() => {
+      const d = new Date(dia + 'T12:00:00')
+      return d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })
+    })()
+
+    const comObs = entregasDia.filter(e => e.requer_icamento || e.observacoes_icamento || e.observacoes)
+
+    const rowsHtml = entregasDia.map((e, i) => {
+      const c = e.pedidos?.clientes
+      const endereco = c ? montarEnderecoCliente(c) : '—'
+      const icamentoHtml = e.requer_icamento
+        ? `<div style="margin-top:4px;padding:4px 8px;background:#FFF3E0;border-left:3px solid #E65100;font-size:10px;">
+            <strong>🏗️ REQUER IÇAMENTO</strong>${e.observacoes_icamento ? ': ' + e.observacoes_icamento : ''}
+           </div>`
+        : ''
+      const obsHtml = e.observacoes
+        ? `<div style="margin-top:4px;padding:4px 8px;background:#f5f5f5;border-left:3px solid #555;font-size:10px;">
+            <strong>Obs:</strong> ${e.observacoes}
+           </div>`
+        : ''
+      const reagendHtml = e.motivo_reagendamento
+        ? `<div style="margin-top:4px;font-size:10px;color:#666;font-style:italic;">↺ Reagendado: ${e.motivo_reagendamento}</div>`
+        : ''
+      return `
+        <tr>
+          <td style="padding:10px 12px;width:5%;text-align:center;font-size:14px;font-weight:700;vertical-align:top;">${i + 1}</td>
+          <td style="padding:10px 12px;width:18%;vertical-align:top;">
+            <div style="font-size:12px;font-weight:700;">P. ${e.pedidos?.numero_pedido || '—'}</div>
+            <div style="font-size:10px;color:#555;margin-top:2px;">${STATUS_COR[e.status]?.label || e.status}</div>
+          </td>
+          <td style="padding:10px 12px;width:25%;vertical-align:top;">
+            <div style="font-size:11px;font-weight:600;">${c?.nome || '—'}</div>
+            <div style="font-size:10px;color:#555;margin-top:2px;">${endereco}</div>
+          </td>
+          <td style="padding:10px 12px;vertical-align:top;">
+            ${icamentoHtml}${obsHtml}${reagendHtml}
+            ${!icamentoHtml && !obsHtml && !reagendHtml ? '<span style="font-size:10px;color:#bbb;">Sem observações</span>' : ''}
+          </td>
+        </tr>`
+    }).join('')
+
+    const alertaHtml = comObs.length > 0
+      ? `<div style="margin-bottom:12px;padding:8px 12px;background:#FFF3E0;border:1px solid #E65100;border-radius:6px;font-size:11px;">
+          <strong>⚠️ Atenção:</strong> ${comObs.length} entrega${comObs.length !== 1 ? 's' : ''} com observação especial neste dia.
+         </div>`
+      : ''
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Observações de Entrega — ${dataFormatada}</title>
+  <style>
+    @page { size: A4 portrait; margin: 10mm 12mm; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:Arial,sans-serif; font-size:11px; color:#000; background:#fff; }
+    table { border-collapse:collapse; width:100%; }
+    td, th { border:1px solid #ccc; }
+    tr:nth-child(even) td { background:#fafafa; }
+  </style>
+</head>
+<body>
+
+<table style="margin-bottom:10px;border:none;">
+  <tr>
+    <td style="border:none;padding:0 0 6px;">
+      <img src="${LOGO_DARK}" alt="Opera House" style="height:38px;object-fit:contain;">
+    </td>
+    <td style="border:none;text-align:right;padding:0 0 6px;">
+      <div style="font-size:10px;color:#666;">FOLHA DE OBSERVAÇÕES — EQUIPE DE ENTREGA</div>
+      <div style="font-size:13px;font-weight:700;text-transform:capitalize;">${dataFormatada}</div>
+    </td>
+  </tr>
+</table>
+
+${alertaHtml}
+
+<table>
+  <thead>
+    <tr style="background:#1a1a2e;">
+      <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:center;width:5%;">#</th>
+      <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:left;width:18%;">Pedido</th>
+      <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:left;width:25%;">Cliente / Endereço</th>
+      <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:left;">Observações</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${rowsHtml}
+  </tbody>
+</table>
+
+<table style="margin-top:16px;border:none;">
+  <tr>
+    <td style="border:none;border-top:1px solid #ccc;padding:8px 0;font-size:9px;color:#888;">
+      Impresso em ${new Date().toLocaleString('pt-BR')} — Opera House ERP
+    </td>
+  </tr>
+</table>
+
+<script>window.onload = function(){ window.print(); }<\/script>
+</body>
+</html>`
+
+    const janela = window.open('', '_blank', 'width=800,height=700')
+    if (!janela) return
+    janela.document.write(html)
+    janela.document.close()
+  }
+
   async function deletarEntrega(id: string, numeroPedido: string) {
     if (!confirm(`Remover o agendamento do Pedido ${numeroPedido}? O pedido não será excluído, apenas o agendamento de entrega.`)) return
     const entrega = entregas.find(e => e.id === id)
@@ -467,7 +577,13 @@ export default function Entregas() {
                       onClick={() => abrirImpressao(dia, entregasDia)}
                       style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: '0.5px solid #e8e7e3', background: '#fff', color: '#555', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}
                     >
-                      🖨️ Imprimir sequência
+                      🖨️ Sequência
+                    </button>
+                    <button
+                      onClick={() => imprimirObservacoes(dia, entregasDia)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: '0.5px solid #e8e7e3', background: '#fff', color: '#555', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}
+                    >
+                      📋 Observações
                     </button>
                     <button
                       onClick={() => abrirRotaMaps(entregasDia)}
@@ -495,7 +611,7 @@ export default function Entregas() {
                               {STATUS_COR[e.status]?.label || e.status}
                             </span>
                             {e.requer_icamento && (
-                              <span style={{ fontSize: '10px', background: '#FAEEDA', color: '#633806', padding: '1px 6px', borderRadius: '6px', fontWeight: '500' }}>Içamento</span>
+                              <span style={{ fontSize: '10px', background: '#FAEEDA', color: '#633806', padding: '1px 6px', borderRadius: '6px', fontWeight: '500' }}>🏗️ Içamento</span>
                             )}
                           </div>
                           <div style={{ fontSize: '12px', color: '#555' }}>{c?.nome}</div>
@@ -504,8 +620,13 @@ export default function Entregas() {
                           ) : (
                             <div style={{ fontSize: '11px', color: '#bbb', marginTop: '2px' }}>{c?.cidade} {c?.estado} — endereço completo não cadastrado</div>
                           )}
+                          {e.requer_icamento && e.observacoes_icamento && (
+                            <div style={{ fontSize: '11px', color: '#633806', marginTop: '3px', background: '#FAEEDA', padding: '3px 8px', borderRadius: '5px', display: 'inline-block' }}>
+                              🏗️ {e.observacoes_icamento}
+                            </div>
+                          )}
                           {e.observacoes && (
-                            <div style={{ fontSize: '11px', color: '#aaa', marginTop: '2px', fontStyle: 'italic' }}>{e.observacoes}</div>
+                            <div style={{ fontSize: '11px', color: '#555', marginTop: '3px', fontStyle: 'italic' }}>📝 {e.observacoes}</div>
                           )}
                           {e.motivo_reagendamento && (
                             <div style={{ fontSize: '10px', color: '#888', marginTop: '2px', fontStyle: 'italic' }}>
