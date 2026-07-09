@@ -138,10 +138,11 @@ export default function AssistenciaTecnica() {
 
   async function buscarATs() {
     setLoadingATs(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('assistencias_tecnicas')
-      .select('*, pedidos(numero_pedido, clientes(nome, cidade)), fornecedores(nome_fantasia, razao_social), itens_pedido(descricao)')
+      .select('*, pedidos(numero_pedido, clientes(nome, cidade)), fornecedores(nome_fantasia, razao_social)')
       .order('created_at', { ascending: false })
+    if (error) console.error('Erro ao buscar ATs:', error)
     setAts((data as unknown as AT[]) || [])
     setLoadingATs(false)
   }
