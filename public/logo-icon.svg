@@ -1,0 +1,15 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fundo branco -->
+  <rect width="200" height="200" fill="white"/>
+  <!-- Moldura dourada -->
+  <rect width="200" height="200" fill="#B8935A"/>
+  <!-- Área branca interna -->
+  <rect x="13" y="13" width="174" height="174" fill="white"/>
+  <!-- Marca "h" dourada -->
+  <!-- Barra esquerda (altura total) -->
+  <rect x="55" y="46" width="19" height="110" fill="#B8935A"/>
+  <!-- Barra horizontal (crossbar) -->
+  <rect x="55" y="88" width="80" height="17" fill="#B8935A"/>
+  <!-- Perna direita (do crossbar para baixo) -->
+  <rect x="116" y="88" width="19" height="68" fill="#B8935A"/>
+</svg>

@@ -163,9 +163,7 @@ export default function Sidebar({ ativa }: { ativa: string }) {
         borderBottom: '1px solid #242440',
       }}>
         {collapsed ? (
-          <div style={{ width: '36px', height: '36px', overflow: 'hidden', flexShrink: 0 }}>
-            <img src="/logo.png" alt="Opera House" style={{ height: '36px', width: 'auto', display: 'block' }} />
-          </div>
+          <img src="/logo-icon.svg" alt="Opera House" style={{ width: '36px', height: '36px', flexShrink: 0 }} />
         ) : (
           <img src={LOGO_NEG} alt="Opera House" style={{ width: '110px', objectFit: 'contain' }} />
         )}
