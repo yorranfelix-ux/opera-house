@@ -207,7 +207,7 @@ export default function Ajuda() {
             <div>
               <div style={{ fontSize: '18px', fontWeight: '600', color: '#C9A84C', marginBottom: '6px' }}>Bem-vindo ao Opera House ERP</div>
               <div style={{ fontSize: '13px', color: '#a0a0c0', lineHeight: '1.7' }}>
-                Este sistema foi desenvolvido para a <strong style={{ color: '#c8c8e0' }}>Delinear Móveis</strong> gerenciar pedidos, assistências técnicas, entregas e o relacionamento com clientes e parceiros. Use o menu abaixo para navegar pelo guia de cada módulo.
+                Este sistema foi desenvolvido para a <strong style={{ color: '#c8c8e0' }}>Opera House</strong> gerenciar pedidos, assistências técnicas, entregas e o relacionamento com clientes e parceiros. Use o menu abaixo para navegar pelo guia de cada módulo.
               </div>
             </div>
           </div>
