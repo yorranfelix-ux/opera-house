@@ -67,6 +67,7 @@ export default function Pedidos() {
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
   const [filtroStatus, setFiltroStatus] = useState<'abertos' | 'entregues' | 'todos'>('abertos')
+  const [filtroProfissional, setFiltroProfissional] = useState<string>('')
   const [profissionais, setProfissionais] = useState<{ id: string; nome: string; tipo: string }[]>([])
   const [salvando, setSalvando] = useState(false)
   const [pagina, setPagina] = useState(1)
@@ -79,15 +80,16 @@ export default function Pedidos() {
         const f = JSON.parse(salvo)
         if (f.busca !== undefined) setBusca(f.busca)
         if (f.filtroStatus !== undefined) setFiltroStatus(f.filtroStatus)
+        if (f.filtroProfissional !== undefined) setFiltroProfissional(f.filtroProfissional)
       }
     } catch {}
   }, [])
 
   useEffect(() => {
-    try { sessionStorage.setItem('operare_filtros_pedidos', JSON.stringify({ busca, filtroStatus })) } catch {}
+    try { sessionStorage.setItem('operare_filtros_pedidos', JSON.stringify({ busca, filtroStatus, filtroProfissional })) } catch {}
   }, [busca, filtroStatus])
 
-  useEffect(() => { setPagina(1) }, [busca, filtroStatus])
+  useEffect(() => { setPagina(1) }, [busca, filtroStatus, filtroProfissional])
 
   useEffect(() => {
     buscarPedidos()
@@ -168,10 +170,11 @@ export default function Pedidos() {
   const STATUS_ABERTOS = ['criado', 'aguardando_compra', 'em_producao', 'em_transporte', 'recebido', 'apto_agendamento', 'agendado', 'com_at']
 
   const filtrados = pedidos.filter(p => {
-    const buscaOk = p.numero_pedido?.toLowerCase().includes(busca.toLowerCase()) || p.clientes?.nome?.toLowerCase().includes(busca.toLowerCase())
+    const buscaOk = !busca || p.numero_pedido?.toLowerCase().includes(busca.toLowerCase()) || p.clientes?.nome?.toLowerCase().includes(busca.toLowerCase())
     if (!buscaOk) return false
-    if (filtroStatus === 'abertos') return STATUS_ABERTOS.includes(p.status)
-    if (filtroStatus === 'entregues') return p.status === 'entregue' || p.status === 'cancelado'
+    if (filtroStatus === 'abertos' && !STATUS_ABERTOS.includes(p.status)) return false
+    if (filtroStatus === 'entregues' && p.status !== 'entregue' && p.status !== 'cancelado') return false
+    if (filtroProfissional && p.profissional_id !== filtroProfissional) return false
     return true
   })
   const totalPaginas = Math.max(1, Math.ceil(filtrados.length / ITEMS_POR_PAGINA))
@@ -241,6 +244,18 @@ export default function Pedidos() {
                 </button>
               ))}
             </div>
+            {profissionais.length > 0 && (
+              <select
+                value={filtroProfissional}
+                onChange={e => setFiltroProfissional(e.target.value)}
+                style={{ padding: '7px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '12px', background: filtroProfissional ? '#1a1a2e' : '#fff', color: filtroProfissional ? '#C9A84C' : '#888', outline: 'none', cursor: 'pointer' }}
+              >
+                <option value="">Todos os profissionais</option>
+                {profissionais.map(p => (
+                  <option key={p.id} value={p.id}>{p.nome}</option>
+                ))}
+              </select>
+            )}
             <span style={{ fontSize: '12px', color: '#aaa' }}>{filtrados.length} pedido{filtrados.length !== 1 ? 's' : ''}</span>
           </div>
 
