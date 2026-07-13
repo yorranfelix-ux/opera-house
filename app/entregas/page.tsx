@@ -14,6 +14,7 @@ interface ClienteEntrega {
   numero: string
   bairro: string
   cep: string
+  telefone: string
 }
 
 interface Entrega {
@@ -25,6 +26,7 @@ interface Entrega {
   requer_icamento: boolean
   observacoes_icamento: string
   observacoes: string
+  responsavel_campo: string | null
   motivo_reagendamento: string | null
   data_anterior: string | null
   pedidos: {
@@ -51,7 +53,7 @@ const STATUS_LISTA = ['agendada', 'realizada', 'reagendada', 'cancelada']
 const formVazio = {
   pedido_id: '', data_agendada: '', data_realizada: '',
   status: 'agendada', requer_icamento: false,
-  observacoes_icamento: '', observacoes: '',
+  observacoes_icamento: '', observacoes: '', responsavel_campo: '',
 }
 
 function montarEnderecoCliente(c: ClienteEntrega): string {
@@ -120,7 +122,7 @@ export default function Entregas() {
   async function buscarEntregas() {
     const { data, error } = await supabase
       .from('entregas')
-      .select('*, motivo_reagendamento, data_anterior, pedidos(numero_pedido, clientes(nome, cidade, estado, endereco, numero, bairro, cep))')
+      .select('*, motivo_reagendamento, data_anterior, pedidos(numero_pedido, clientes(nome, cidade, estado, endereco, numero, bairro, cep, telefone))')
       .order('data_agendada', { ascending: true })
     if (error) console.error('Erro ao buscar entregas:', error)
     setEntregas((data as unknown as Entrega[]) || [])
@@ -152,6 +154,7 @@ export default function Entregas() {
       requer_icamento: e.requer_icamento || false,
       observacoes_icamento: e.observacoes_icamento || '',
       observacoes: e.observacoes || '',
+      responsavel_campo: e.responsavel_campo || '',
     })
     setShowForm(true)
   }
@@ -179,6 +182,7 @@ export default function Entregas() {
         requer_icamento: form.requer_icamento,
         observacoes_icamento: form.observacoes_icamento,
         observacoes: form.observacoes,
+        responsavel_campo: form.responsavel_campo || null,
       }
       const pedidoSel = pedidos.find(p => p.id === form.pedido_id)
       const numPedido = pedidoSel?.numero_pedido || '?'
@@ -191,6 +195,10 @@ export default function Entregas() {
         const { error } = await supabase.from('entregas').update(payload).eq('id', editandoId)
         if (error) return alert('Erro: ' + error.message)
         await registrarHistorico({ tipo: 'entrega_atualizada', descricao: `Entrega do Pedido ${numPedido} atualizada para ${form.data_agendada ? new Date(form.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}`, pedidoId: form.pedido_id })
+        if (payload.status === 'realizada') {
+          await supabase.from('pedidos').update({ status: 'entregue' }).eq('id', form.pedido_id)
+          await registrarHistorico({ tipo: 'pedido_editado', descricao: `Pedido marcado como entregue automaticamente após entrega realizada`, pedidoId: form.pedido_id })
+        }
       } else {
         const { error } = await supabase.from('entregas').insert([{ ...payload, status: 'agendada' }])
         if (error) return alert('Erro: ' + error.message)
@@ -418,6 +426,8 @@ export default function Entregas() {
           <td style="padding:10px 12px;width:25%;vertical-align:top;">
             <div style="font-size:11px;font-weight:600;">${c?.nome || '—'}</div>
             <div style="font-size:10px;color:#555;margin-top:2px;">${endereco}</div>
+            ${c?.telefone ? `<div style="font-size:10px;color:#555;margin-top:2px;">📞 ${c.telefone}</div>` : ''}
+            ${e.responsavel_campo ? `<div style="font-size:10px;color:#333;margin-top:2px;font-weight:600;">👷 ${e.responsavel_campo}</div>` : ''}
           </td>
           <td style="padding:10px 12px;vertical-align:top;">
             ${icamentoHtml}${obsHtml}${reagendHtml}
@@ -628,6 +638,9 @@ ${alertaHtml}
                           {e.observacoes && (
                             <div style={{ fontSize: '11px', color: '#555', marginTop: '3px', fontStyle: 'italic' }}>📝 {e.observacoes}</div>
                           )}
+                          {e.responsavel_campo && (
+                            <div style={{ fontSize: '11px', color: '#555', marginTop: '2px' }}>👷 {e.responsavel_campo}</div>
+                          )}
                           {e.motivo_reagendamento && (
                             <div style={{ fontSize: '10px', color: '#888', marginTop: '2px', fontStyle: 'italic' }}>
                               ↺ {e.motivo_reagendamento}
@@ -808,6 +821,13 @@ ${alertaHtml}
                   style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
               </div>
             )}
+
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Responsável / montador</div>
+              <input type="text" value={form.responsavel_campo || ''} onChange={e => setForm({ ...form, responsavel_campo: e.target.value })}
+                placeholder="Nome de quem realizou a entrega"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
 
             <div style={{ marginBottom: '20px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações</div>

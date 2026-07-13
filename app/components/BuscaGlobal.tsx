@@ -66,8 +66,8 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
           .limit(5),
         supabase
           .from('assistencias_tecnicas')
-          .select('id, numero_at, pedidos(numero_pedido, clientes(nome))')
-          .or(`numero_at.ilike.%${q}%`)
+          .select('id, numero_at, descricao_problema, pedidos(numero_pedido, clientes(nome))')
+          .or(`numero_at.ilike.%${q}%,descricao_problema.ilike.%${q}%`)
           .limit(4),
       ])
 
@@ -124,10 +124,13 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
           label: 'AT',
           items: atsRes.data.map((at: any) => {
             const pedido = Array.isArray(at.pedidos) ? at.pedidos[0] : at.pedidos
+            const detalhePartes = []
+            if (pedido) detalhePartes.push(`Pedido ${pedido.numero_pedido}`)
+            if (at.descricao_problema) detalhePartes.push(at.descricao_problema.substring(0, 60) + (at.descricao_problema.length > 60 ? '…' : ''))
             return {
               id: at.id,
               titulo: at.numero_at,
-              detalhe: pedido ? `Pedido ${pedido.numero_pedido}` : undefined,
+              detalhe: detalhePartes.join(' · ') || undefined,
               url: `/assistencia/${at.id}`,
             }
           }),

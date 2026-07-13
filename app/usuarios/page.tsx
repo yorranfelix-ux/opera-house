@@ -18,6 +18,8 @@ export default function Usuarios() {
   const [showForm, setShowForm] = useState(false)
   const [showSenhaModal, setShowSenhaModal] = useState<string | null>(null)
   const [showEditModal, setShowEditModal] = useState<string | null>(null)
+  const [showDesativarModal, setShowDesativarModal] = useState<string | null>(null)
+  const [desativando, setDesativando] = useState(false)
   const [editForm, setEditForm] = useState({ nome: '', cargo: '' })
   const [salvando, setSalvando] = useState(false)
 
@@ -63,6 +65,21 @@ export default function Usuarios() {
     setSalvando(false)
     if (error) return alert('Erro: ' + error.message)
     setShowEditModal(null)
+    buscarUsuarios()
+  }
+
+  async function desativarUsuario() {
+    if (!showDesativarModal) return
+    setDesativando(true)
+    const res = await fetch('/api/usuarios/desativar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: showDesativarModal }),
+    })
+    const data = await res.json()
+    setDesativando(false)
+    if (data.error) return alert('Erro: ' + data.error)
+    setShowDesativarModal(null)
     buscarUsuarios()
   }
 
@@ -125,6 +142,10 @@ export default function Usuarios() {
                     <button onClick={() => { setShowSenhaModal(u.id); setNovaSenha('') }}
                       style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>
                       Redefinir senha
+                    </button>
+                    <button onClick={() => setShowDesativarModal(u.id)}
+                      style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #f5c6c6', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#A32D2D' }}>
+                      Excluir
                     </button>
                   </div>
                 </div>
@@ -201,6 +222,30 @@ export default function Usuarios() {
               <button onClick={editarUsuario} disabled={salvando}
                 style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>
                 {salvando ? 'Salvando...' : 'Salvar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDesativarModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '380px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#A32D2D' }}>Excluir usuário</span>
+              <button onClick={() => setShowDesativarModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+            </div>
+            <p style={{ fontSize: '13px', color: '#555', marginBottom: '8px', lineHeight: '1.6' }}>
+              Esta ação é <strong>permanente e irreversível</strong>. O usuário perderá acesso imediatamente e não poderá mais entrar no sistema.
+            </p>
+            <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px', lineHeight: '1.6' }}>
+              O histórico de alterações feitas por este usuário será mantido.
+            </p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowDesativarModal(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
+              <button onClick={desativarUsuario} disabled={desativando}
+                style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#A32D2D', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: desativando ? 0.7 : 1 }}>
+                {desativando ? 'Excluindo...' : 'Excluir usuário'}
               </button>
             </div>
           </div>

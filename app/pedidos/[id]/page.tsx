@@ -15,6 +15,8 @@ interface Pedido {
   status: string
   semaforo: string
   observacoes_gerais: string
+  tipo_documento: string | null
+  numero_documento: string | null
   clientes: { nome: string; endereco: string; numero: string; cidade: string; estado: string; telefone: string }
   profissionais: { nome: string; tipo: string } | null
 }
@@ -107,6 +109,9 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const [excluindo, setExcluindo] = useState(false)
   const [salvandoItem, setSalvandoItem] = useState(false)
   const [pagamento, setPagamento] = useState({ status_pagamento: 'pendente', observacao_pagamento: '' })
+  const [docForm, setDocForm] = useState({ tipo_documento: 'NF', numero_documento: '' })
+  const [editandoDoc, setEditandoDoc] = useState(false)
+  const [salvandoDoc, setSalvandoDoc] = useState(false)
   const [pagamentoAberto, setPagamentoAberto] = useState(false)
   const [historicoItemId, setHistoricoItemId] = useState<string | null>(null)
   const [historicoItens, setHistoricoItens] = useState<any[]>([])
@@ -142,6 +147,34 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       status_pagamento: pagamento.status_pagamento,
       observacao_pagamento: pagamento.observacao_pagamento || null,
     }).eq('id', id)
+  }
+
+  async function salvarDocumento() {
+    if (!docForm.numero_documento.trim()) return
+    setSalvandoDoc(true)
+    const { error } = await supabase.from('pedidos').update({
+      tipo_documento: docForm.tipo_documento,
+      numero_documento: docForm.numero_documento.trim(),
+    }).eq('id', id)
+    setSalvandoDoc(false)
+    if (error) { alert('Erro: ' + error.message); return }
+    await registrarHistorico({ tipo: 'pedido_editado', descricao: `Documento fiscal: ${docForm.tipo_documento} ${docForm.numero_documento}`, pedidoId: id })
+    setEditandoDoc(false)
+    buscarPedido()
+  }
+
+  async function verificarStatusPedido() {
+    const { data: todosItens } = await supabase.from('itens_pedido').select('apto_entrega, status').eq('pedido_id', id)
+    if (!todosItens || todosItens.length === 0) return
+    const todosAptos = todosItens.every((i: any) => i.apto_entrega === true)
+    if (todosAptos) {
+      const { data: p } = await supabase.from('pedidos').select('status').eq('id', id).single()
+      if (p && p.status !== 'entregue' && p.status !== 'cancelado' && p.status !== 'apto_agendamento') {
+        await supabase.from('pedidos').update({ status: 'apto_agendamento' }).eq('id', id)
+        await registrarHistorico({ tipo: 'pedido_editado', descricao: 'Status atualizado automaticamente para Apto p/ agendamento (todos os itens prontos)', pedidoId: id })
+        buscarPedido()
+      }
+    }
   }
 
   async function verHistoricoItem(itemId: string) {
@@ -336,6 +369,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       }
       if (itemAnterior?.apto_entrega !== itemForm.apto_entrega) {
         mudancas.push(`Apto entrega: ${itemForm.apto_entrega ? 'Sim' : 'Não'}`)
+        if (itemForm.apto_entrega) setTimeout(() => verificarStatusPedido(), 500)
       }
       if (itemAnterior?.requer_icamento !== itemForm.requer_icamento) {
         mudancas.push(`Içamento: ${itemForm.requer_icamento ? 'Sim' : 'Não'}`)
@@ -664,6 +698,44 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                 {pedido.observacoes_gerais}
               </div>
             )}
+            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {!editandoDoc ? (
+                <>
+                  {pedido.numero_documento ? (
+                    <div style={{ padding: '6px 12px', background: '#252540', borderRadius: '8px', fontSize: '12px', color: '#C9A84C', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ color: '#6a6a8a' }}>{pedido.tipo_documento || 'NF'}:</span>
+                      <span style={{ fontWeight: '500' }}>{pedido.numero_documento}</span>
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: '12px', color: '#4a4a6a' }}>Sem NF / Romaneio</span>
+                  )}
+                  <button onClick={() => { setDocForm({ tipo_documento: pedido.tipo_documento || 'NF', numero_documento: pedido.numero_documento || '' }); setEditandoDoc(true) }}
+                    style={{ padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #3a3a58', background: 'transparent', color: '#6a6a8a', fontSize: '11px', cursor: 'pointer' }}>
+                    {pedido.numero_documento ? 'Editar' : '+ NF / Romaneio'}
+                  </button>
+                </>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <select value={docForm.tipo_documento} onChange={e => setDocForm({ ...docForm, tipo_documento: e.target.value })}
+                    style={{ padding: '5px 8px', borderRadius: '6px', border: '0.5px solid #3a3a58', background: '#252540', color: '#C9A84C', fontSize: '12px', outline: 'none' }}>
+                    <option value="NF">NF</option>
+                    <option value="Romaneio">Romaneio</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                  <input value={docForm.numero_documento} onChange={e => setDocForm({ ...docForm, numero_documento: e.target.value })} placeholder="Número"
+                    onKeyDown={e => { if (e.key === 'Enter') salvarDocumento(); if (e.key === 'Escape') setEditandoDoc(false) }}
+                    style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #C9A84C', background: '#252540', color: '#fff', fontSize: '12px', outline: 'none', width: '120px' }} autoFocus />
+                  <button onClick={salvarDocumento} disabled={salvandoDoc}
+                    style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', background: '#C9A84C', color: '#1a1a2e', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}>
+                    {salvandoDoc ? '...' : 'Salvar'}
+                  </button>
+                  <button onClick={() => setEditandoDoc(false)}
+                    style={{ padding: '5px 8px', borderRadius: '6px', border: '0.5px solid #3a3a58', background: 'transparent', color: '#888', fontSize: '12px', cursor: 'pointer' }}>
+                    ✕
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '16px' }}>

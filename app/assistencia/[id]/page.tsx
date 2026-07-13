@@ -23,6 +23,8 @@ interface AT {
   observacoes: string
   observacoes_fornecedor: string
   numero_nf_envio: string
+  dentro_garantia: boolean
+  data_expiracao_garantia: string | null
   created_at: string
   pedido_id: string
   item_id: string
@@ -362,6 +364,7 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
         ${linha('Fornecedor', at.fornecedores?.nome_fantasia || at.fornecedores?.razao_social)}
         ${linha('NF envio ao fornecedor', at.numero_nf_envio)}
         ${at.pedidos?.profissionais ? linha('Profissional', `${at.pedidos.profissionais.nome} — ${at.pedidos.profissionais.tipo}`) : ''}
+        ${linha('Garantia', at.dentro_garantia ? `Em garantia${(at as any).data_expiracao_garantia ? ' · Vence: ' + formatarData((at as any).data_expiracao_garantia) : ''}` : 'Fora da garantia')}
       </table>
     </div>
 
@@ -530,6 +533,39 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
             {/* Observações */}
             <EditableTextCard label="Observações gerais" value={at.observacoes} multiline onSave={v => atualizarCampo('observacoes', v)} />
             <EditableTextCard label="Observações fornecedor" value={at.observacoes_fornecedor} multiline onSave={v => atualizarCampo('observacoes_fornecedor', v)} />
+
+            {/* Garantia */}
+            <div style={{ background: '#fff', borderRadius: '12px', border: `0.5px solid ${at.dentro_garantia ? '#a8d5a2' : '#e8e7e3'}`, padding: '16px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Garantia</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: at.dentro_garantia ? '10px' : '0' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: '#1a1a2e' }}>
+                  <input type="checkbox" checked={at.dentro_garantia || false}
+                    onChange={async e => {
+                      const { error } = await supabase.from('assistencias_tecnicas').update({ dentro_garantia: e.target.checked }).eq('id', id)
+                      if (error) { alert('Erro: ' + error.message); return }
+                      await registrarHistorico({ tipo: 'at_atualizada', descricao: `Garantia: ${e.target.checked ? 'dentro da garantia' : 'fora da garantia'}`, pedidoId: at?.pedido_id })
+                      buscarAT()
+                    }}
+                    style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+                  Dentro da garantia
+                </label>
+                {at.dentro_garantia && (
+                  <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '6px', background: '#EAF3DE', color: '#27500A', fontWeight: '500' }}>✓ Em garantia</span>
+                )}
+              </div>
+              {at.dentro_garantia && (
+                <div>
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>Vencimento da garantia</div>
+                  <input type="date" value={(at as any).data_expiracao_garantia || ''}
+                    onChange={async e => {
+                      const { error } = await supabase.from('assistencias_tecnicas').update({ data_expiracao_garantia: e.target.value || null }).eq('id', id)
+                      if (error) { alert('Erro: ' + error.message); return }
+                      buscarAT()
+                    }}
+                    style={{ padding: '7px 10px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', color: '#1a1a2e' }} />
+                </div>
+              )}
+            </div>
 
             {/* Address if retirada */}
             {at.requer_retirada && (
