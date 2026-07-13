@@ -73,6 +73,13 @@ const ICON: Record<string, React.ReactElement> = {
       <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M3.1 12.9l1.4-1.4M11.5 4.5l1.4-1.4"/>
     </svg>
   ),
+  '/ajuda': (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="8" cy="8" r="6.5"/>
+      <path d="M6 6c0-1.105.895-2 2-2s2 .895 2 2c0 1-.667 1.5-1.5 2S8 9.5 8 10.5"/>
+      <circle cx="8" cy="12.5" r="0.6" fill="currentColor" stroke="none"/>
+    </svg>
+  ),
 }
 
 const GROUPS = [
@@ -104,6 +111,7 @@ const GROUPS = [
       { label: 'Histórico', href: '/historico' },
       { label: 'Usuários', href: '/usuarios' },
       { label: 'Configurações', href: '/configuracoes' },
+      { label: 'Ajuda', href: '/ajuda' },
     ],
   },
 ]
