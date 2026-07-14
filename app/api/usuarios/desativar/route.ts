@@ -12,6 +12,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Variáveis SUPABASE_URL ou SERVICE_ROLE_KEY não configuradas no servidor' }, { status: 500 })
   }
 
+  // Anula o usuario_id no histórico (preserva usuario_nome, remove a FK)
+  await supabaseAdmin.from('historico_alteracoes').update({ usuario_id: null }).eq('usuario_id', userId)
+
   // Chama a API REST diretamente para ter acesso ao texto real do erro
   const res = await fetch(`${url}/auth/v1/admin/users/${userId}`, {
     method: 'DELETE',
