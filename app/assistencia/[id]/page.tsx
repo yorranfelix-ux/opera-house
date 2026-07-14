@@ -212,7 +212,8 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
 
 
   async function iniciarProcesso() {
-    await supabase.from('assistencias_tecnicas').update({ status: 'em_reparo', observacoes: processoObs || null }).eq('id', id)
+    const obsAtualizada = [at?.observacoes, processoObs].filter(Boolean).join('\n') || null
+    await supabase.from('assistencias_tecnicas').update({ status: 'em_reparo', observacoes: obsAtualizada }).eq('id', id)
     await registrarHistorico({ tipo: 'at_atualizada', descricao: `AT iniciada em processo de reparo interno. ${processoObs ? 'Obs: ' + processoObs : ''}`, pedidoId: at?.pedido_id })
     setShowProcessoModal(false)
     setProcessoObs('')
@@ -238,11 +239,12 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
   }
 
   async function registrarRetorno() {
+    const obsAtualizada = [at?.observacoes, retornoForm.observacoes].filter(Boolean).join('\n') || null
     await supabase.from('assistencias_tecnicas').update({
       status: 'aguardando_devolucao',
       data_retorno_fornecedor: retornoForm.data_retorno_fornecedor || null,
       previsao_entrega_cliente: retornoForm.previsao_entrega_cliente || null,
-      observacoes: retornoForm.observacoes || null,
+      observacoes: obsAtualizada,
     }).eq('id', id)
     await registrarHistorico({ tipo: 'at_atualizada', descricao: `Retorno do fornecedor registrado. ${retornoForm.observacoes ? 'Obs: ' + retornoForm.observacoes : ''}`, pedidoId: at?.pedido_id })
     setShowRetornoModal(false)
@@ -252,7 +254,8 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
   }
 
   async function marcarResolvida() {
-    await supabase.from('assistencias_tecnicas').update({ status: 'resolvida', observacoes: resolvidaObs || null }).eq('id', id)
+    const obsAtualizada = [at?.observacoes, resolvidaObs].filter(Boolean).join('\n') || null
+    await supabase.from('assistencias_tecnicas').update({ status: 'resolvida', observacoes: obsAtualizada }).eq('id', id)
     await registrarHistorico({ tipo: 'at_atualizada', descricao: `AT marcada como resolvida. ${resolvidaObs ? 'Obs: ' + resolvidaObs : ''}`, pedidoId: at?.pedido_id })
     setShowResolvidaModal(false)
     setResolvidaObs('')
@@ -286,7 +289,8 @@ export default function ATPage({ params }: { params: Promise<{ id: string }> }) 
   }
 
   async function cancelarAT() {
-    await supabase.from('assistencias_tecnicas').update({ status: 'cancelada', observacoes: cancelarObs || null }).eq('id', id)
+    const obsAtualizada = [at?.observacoes, cancelarObs].filter(Boolean).join('\n') || null
+    await supabase.from('assistencias_tecnicas').update({ status: 'cancelada', observacoes: obsAtualizada }).eq('id', id)
     await registrarHistorico({ tipo: 'at_atualizada', descricao: `AT cancelada. ${cancelarObs ? 'Motivo: ' + cancelarObs : ''}`, pedidoId: at?.pedido_id })
     setShowCancelarModal(false)
     setCancelarObs('')

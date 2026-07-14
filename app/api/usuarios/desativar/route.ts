@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
@@ -6,11 +8,23 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: 'userId é obrigatório' }, { status: 400 })
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!url || !key) {
-    return NextResponse.json({ error: 'Variáveis SUPABASE_URL ou SERVICE_ROLE_KEY não configuradas no servidor' }, { status: 500 })
+  if (!url || !key || !anonKey) {
+    return NextResponse.json({ error: 'Variáveis de ambiente não configuradas no servidor' }, { status: 500 })
   }
+
+  // Verifica se o chamador está autenticado
+  const cookieStore = await cookies()
+  const supabaseAuth = createServerClient(url, anonKey, {
+    cookies: {
+      getAll() { return cookieStore.getAll() },
+      setAll() {},
+    },
+  })
+  const { data: { user } } = await supabaseAuth.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
 
   const supabaseAdmin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
 

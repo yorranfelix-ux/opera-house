@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
 // Estado global simples para abrir/fechar o modal de qualquer lugar
@@ -32,12 +32,16 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState('')
   const [grupos, setGrupos] = useState<GrupoResultado[]>([])
   const [carregando, setCarregando] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
   const q = usarDebounce(query, 250)
 
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
+
+  // Reset selection when results change
+  useEffect(() => { setSelectedIndex(-1) }, [grupos])
 
   useEffect(() => {
     if (q.length < 2) {
@@ -145,7 +149,27 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
     return () => { cancelado = true }
   }, [q])
 
-  const temResultados = grupos.some(g => g.items.length > 0)
+  const todosItens = grupos.flatMap(g => g.items)
+  const temResultados = todosItens.length > 0
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setSelectedIndex(i => Math.min(i + 1, todosItens.length - 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setSelectedIndex(i => Math.max(i - 1, -1))
+    } else if (e.key === 'Enter' && selectedIndex >= 0 && todosItens[selectedIndex]) {
+      window.location.href = todosItens[selectedIndex].url
+      onClose()
+    } else if (e.key === 'Enter' && selectedIndex === -1 && todosItens.length === 1) {
+      window.location.href = todosItens[0].url
+      onClose()
+    }
+  }
+
+  // Flat index counter for rendering
+  let flatIdx = 0
 
   return (
     <div
@@ -180,6 +204,7 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Buscar pedidos, clientes, fornecedores..."
             style={{
               flex: 1,
@@ -219,7 +244,10 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
                 }}>
                   {grupo.label}
                 </div>
-                {grupo.items.map(item => (
+                {grupo.items.map(item => {
+                  const idx = flatIdx++
+                  const isSelected = idx === selectedIndex
+                  return (
                   <div
                     key={item.id}
                     onClick={() => { window.location.href = item.url; onClose() }}
@@ -229,9 +257,10 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
                       display: 'flex',
                       gap: '10px',
                       alignItems: 'center',
+                      background: isSelected ? '#f0ede8' : 'transparent',
                     }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#f7f6f3' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = isSelected ? '#f0ede8' : '#f7f6f3'; setSelectedIndex(idx) }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isSelected ? '#f0ede8' : 'transparent' }}
                   >
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -248,7 +277,7 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
                       )}
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
             ))}
           </div>

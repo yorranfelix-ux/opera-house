@@ -128,14 +128,24 @@ export default function Entregas() {
     setEntregas((data as unknown as Entrega[]) || [])
   }
 
-  async function buscarPedidos() {
+  async function buscarPedidos(incluirId?: string) {
     const { data, error } = await supabase
       .from('pedidos')
       .select('id, numero_pedido, clientes(nome, cidade)')
       .not('status', 'in', '(entregue,cancelado)')
       .order('numero_pedido', { ascending: false })
     if (error) console.error('Erro ao buscar pedidos (entregas):', error)
-    setPedidos((data as unknown as Pedido[]) || [])
+    let lista = (data as unknown as Pedido[]) || []
+    // Ao editar, inclui o pedido atual mesmo se já entregue (para aparecer no select)
+    if (incluirId && !lista.some(p => p.id === incluirId)) {
+      const { data: extra } = await supabase
+        .from('pedidos')
+        .select('id, numero_pedido, clientes(nome, cidade)')
+        .eq('id', incluirId)
+        .single()
+      if (extra) lista = [extra as unknown as Pedido, ...lista]
+    }
+    setPedidos(lista)
   }
 
   function abrirNovo() {
@@ -156,6 +166,7 @@ export default function Entregas() {
       observacoes: e.observacoes || '',
       responsavel_campo: e.responsavel_campo || '',
     })
+    buscarPedidos(e.pedido_id)
     setShowForm(true)
   }
 
@@ -196,8 +207,17 @@ export default function Entregas() {
         if (error) return alert('Erro: ' + error.message)
         await registrarHistorico({ tipo: 'entrega_atualizada', descricao: `Entrega do Pedido ${numPedido} atualizada para ${form.data_agendada ? new Date(form.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}`, pedidoId: form.pedido_id })
         if (payload.status === 'realizada') {
-          await supabase.from('pedidos').update({ status: 'entregue' }).eq('id', form.pedido_id)
-          await registrarHistorico({ tipo: 'pedido_editado', descricao: `Pedido marcado como entregue automaticamente após entrega realizada`, pedidoId: form.pedido_id })
+          // Só marca como entregue se não houver outras entregas pendentes
+          const { data: pendentes } = await supabase
+            .from('entregas')
+            .select('id')
+            .eq('pedido_id', form.pedido_id)
+            .in('status', ['agendada', 'reagendada'])
+            .neq('id', editandoId)
+          if (!pendentes || pendentes.length === 0) {
+            await supabase.from('pedidos').update({ status: 'entregue' }).eq('id', form.pedido_id)
+            await registrarHistorico({ tipo: 'pedido_editado', descricao: `Pedido marcado como entregue automaticamente após entrega realizada`, pedidoId: form.pedido_id })
+          }
         }
       } else {
         const { error } = await supabase.from('entregas').insert([{ ...payload, status: 'agendada' }])

@@ -80,10 +80,10 @@ export default function Relatorios() {
   async function buscar() {
     setLoading(true)
     const [atsRes, entregasRes, ocorrenciasRes, pedidosRes] = await Promise.all([
-      supabase.from('assistencias_tecnicas').select('status, created_at'),
-      supabase.from('entregas').select('status, data_agendada, data_realizada'),
-      supabase.from('ocorrencias').select('tipo, status'),
-      supabase.from('pedidos').select('status'),
+      supabase.from('assistencias_tecnicas').select('status, created_at').range(0, 9999),
+      supabase.from('entregas').select('status, data_agendada, data_realizada').range(0, 9999),
+      supabase.from('ocorrencias').select('tipo, status').range(0, 9999),
+      supabase.from('pedidos').select('status').range(0, 9999),
     ])
 
     if (atsRes.error) console.error('Relatórios ATs:', atsRes.error)
