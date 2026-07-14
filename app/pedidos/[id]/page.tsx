@@ -214,6 +214,9 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     if (confirmacaoExcluir !== pedido?.numero_pedido) return
     setExcluindo(true)
 
+    // Nullifica FKs no histórico antes de deletar (preserva os registros, remove o vínculo)
+    await supabase.from('historico_alteracoes').update({ pedido_id: null }).eq('pedido_id', id)
+    await supabase.from('historico_itens').delete().eq('pedido_id', id)
     const { error: errItens } = await supabase.from('itens_pedido').delete().eq('pedido_id', id)
     if (errItens) { alert('Erro ao excluir itens: ' + errItens.message); setExcluindo(false); return }
     const { error: errATs } = await supabase.from('assistencias_tecnicas').delete().eq('pedido_id', id)
