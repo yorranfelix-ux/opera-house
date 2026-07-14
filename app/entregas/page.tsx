@@ -430,7 +430,6 @@ export default function Entregas() {
             <div style="font-size:11px;font-weight:600;">${c?.nome || '—'}</div>
             <div style="font-size:10px;color:#555;margin-top:2px;">${endereco}</div>
             ${c?.telefone ? `<div style="font-size:10px;color:#555;margin-top:2px;">📞 ${c.telefone}</div>` : ''}
-            ${e.responsavel_campo ? `<div style="font-size:10px;color:#333;margin-top:2px;font-weight:600;">👷 ${e.responsavel_campo}</div>` : ''}
           </td>
           <td style="padding:10px 12px;vertical-align:top;">
             ${icamentoHtml}${obsHtml}${reagendHtml}
