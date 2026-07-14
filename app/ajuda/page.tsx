@@ -56,6 +56,8 @@ const SECOES: Secao[] = [
     passos: [
       { titulo: 'Adicionar itens', texto: 'Na seção "Itens" clique em "+ Adicionar item". Informe a descrição, quantidade, status do item, se requer tecido fornecido pelo fornecedor, a previsão de chegada e o fornecedor responsável. Os itens são a base para o controle de produção.' },
       { titulo: 'Status dos itens', texto: 'Cada item tem seu próprio status independente: Criado → Aguard. compra → Em produção → Em transporte → Recebido → Conferido OK → Apto entrega → Entregue. Atualize conforme a produção avança.' },
+      { titulo: 'Status automático: Apto p/ agendamento', texto: 'Quando todos os itens do pedido são marcados como "Apto entrega", o status do pedido muda automaticamente para "Apto p/ agendamento". Isso sinaliza que o pedido pode ser incluído na programação de entregas sem intervenção manual.' },
+      { titulo: 'NF / Romaneio de entrega', texto: 'No cabeçalho do pedido há um campo para registrar o documento fiscal. Escolha o tipo (NF para Nota Fiscal ou Romaneio para entregas sem NF) e informe o número. Esse número aparece no resumo impresso do pedido.' },
       { titulo: 'Ícones de alerta nos itens', texto: 'O ícone ⚠️ em um item indica que há uma ocorrência aberta vinculada a ele. O ícone 🔧 indica que o item tem uma AT ativa. Ambos são links — clique para navegar diretamente.' },
       { titulo: 'Semáforo de prioridade', texto: 'O semáforo fica no topo da página. Clique em uma cor para alterar: 🟢 Verde = andamento normal · 🟡 Amarelo = atenção necessária · 🔴 Vermelho = urgente · 🔵 Azul = aguardando retorno do cliente · 🟣 Roxo = situação especial.' },
       { titulo: 'Pagamento', texto: 'No bloco de pagamento selecione o status (Pendente, Parcial ou Pago) e use o campo de observações para registrar detalhes como número de parcelas, data de vencimento ou código de cheque.' },
@@ -65,6 +67,7 @@ const SECOES: Secao[] = [
     dicas: [
       'O contador de ATs ativas aparece no topo da página. Clique nele para ver as ATs do pedido.',
       'Itens com "Requer tecido fornecido" marcado aparecem como alerta no Dashboard enquanto o tecido não chegar.',
+      'Quando não há NF (entrega com romaneio), selecione "Romaneio" no campo de documento e informe o número do romaneio.',
     ],
   },
   {
@@ -121,13 +124,16 @@ const SECOES: Secao[] = [
       { titulo: 'Fluxo de status', texto: 'O status avança conforme o processo: Aberta → Aguard. retirada → Em reparo → Enviado ao fornecedor → Aguard. devolução → Resolvida. Dentro da AT, altere o status e registre as observações de cada etapa.' },
       { titulo: 'Filtros da lista', texto: 'Por padrão a lista mostra apenas ATs ativas (aberta, aguard. retirada, em reparo, enviado fornecedor, aguard. devolução). Use o filtro para ver "Finalizadas" (resolvidas e canceladas) ou "Todas". Use a busca para localizar pelo número da AT, número do pedido ou nome do cliente.' },
       { titulo: 'Registrar informações da AT', texto: 'Dentro da AT registre: observações gerais do processo, laudo/observações do fornecedor, número da NF de envio ao fornecedor, transportadora usada e datas de cada etapa (retirada, envio, previsão de retorno, retorno efetivo, previsão de entrega).' },
-      { titulo: 'Imprimir AT', texto: 'Clique em "🖨️ Imprimir AT" para gerar o documento formal da assistência — inclui todos os dados, datas, descrição do problema, observações e campos de assinatura do responsável técnico e do cliente.' },
+      { titulo: 'Garantia', texto: 'Marque "Dentro da garantia" para sinalizar que o produto está coberto. Quando marcado, aparece um campo para registrar a data de vencimento da garantia. Essa informação é exibida no documento impresso da AT.' },
+      { titulo: 'Observações cumulativas', texto: 'As observações gerais da AT são acumulativas: ao executar uma ação (iniciar processo, registrar retorno, resolver, cancelar) e informar uma observação, ela é adicionada ao campo "Observações gerais" sem apagar o que já estava registrado.' },
+      { titulo: 'Imprimir AT', texto: 'Clique em "🖨️ Imprimir AT" para gerar o documento formal da assistência — inclui todos os dados, datas, descrição do problema, observações, situação de garantia e campos de assinatura do responsável técnico e do cliente.' },
       { titulo: 'Resolver ou cancelar', texto: 'Quando o problema for solucionado, clique em "Resolver AT" e informe uma observação de conclusão. Para cancelar sem resolução use "Cancelar AT". Ambas as ações removem a AT da lista de ativas.' },
     ],
     dicas: [
       'ATs abertas a partir de uma Ocorrência fecham a ocorrência de origem automaticamente.',
       'ATs sem movimentação há mais de 7 dias aparecem como alerta no Dashboard.',
       'O número da AT é gerado automaticamente no formato: AT [Pedido]-[Ano]-[Sequência].',
+      'A busca global (Ctrl+K) localiza ATs tanto pelo número quanto pela descrição do problema.',
     ],
   },
   {
@@ -157,13 +163,33 @@ const SECOES: Secao[] = [
       { titulo: 'Imprimir sequência', texto: 'Clique em "🖨️ Sequência" para imprimir a folha de rota em formato paisagem — inclui motorista, veículo, placa, rodízio, data e a ordem das entregas com espaço para horários de chegada e saída em cada endereço.' },
       { titulo: 'Imprimir observações', texto: 'Clique em "📋 Observações" para imprimir a folha de observações da equipe — lista cada entrega com endereço completo, içamento destacado em laranja e todas as observações especiais. Ideal para a equipe em campo.' },
       { titulo: 'Abrir rota no Maps', texto: 'Clique em "📍 Abrir rota no Maps" para abrir o Google Maps com a rota otimizada do dia, partindo do endereço de saída configurado em Configurações.' },
-      { titulo: 'Marcar como realizada', texto: 'Após a entrega, abra o registro e marque como "Realizada" informando a data de entrega efetiva.' },
+      { titulo: 'Responsável / montador', texto: 'No formulário de agendamento há um campo "Responsável / montador" para registrar o nome de quem realizará a entrega ou montagem. Esse nome aparece no cartão da entrega (ícone 👷) e é listado automaticamente na linha EQUIPE da folha de sequência do motorista.' },
+      { titulo: 'Marcar como realizada', texto: 'Após a entrega, abra o registro e marque como "Realizada" informando a data de entrega efetiva. Quando não há outras entregas pendentes do mesmo pedido, o pedido é marcado automaticamente como "Entregue".' },
       { titulo: 'Reagendar', texto: 'Se a entrega não for realizada, marque como "Reagendada" informando o motivo. O motivo aparece no cartão da lista para referência.' },
     ],
     dicas: [
       'Configure o endereço de saída em Configurações para que a rota no Maps parta do local correto.',
-      'Use "📋 Observações" para entregar à equipe que vai para a rua — ela tem tudo que precisa: endereço, içamento e instruções especiais.',
+      'Use "📋 Observações" para entregar à equipe que vai para a rua — ela tem tudo que precisa: endereço, telefone do cliente, içamento e instruções especiais.',
       'O filtro "Pendentes" mostra apenas entregas agendadas e reagendadas — use para ver o que ainda precisa ser feito.',
+      'Pedidos com múltiplas entregas só são marcados como "Entregue" quando a última entrega pendente for realizada.',
+    ],
+  },
+  {
+    id: 'relatorios',
+    icone: '📊',
+    titulo: 'Relatórios',
+    descricao: 'Visão consolidada de ATs, entregas, ocorrências e pedidos com exportação para CSV.',
+    passos: [
+      { titulo: 'Cards de totais', texto: 'No topo da página aparecem os totais gerais do banco de dados: total de ATs, total de entregas, total de ocorrências e total de pedidos cadastrados.' },
+      { titulo: 'ATs por status', texto: 'Tabela com a distribuição das Assistências Técnicas por status (Aberta, Em reparo, No fornecedor, Resolvida etc.), com o total de cada um e o percentual de participação.' },
+      { titulo: 'Entregas por mês', texto: 'Tabela dos últimos 6 meses com o número de entregas agendadas, realizadas e a taxa de conclusão de cada mês.' },
+      { titulo: 'Ocorrências por tipo', texto: 'Distribuição das ocorrências por tipo, com o total e quantas ainda estão abertas para cada categoria.' },
+      { titulo: 'Pedidos por status', texto: 'Distribuição dos pedidos por status (Em aberto, Apto p/ agendamento, Agendado, Entregue, Cancelado) com participação percentual.' },
+      { titulo: 'Exportar CSV', texto: 'Cada aba tem um botão "Exportar CSV" que baixa os dados em formato compatível com Excel — útil para análises, apresentações ou relatórios gerenciais.' },
+    ],
+    dicas: [
+      'Clique em "Atualizar" no topo para recarregar os dados mais recentes sem precisar recarregar a página.',
+      'O CSV exportado usa ponto-e-vírgula como separador e UTF-8 com BOM — abre corretamente no Excel com acentuação.',
     ],
   },
   {
@@ -191,10 +217,12 @@ const SECOES: Secao[] = [
       { titulo: 'Criar novo usuário', texto: 'Clique em "+ Novo usuário". Preencha nome completo, cargo, e-mail e defina uma senha inicial (mínimo 6 caracteres). O usuário é criado imediatamente e já pode fazer login com as credenciais informadas.' },
       { titulo: 'Editar nome e cargo', texto: 'Clique em "Editar" na linha do usuário para atualizar o nome e o cargo. O nome e cargo aparecem no rodapé do menu lateral de cada usuário.' },
       { titulo: 'Redefinir senha', texto: 'Clique em "Redefinir senha" para definir uma nova senha para qualquer usuário — útil quando alguém esquece a senha. Informe e confirme a nova senha (mínimo 6 caracteres).' },
+      { titulo: 'Excluir usuário', texto: 'Clique em "Excluir" (botão vermelho) para remover permanentemente um usuário do sistema. O histórico de alterações feitas por ele é preservado com o nome registrado — apenas o acesso ao sistema é revogado. Essa ação não pode ser desfeita.' },
     ],
     dicas: [
       'Todo o gerenciamento de usuários é feito direto pelo sistema — não é necessário acessar o painel do Supabase.',
       'Defina um cargo descritivo para cada usuário (ex: "Operacional e Logística", "Direção") — ele aparece no menu lateral e ajuda a identificar quem está logado.',
+      'Ao excluir um usuário, o histórico de ações dele no sistema permanece intacto para fins de auditoria.',
     ],
   },
   {
@@ -243,8 +271,9 @@ export default function Ajuda() {
             <div style={{ fontSize: '12px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '14px' }}>Atalhos do sistema</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               {[
-                { tecla: 'Ctrl + K', acao: 'Abrir busca global — localiza pedidos, clientes, fornecedores e ATs' },
-                { tecla: 'Enter', acao: 'Confirmar lembrete no Dashboard' },
+                { tecla: 'Ctrl + K', acao: 'Abrir busca global — localiza pedidos, clientes, fornecedores e ATs (inclusive pela descrição do problema)' },
+                { tecla: '↑ ↓', acao: 'Navegar pelos resultados da busca global' },
+                { tecla: 'Enter', acao: 'Abrir o resultado selecionado na busca global / confirmar lembrete no Dashboard' },
                 { tecla: 'Esc', acao: 'Fechar modal ou busca global' },
                 { tecla: 'Clique no número', acao: 'Abrir detalhes do pedido ou AT' },
               ].map(a => (
