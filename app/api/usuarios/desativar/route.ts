@@ -12,6 +12,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Variáveis SUPABASE_URL ou SERVICE_ROLE_KEY não configuradas no servidor' }, { status: 500 })
   }
 
+  const supabaseAdmin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
+
   // Anula o usuario_id no histórico (preserva usuario_nome, remove a FK)
   await supabaseAdmin.from('historico_alteracoes').update({ usuario_id: null }).eq('usuario_id', userId)
 
@@ -30,9 +32,6 @@ export async function POST(req: NextRequest) {
     try { errorMsg = JSON.parse(text)?.message || text || errorMsg } catch { errorMsg = text || errorMsg }
     return NextResponse.json({ error: errorMsg }, { status: 400 })
   }
-
-  // Limpa o profile manualmente
-  const supabaseAdmin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
   await supabaseAdmin.from('profiles').delete().eq('id', userId)
 
   return NextResponse.json({ ok: true })
