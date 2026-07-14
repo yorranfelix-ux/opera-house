@@ -246,6 +246,8 @@ export default function Entregas() {
     const TOTAL_LINHAS = 13
     const linhasVazias = Math.max(0, TOTAL_LINHAS - info.entregas.length)
 
+    const equipeList = [...new Set(info.entregas.map(e => e.responsavel_campo).filter(Boolean))].join(' · ')
+
     const rowsHtml = info.entregas.map(e => {
       const c = e.pedidos?.clientes
       const nomeAbrev = (c?.nome || '').substring(0, 20).toUpperCase()
@@ -358,6 +360,7 @@ export default function Entregas() {
   <tr>
     <td style="padding:8px 12px;">
       <span style="font-size:10px;font-weight:bold;">EQUIPE:</span>
+      ${equipeList ? `<span style="font-size:11px;margin-left:8px;font-weight:600;">${equipeList}</span>` : ''}
     </td>
   </tr>
 </table>

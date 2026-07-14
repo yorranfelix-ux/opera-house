@@ -12,7 +12,10 @@ export async function POST(req: NextRequest) {
   )
 
   const { error } = await supabaseAdmin.auth.admin.deleteUser(userId)
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  if (error) {
+    console.error('deleteUser error:', JSON.stringify(error))
+    return NextResponse.json({ error: error.message || JSON.stringify(error) || 'Erro ao excluir usuário no Supabase' }, { status: 400 })
+  }
 
   await supabaseAdmin.from('profiles').delete().eq('id', userId)
 
