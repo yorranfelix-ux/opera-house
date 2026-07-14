@@ -78,7 +78,7 @@ export default function Usuarios() {
     })
     const data = await res.json()
     setDesativando(false)
-    if (data.error) return alert('Erro: ' + data.error)
+    if (data.error) return alert('Erro ao excluir: ' + (typeof data.error === 'object' ? JSON.stringify(data.error) : String(data.error)))
     setShowDesativarModal(null)
     buscarUsuarios()
   }
