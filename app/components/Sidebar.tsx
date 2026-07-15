@@ -200,7 +200,31 @@ export default function Sidebar({ ativa }: { ativa: string }) {
             </svg>
           </button>
         ) : (
-          <img src={LOGO_NEG} alt="Opera House" style={{ width: '110px', objectFit: 'contain' }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <img src={LOGO_NEG} alt="Opera House" style={{ width: '110px', objectFit: 'contain' }} />
+            <button
+              onClick={toggleCollapsed}
+              title="Recolher menu"
+              style={{
+                width: '28px', height: '28px', borderRadius: '6px', border: '1px solid #242440',
+                background: 'transparent', color: '#3a3a58', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'color 150ms, background 150ms', flexShrink: 0,
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'
+                ;(e.currentTarget as HTMLElement).style.color = '#6a6a8a'
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLElement).style.background = 'transparent'
+                ;(e.currentTarget as HTMLElement).style.color = '#3a3a58'
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9,2 4,7 9,12"/>
+              </svg>
+            </button>
+          </div>
         )}
       </div>
 
