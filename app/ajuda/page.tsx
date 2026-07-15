@@ -253,7 +253,7 @@ export default function Ajuda() {
           <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Central de Ajuda</span>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto', padding: '28px 32px', maxWidth: '860px' }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: '28px 32px' }}>
 
           {/* Intro */}
           <div style={{ background: '#1a1a2e', borderRadius: '14px', padding: '24px 28px', marginBottom: '28px', display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
