@@ -319,35 +319,6 @@ export default function Sidebar({ ativa }: { ativa: string }) {
         ))}
       </div>
 
-      {/* Toggle button — só aparece expandido */}
-      {!collapsed && (
-        <div style={{ padding: '6px', borderTop: '1px solid #242440' }}>
-          <button
-            onClick={toggleCollapsed}
-            title="Recolher menu"
-            style={{
-              width: '100%',
-              padding: '7px',
-              borderRadius: '7px',
-              border: 'none',
-              background: 'transparent',
-              color: '#3a3a58',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              transition: 'color 150ms',
-            }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#6a6a8a' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#3a3a58' }}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9,2 4,7 9,12"/>
-            </svg>
-          </button>
-        </div>
-      )}
-
       {/* User */}
       {!collapsed && (
         <div style={{ padding: '10px 14px 14px', borderTop: '1px solid #242440' }}>
