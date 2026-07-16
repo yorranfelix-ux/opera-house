@@ -114,17 +114,20 @@ export default function Dashboard() {
       supabase.from('ocorrencias').select('id, created_at, pedidos(numero_pedido, clientes(nome))').eq('status', 'aberta').lt('created_at', new Date(hoje.getTime() - 3 * 86400000).toISOString()),
       supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_tecido_fornecido', true).not('status', 'in', '(entregue,cancelado)'),
       supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').is('previsao_chegada', null).not('status', 'in', '(entregue,apto_entrega,conferido_ok,recebido)'),
+      supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_higienizacao', true).not('apto_entrega', 'is', true).not('status', 'in', '(entregue,cancelado)'),
+      supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_impermeabilizacao', true).not('apto_entrega', 'is', true).not('status', 'in', '(entregue,cancelado)'),
       supabase.from('entregas').select('data_agendada, pedidos(numero_pedido)').gte('data_agendada', hojeStr).lte('data_agendada', horizonteStr),
       supabase.from('assistencias_tecnicas').select('data_retirada_agendada, pedidos(numero_pedido)').not('data_retirada_agendada', 'is', null).gte('data_retirada_agendada', hojeStr).lte('data_retirada_agendada', horizonteStr),
     ])
 
-    const nomes = ['pedidos', 'itens', 'ats', 'entregas', 'entreguesMes', 'ocorrencias', 'itensTecido', 'itensSemPrevisao', 'entregasCalendario', 'atsCalendario']
+    const nomes = ['pedidos', 'itens', 'ats', 'entregas', 'entreguesMes', 'ocorrencias', 'itensTecido', 'itensSemPrevisao', 'itensHigienizacao', 'itensImperm', 'entregasCalendario', 'atsCalendario']
     resultados.forEach((r, i) => { if (r.error) console.error(`Erro na query do dashboard (${nomes[i]}):`, r.error) })
 
     const [
       { data: pedidos }, { data: itens }, { data: ats }, { data: entregas },
       { data: entreguesMes }, { data: ocorrencias }, { data: itensTecido },
-      { data: itensSemPrevisao }, { data: entregasCalendario }, { data: atsCalendario },
+      { data: itensSemPrevisao }, { data: itensHigienizacao }, { data: itensImperm },
+      { data: entregasCalendario }, { data: atsCalendario },
     ] = resultados
 
     const pedidosAtivos = (pedidos || []) as any[]
@@ -210,6 +213,30 @@ export default function Dashboard() {
         titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || '—'} · ${(i.pedidos as any)?.clientes?.nome || ''}`,
         detalhe: `Item "${i.descricao}" sem previsão de chegada definida`,
         tag: 'Sem previsão', tagColor: '#0C447C', tagBg: '#E6F1FB',
+      })
+    })
+
+    const pedidosHigienizacaoVistos = new Set<string>()
+    ;(itensHigienizacao || []).forEach((i: any) => {
+      if (pedidosHigienizacaoVistos.has(i.pedido_id)) return
+      pedidosHigienizacaoVistos.add(i.pedido_id)
+      lista.push({
+        id: i.id, href: `/pedidos/${i.pedido_id}`, tipo: 'atencao',
+        titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || '—'} · ${(i.pedidos as any)?.clientes?.nome || ''}`,
+        detalhe: `Item "${i.descricao}" requer higienização antes da entrega`,
+        tag: 'Higienização', tagColor: '#155E8A', tagBg: '#E8F4FD',
+      })
+    })
+
+    const pedidosImpermVistos = new Set<string>()
+    ;(itensImperm || []).forEach((i: any) => {
+      if (pedidosImpermVistos.has(i.pedido_id)) return
+      pedidosImpermVistos.add(i.pedido_id)
+      lista.push({
+        id: i.id, href: `/pedidos/${i.pedido_id}`, tipo: 'atencao',
+        titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || '—'} · ${(i.pedidos as any)?.clientes?.nome || ''}`,
+        detalhe: `Item "${i.descricao}" requer impermeabilização antes da entrega`,
+        tag: 'Impermeabilização', tagColor: '#155E8A', tagBg: '#E8F4FD',
       })
     })
 
