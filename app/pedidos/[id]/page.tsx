@@ -286,7 +286,6 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       .select('*')
       .eq('pedido_id', id)
       .order('created_at', { ascending: false })
-      .limit(30)
     setHistorico(data || [])
   }
 
