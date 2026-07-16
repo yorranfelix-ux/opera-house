@@ -72,6 +72,7 @@ export default function Pedidos() {
   const [salvando, setSalvando] = useState(false)
   const [pagina, setPagina] = useState(1)
   const ITEMS_POR_PAGINA = 25
+  const [pedidosComAT, setPedidosComAT] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     try {
@@ -95,6 +96,7 @@ export default function Pedidos() {
     buscarPedidos()
     buscarClientes()
     buscarProfissionais()
+    buscarATsAtivas()
   }, [])
 
   async function buscarPedidos() {
@@ -112,6 +114,14 @@ export default function Pedidos() {
     const { data, error } = await supabase.from('clientes').select('id, nome').order('nome')
     if (error) console.error('Erro ao buscar clientes:', error)
     setClientes(data || [])
+  }
+
+  async function buscarATsAtivas() {
+    const { data } = await supabase
+      .from('assistencias_tecnicas')
+      .select('pedido_id')
+      .in('status', ['aberta', 'aguardando_retirada', 'em_reparo', 'enviado_fornecedor', 'aguardando_devolucao'])
+    setPedidosComAT(new Set((data || []).map((a: any) => a.pedido_id as string)))
   }
 
   async function buscarProfissionais() {
@@ -292,9 +302,16 @@ export default function Pedidos() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: SEMAFORO_COLOR[p.semaforo] || '#888' }} />
                 </div>
-                <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '10px', fontWeight: '500', background: STATUS_COLOR[p.status]?.bg || '#f0efe9', color: STATUS_COLOR[p.status]?.color || '#555' }}>
-                  {STATUS_LABEL[p.status] || p.status}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '10px', fontWeight: '500', background: STATUS_COLOR[p.status]?.bg || '#f0efe9', color: STATUS_COLOR[p.status]?.color || '#555' }}>
+                    {STATUS_LABEL[p.status] || p.status}
+                  </span>
+                  {pedidosComAT.has(p.id) && (
+                    <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '6px', fontWeight: '500', background: '#FCEBEB', color: '#791F1F' }}>
+                      AT ativa
+                    </span>
+                  )}
+                </div>
                 <button
                   onClick={e => abrirEdicao(e, p)}
                   style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}
