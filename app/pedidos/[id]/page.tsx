@@ -36,6 +36,9 @@ interface Item {
   tem_at: boolean
   requer_icamento: boolean
   requer_tecido_fornecido: boolean
+  requer_retirada_loja: boolean
+  requer_higienizacao: boolean
+  requer_impermeabilizacao: boolean
   tipo: string
   fornecedor_id: string
   data_recebimento: string
@@ -85,7 +88,11 @@ const SEMAFORO_LABEL: Record<string, string> = {
 const itemFormVazio = {
   descricao: '', quantidade: '1', medida: '', tecido: '', cor: '',
   acabamento: '', observacoes: '', fornecedor_id: '', requer_icamento: false,
-  requer_tecido_fornecido: false, tipo: 'movel',
+  requer_tecido_fornecido: false,
+  requer_retirada_loja: false,
+  requer_higienizacao: false,
+  requer_impermeabilizacao: false,
+  tipo: 'movel',
   status: 'aguardando_compra', previsao_chegada: '', apto_entrega: false,
   data_recebimento: '', numero_nf: '',
 }
@@ -304,6 +311,9 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       fornecedor_id: item.fornecedor_id || '',
       requer_icamento: item.requer_icamento || false,
       requer_tecido_fornecido: item.requer_tecido_fornecido || false,
+      requer_retirada_loja: item.requer_retirada_loja || false,
+      requer_higienizacao: item.requer_higienizacao || false,
+      requer_impermeabilizacao: item.requer_impermeabilizacao || false,
       tipo: item.tipo || 'movel',
       status: item.status || 'aguardando_compra',
       previsao_chegada: item.previsao_chegada || '',
@@ -329,6 +339,9 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       fornecedor_id: itemForm.fornecedor_id || null,
       requer_icamento: itemForm.requer_icamento,
       requer_tecido_fornecido: itemForm.requer_tecido_fornecido,
+      requer_retirada_loja: itemForm.requer_retirada_loja,
+      requer_higienizacao: itemForm.requer_higienizacao,
+      requer_impermeabilizacao: itemForm.requer_impermeabilizacao,
       tipo: itemForm.tipo || 'movel',
       status: itemForm.status,
       previsao_chegada: itemForm.previsao_chegada || null,
@@ -389,6 +402,15 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       }
       if (itemAnterior?.requer_icamento !== itemForm.requer_icamento) {
         mudancas.push(`Içamento: ${itemForm.requer_icamento ? 'Sim' : 'Não'}`)
+      }
+      if (itemAnterior?.requer_retirada_loja !== itemForm.requer_retirada_loja) {
+        mudancas.push(`Retirada na loja: ${itemForm.requer_retirada_loja ? 'Sim' : 'Não'}`)
+      }
+      if (itemAnterior?.requer_higienizacao !== itemForm.requer_higienizacao) {
+        mudancas.push(`Higienização: ${itemForm.requer_higienizacao ? 'Sim' : 'Não'}`)
+      }
+      if (itemAnterior?.requer_impermeabilizacao !== itemForm.requer_impermeabilizacao) {
+        mudancas.push(`Impermeabilização: ${itemForm.requer_impermeabilizacao ? 'Sim' : 'Não'}`)
       }
       const descricao = `Item "${itemForm.descricao}" editado${mudancas.length ? ': ' + mudancas.join(' · ') : ''}`
       await registrarHistorico({ tipo: 'item_editado', descricao, pedidoId: id, itemId: editandoItemId || undefined })
@@ -773,9 +795,11 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
               style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', fontWeight: '600' }}>Pagamento</span>
-                {!pagamentoAberto && pagamento.status_pagamento !== 'pendente' && (
-                  <span style={{ fontSize: '10px', padding: '1px 7px', borderRadius: '5px', fontWeight: '500', background: pagamento.status_pagamento === 'pago' ? '#EAF3DE' : '#FAEEDA', color: pagamento.status_pagamento === 'pago' ? '#27500A' : '#633806' }}>
-                    {pagamento.status_pagamento === 'pago' ? 'Pago' : 'Parcial'}
+                {!pagamentoAberto && !['pendente'].includes(pagamento.status_pagamento) && (
+                  <span style={{ fontSize: '10px', padding: '1px 7px', borderRadius: '5px', fontWeight: '500',
+                    background: pagamento.status_pagamento === 'pago' ? '#EAF3DE' : pagamento.status_pagamento === 'pendente_boleto' ? '#FAEEDA' : '#FAEEDA',
+                    color: pagamento.status_pagamento === 'pago' ? '#27500A' : '#633806' }}>
+                    {pagamento.status_pagamento === 'pago' ? 'Pago' : pagamento.status_pagamento === 'pendente_boleto' ? 'Pend. Boleto' : 'Parcial'}
                   </span>
                 )}
               </div>
@@ -792,6 +816,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                   <select value={pagamento.status_pagamento} onChange={e => setPagamento({ ...pagamento, status_pagamento: e.target.value })} onBlur={salvarPagamento}
                     style={{ width: '100%', padding: '6px 10px', borderRadius: '7px', border: '0.5px solid #e8e7e3', fontSize: '12px', outline: 'none', color: '#1a1a2e', background: '#fff' }}>
                     <option value="pendente">Pendente</option>
+                    <option value="pendente_boleto">Pendente Boleto</option>
                     <option value="parcial">Parcial</option>
                     <option value="pago">Pago</option>
                   </select>
@@ -810,10 +835,12 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
               </div>
             )}
 
-            {pagamentoAberto && pagamento.status_pagamento !== 'pendente' && (
+            {pagamentoAberto && !['pendente'].includes(pagamento.status_pagamento) && (
               <div style={{ padding: '0 16px 12px' }}>
-                <span style={{ fontSize: '11px', padding: '2px 9px', borderRadius: '6px', fontWeight: '500', background: pagamento.status_pagamento === 'pago' ? '#EAF3DE' : '#FAEEDA', color: pagamento.status_pagamento === 'pago' ? '#27500A' : '#633806' }}>
-                  {pagamento.status_pagamento === 'pago' ? 'Pago' : 'Parcialmente pago'}
+                <span style={{ fontSize: '11px', padding: '2px 9px', borderRadius: '6px', fontWeight: '500',
+                  background: pagamento.status_pagamento === 'pago' ? '#EAF3DE' : '#FAEEDA',
+                  color: pagamento.status_pagamento === 'pago' ? '#27500A' : '#633806' }}>
+                  {pagamento.status_pagamento === 'pago' ? 'Pago' : pagamento.status_pagamento === 'pendente_boleto' ? 'Boleto pendente' : 'Parcialmente pago'}
                 </span>
               </div>
             )}
@@ -858,6 +885,15 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                         )}
                         {atItemIds.has(item.id) && (
                           <span style={{ marginLeft: '6px', background: '#FCEBEB', color: '#791F1F', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>AT ativa</span>
+                        )}
+                        {item.requer_retirada_loja && (
+                          <span style={{ marginLeft: '6px', background: '#FFF3CD', color: '#7A5800', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>Retirada loja</span>
+                        )}
+                        {item.requer_higienizacao && (
+                          <span style={{ marginLeft: '6px', background: '#E8F4FD', color: '#155E8A', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>Higienização</span>
+                        )}
+                        {item.requer_impermeabilizacao && (
+                          <span style={{ marginLeft: '6px', background: '#E8F4FD', color: '#155E8A', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>Impermeab.</span>
                         )}
                       </div>
                       {(item.numero_nf || item.data_recebimento) && (
@@ -998,6 +1034,23 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <input type="checkbox" id="tecido_fornecido" checked={itemForm.requer_tecido_fornecido} onChange={e => setItemForm({ ...itemForm, requer_tecido_fornecido: e.target.checked })} />
               <label htmlFor="tecido_fornecido" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Requer envio de tecido fornecido ao fornecedor</label>
+            </div>
+
+            <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input type="checkbox" id="retirada_loja" checked={itemForm.requer_retirada_loja} onChange={e => setItemForm({ ...itemForm, requer_retirada_loja: e.target.checked })} />
+              <label htmlFor="retirada_loja" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Requer retirada na loja</label>
+            </div>
+
+            <div style={{ marginBottom: '4px' }}>
+              <div style={{ fontSize: '10px', color: '#888', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '500' }}>Tratamentos especiais</div>
+              <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input type="checkbox" id="higienizacao" checked={itemForm.requer_higienizacao} onChange={e => setItemForm({ ...itemForm, requer_higienizacao: e.target.checked })} />
+                <label htmlFor="higienizacao" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Requer higienização</label>
+              </div>
+              <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input type="checkbox" id="impermeabilizacao" checked={itemForm.requer_impermeabilizacao} onChange={e => setItemForm({ ...itemForm, requer_impermeabilizacao: e.target.checked })} />
+                <label htmlFor="impermeabilizacao" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Requer impermeabilização</label>
+              </div>
             </div>
 
             <div style={{ borderTop: '0.5px solid #f0efe9', paddingTop: '14px', marginBottom: '12px' }}>

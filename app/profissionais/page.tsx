@@ -15,13 +15,14 @@ interface Profissional {
   observacoes: string
   ativo: boolean
   created_at: string
+  data_nascimento: string | null
 }
 
 const TIPOS = ['Arquiteto(a)', 'Designer de Interiores', 'Decorador(a)', 'Engenheiro(a)', 'Outro']
 
 const formVazio = {
   nome: '', tipo: 'Arquiteto(a)', telefone: '', whatsapp: '',
-  email: '', observacoes: '', ativo: true,
+  email: '', observacoes: '', ativo: true, data_nascimento: '',
 }
 
 export default function Profissionais() {
@@ -34,6 +35,7 @@ export default function Profissionais() {
   const [excluindoId, setExcluindoId] = useState<string | null>(null)
   const [filtroAtivo, setFiltroAtivo] = useState<'ativos' | 'todos'>('ativos')
   const [salvando, setSalvando] = useState(false)
+  const [aniversariantes, setAniversariantes] = useState<string[]>([])
 
   useEffect(() => { buscar() }, [])
 
@@ -41,6 +43,13 @@ export default function Profissionais() {
     setLoading(true)
     const { data } = await supabase.from('profissionais').select('*').order('nome')
     setProfissionais(data || [])
+    const hoje = new Date()
+    const anivs = (data || []).filter(p => {
+      if (!p.data_nascimento) return false
+      const nasc = new Date(p.data_nascimento + 'T12:00:00')
+      return nasc.getDate() === hoje.getDate() && nasc.getMonth() === hoje.getMonth()
+    })
+    setAniversariantes(anivs.map(p => p.nome))
     setLoading(false)
   }
 
@@ -60,6 +69,7 @@ export default function Profissionais() {
       email: p.email || '',
       observacoes: p.observacoes || '',
       ativo: p.ativo ?? true,
+      data_nascimento: p.data_nascimento || '',
     })
     setShowForm(true)
   }
@@ -87,6 +97,7 @@ export default function Profissionais() {
         email: form.email || null,
         observacoes: form.observacoes || null,
         ativo: form.ativo,
+        data_nascimento: form.data_nascimento || null,
       }
       if (editandoId) {
         const { error } = await supabase.from('profissionais').update(payload).eq('id', editandoId)
@@ -129,6 +140,13 @@ export default function Profissionais() {
             + Novo profissional
           </button>
         </div>
+
+        {aniversariantes.length > 0 && (
+          <div style={{ margin: '16px 24px 0', padding: '12px 16px', background: '#FFF9E6', border: '1px solid #F0D060', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#7A5800' }}>
+            <span style={{ fontSize: '18px' }}>🎂</span>
+            <span><strong>Aniversariante{aniversariantes.length > 1 ? 's' : ''} de hoje:</strong> {aniversariantes.join(' e ')}</span>
+          </div>
+        )}
 
         <div style={{ padding: '24px', flex: 1, overflow: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
@@ -235,6 +253,11 @@ export default function Profissionais() {
             <div style={{ marginBottom: '12px' }}>
               <label style={labelStyle}>E-mail</label>
               <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} style={inputStyle} placeholder="email@exemplo.com" />
+            </div>
+
+            <div style={{ marginBottom: '12px' }}>
+              <label style={labelStyle}>Data de Nascimento</label>
+              <input type="date" value={form.data_nascimento} onChange={e => setForm({ ...form, data_nascimento: e.target.value })} style={inputStyle} />
             </div>
 
             <div style={{ marginBottom: '16px' }}>
