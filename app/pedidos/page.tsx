@@ -88,7 +88,7 @@ export default function Pedidos() {
 
   useEffect(() => {
     try { sessionStorage.setItem('operare_filtros_pedidos', JSON.stringify({ busca, filtroStatus, filtroProfissional })) } catch {}
-  }, [busca, filtroStatus])
+  }, [busca, filtroStatus, filtroProfissional])
 
   useEffect(() => { setPagina(1) }, [busca, filtroStatus, filtroProfissional])
 
@@ -104,6 +104,7 @@ export default function Pedidos() {
     const { data, error } = await supabase
       .from('pedidos')
       .select('*, clientes(nome, cidade, estado), profissionais(nome, tipo)')
+      .range(0, 9999)
       .order('created_at', { ascending: false })
     if (error) console.error('Erro ao buscar pedidos:', error)
     setPedidos(data || [])
@@ -111,7 +112,7 @@ export default function Pedidos() {
   }
 
   async function buscarClientes() {
-    const { data, error } = await supabase.from('clientes').select('id, nome').order('nome')
+    const { data, error } = await supabase.from('clientes').select('id, nome').range(0, 9999).order('nome')
     if (error) console.error('Erro ao buscar clientes:', error)
     setClientes(data || [])
   }
@@ -121,11 +122,12 @@ export default function Pedidos() {
       .from('assistencias_tecnicas')
       .select('pedido_id')
       .in('status', ['aberta', 'aguardando_retirada', 'em_reparo', 'enviado_fornecedor', 'aguardando_devolucao'])
+      .range(0, 9999)
     setPedidosComAT(new Set((data || []).map((a: any) => a.pedido_id as string)))
   }
 
   async function buscarProfissionais() {
-    const { data, error } = await supabase.from('profissionais').select('id, nome, tipo').eq('ativo', true).order('nome')
+    const { data, error } = await supabase.from('profissionais').select('id, nome, tipo').eq('ativo', true).range(0, 9999).order('nome')
     if (error) console.error('Erro ao buscar profissionais:', error)
     setProfissionais(data || [])
   }

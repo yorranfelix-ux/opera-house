@@ -20,7 +20,7 @@ const SECOES: Secao[] = [
     descricao: 'Visão geral do negócio em tempo real — alertas, métricas e calendário de compromissos.',
     passos: [
       { titulo: 'Cards de métricas', texto: 'No topo aparecem os totais: pedidos ativos, ATs abertas, ocorrências pendentes e entregas do mês. Clique em qualquer card para ir direto ao módulo correspondente.' },
-      { titulo: 'Painel de alertas', texto: 'Lista automática de situações que precisam de atenção: pedidos com prazo vencido, ATs sem movimentação há mais de 7 dias, ocorrências abertas há mais de 3 dias, itens aguardando tecido fornecido e itens sem previsão de chegada cadastrada.' },
+      { titulo: 'Painel de alertas', texto: 'Lista automática de situações que precisam de atenção: pedidos com prazo vencido, ATs sem movimentação há mais de 7 dias, ocorrências abertas há mais de 3 dias, itens aguardando tecido fornecido, itens sem previsão de chegada cadastrada, e itens que requerem higienização ou impermeabilização ainda não marcados como aptos para entrega.' },
       { titulo: 'Calendário de compromissos', texto: 'Mostra as entregas agendadas e retiradas de AT nos próximos 21 dias. Dias com compromisso ficam destacados — clique no dia para ver o detalhe de cada compromisso.' },
       { titulo: 'Lembretes', texto: 'Bloco de anotações rápidas no lado direito da tela. Digite o lembrete e pressione Enter ou clique em "+". Os lembretes ficam salvos permanentemente no navegador (não somem à meia-noite) e só são removidos quando você clica no "✕" de cada um.' },
     ],
@@ -46,6 +46,7 @@ const SECOES: Secao[] = [
     dicas: [
       'Todos os filtros (busca, status, profissional) são salvos automaticamente — ao voltar para a página eles estarão como você deixou.',
       'Pedidos entregues ou cancelados somem do filtro "Em aberto". Use "Todos" para encontrá-los.',
+      'Pedidos entregues que ainda possuem AT ativa exibem a tag vermelha "AT ativa" diretamente na lista — facilitando identificar clientes que precisam de atenção pós-entrega.',
     ],
   },
   {
@@ -54,19 +55,21 @@ const SECOES: Secao[] = [
     titulo: 'Detalhes do Pedido',
     descricao: 'Dentro de cada pedido você gerencia itens, semáforo, pagamento, ATs e imprime o resumo.',
     passos: [
-      { titulo: 'Adicionar itens', texto: 'Na seção "Itens" clique em "+ Adicionar item". Informe a descrição, quantidade, status do item, se requer tecido fornecido pelo fornecedor, a previsão de chegada e o fornecedor responsável. Os itens são a base para o controle de produção.' },
+      { titulo: 'Adicionar itens', texto: 'Na seção "Itens" clique em "+ Adicionar item". Informe a descrição, quantidade, status do item, fornecedor responsável e previsão de chegada. Marque as flags necessárias: "Requer içamento na entrega", "Requer envio de tecido fornecido", "Requer retirada na loja" e os tratamentos especiais "Higienização" e/ou "Impermeabilização". Cada flag gera uma tag visual no item e alertas no Dashboard enquanto não forem concluídas.' },
+      { titulo: 'Retirada na loja', texto: 'Ao marcar "Requer retirada na loja" em um item, uma tag amarela "Retirada loja" aparece no item para sinalizar que o produto precisa ser buscado na loja antes da entrega ao cliente. Use para produtos do Outlet, peças entregues na loja, ou qualquer situação em que a equipe precise buscar o item antes da entrega.' },
+      { titulo: 'Tratamentos especiais', texto: 'Marque "Requer higienização" ou "Requer impermeabilização" nos itens que precisam de procedimento antes da entrega. Tags azuis aparecem no item para lembrete visual da equipe. O Dashboard exibe um alerta enquanto o item não for marcado como "Apto entrega", sinalizando que o tratamento ainda está pendente.' },
       { titulo: 'Status dos itens', texto: 'Cada item tem seu próprio status independente: Criado → Aguard. compra → Em produção → Em transporte → Recebido → Conferido OK → Apto entrega → Entregue. Atualize conforme a produção avança.' },
       { titulo: 'Status automático: Apto p/ agendamento', texto: 'Quando todos os itens do pedido são marcados como "Apto entrega", o status do pedido muda automaticamente para "Apto p/ agendamento". Isso sinaliza que o pedido pode ser incluído na programação de entregas sem intervenção manual.' },
       { titulo: 'NF / Romaneio de entrega', texto: 'No cabeçalho do pedido há um campo para registrar o documento fiscal. Escolha o tipo (NF para Nota Fiscal ou Romaneio para entregas sem NF) e informe o número. Esse número aparece no resumo impresso do pedido.' },
       { titulo: 'Ícones de alerta nos itens', texto: 'O ícone ⚠️ em um item indica que há uma ocorrência aberta vinculada a ele. O ícone 🔧 indica que o item tem uma AT ativa. Ambos são links — clique para navegar diretamente.' },
       { titulo: 'Semáforo de prioridade', texto: 'O semáforo fica no topo da página. Clique em uma cor para alterar: 🟢 Verde = andamento normal · 🟡 Amarelo = atenção necessária · 🔴 Vermelho = urgente · 🔵 Azul = aguardando retorno do cliente · 🟣 Roxo = situação especial.' },
-      { titulo: 'Pagamento', texto: 'No bloco de pagamento selecione o status (Pendente, Parcial ou Pago) e use o campo de observações para registrar detalhes como número de parcelas, data de vencimento ou código de cheque.' },
-      { titulo: 'Histórico de alterações', texto: 'Toda mudança no pedido e nos itens é registrada automaticamente: status alterado, item adicionado, semáforo modificado. O histórico fica visível na parte inferior da página.' },
+      { titulo: 'Pagamento', texto: 'No bloco de pagamento selecione o status: Pendente, Pendente Boleto (boleto emitido mas ainda não compensado), Parcial ou Pago. Use o campo de observações para registrar detalhes como número de parcelas, data de vencimento ou código de cheque. O bloco é colapsável — clique no cabeçalho para expandir ou recolher.' },
+      { titulo: 'Histórico de alterações', texto: 'Toda mudança no pedido e nos itens é registrada automaticamente: status alterado, item adicionado, semáforo modificado. O histórico fica na parte inferior da página e é colapsável — clique no cabeçalho para expandir. Mostra todos os registros sem limite de quantidade.' },
       { titulo: 'Imprimir resumo', texto: 'Clique em "🖨️ Imprimir" para gerar o documento completo do pedido — inclui dados do cliente, todos os itens, prazo prometido, semáforo, status de pagamento e observações.' },
     ],
     dicas: [
       'O contador de ATs ativas aparece no topo da página. Clique nele para ver as ATs do pedido.',
-      'Itens com "Requer tecido fornecido" marcado aparecem como alerta no Dashboard enquanto o tecido não chegar.',
+      'Itens com flags de tratamento especial (higienização, impermeabilização, tecido fornecido, retirada na loja) exibem tags coloridas para lembrete visual. Os de higienização e impermeabilização geram alertas no Dashboard enquanto o item não estiver como "Apto entrega".',
       'Quando não há NF (entrega com romaneio), selecione "Romaneio" no campo de documento e informe o número do romaneio.',
     ],
   },
@@ -106,12 +109,14 @@ const SECOES: Secao[] = [
     titulo: 'Profissionais',
     descricao: 'Cadastro de arquitetos, designers e outros profissionais parceiros.',
     passos: [
-      { titulo: 'Cadastrar profissional', texto: 'Clique em "+ Novo profissional". Informe nome, tipo (Arquiteto, Designer de Interiores, Decorador…) e dados de contato. O profissional fica disponível para seleção na criação de pedidos.' },
+      { titulo: 'Cadastrar profissional', texto: 'Clique em "+ Novo profissional". Informe nome, tipo (Arquiteto, Designer de Interiores, Decorador…), dados de contato e a data de nascimento. O profissional fica disponível para seleção na criação de pedidos.' },
       { titulo: 'Ativar / Desativar', texto: 'Profissionais inativos não aparecem nas opções de seleção de novos pedidos, mas os pedidos já vinculados a eles não são afetados.' },
       { titulo: 'Filtrar pedidos por profissional', texto: 'Na listagem de Pedidos, use o select "Todos os profissionais" para filtrar e ver apenas os pedidos de um parceiro específico — útil para calcular comissões ou preparar relatórios por parceiro.' },
+      { titulo: 'Lembrete de aniversário', texto: 'Ao acessar a aba de Profissionais, se houver algum profissional fazendo aniversário no dia, um banner amarelo é exibido no topo da lista com os nomes dos aniversariantes — por exemplo: "🎂 Aniversariante de hoje: João Silva". Use para enviar uma lembrança ou mensagem ao colaborador.' },
     ],
     dicas: [
       'Desative profissionais que não trabalham mais com a empresa em vez de excluí-los — assim o histórico dos pedidos antigos fica preservado.',
+      'Cadastre a data de nascimento dos profissionais para receber o lembrete automático de aniversário ao acessar a aba.',
     ],
   },
   {

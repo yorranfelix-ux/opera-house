@@ -17,6 +17,8 @@ interface Pedido {
   observacoes_gerais: string
   tipo_documento: string | null
   numero_documento: string | null
+  status_pagamento: string | null
+  observacao_pagamento: string | null
   clientes: { nome: string; endereco: string; numero: string; cidade: string; estado: string; telefone: string }
   profissionais: { nome: string; tipo: string } | null
 }
@@ -268,6 +270,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       .from('itens_pedido')
       .select('*, fornecedores(nome_fantasia, razao_social)')
       .eq('pedido_id', id)
+      .range(0, 9999)
       .order('created_at')
     setItens(data || [])
   }
@@ -276,6 +279,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     const { data } = await supabase
       .from('fornecedores')
       .select('id, nome_fantasia, razao_social')
+      .range(0, 9999)
       .order('nome_fantasia')
     setFornecedores(data || [])
   }
@@ -285,6 +289,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       .from('historico_alteracoes')
       .select('*')
       .eq('pedido_id', id)
+      .range(0, 9999)
       .order('created_at', { ascending: false })
     setHistorico(data || [])
   }
