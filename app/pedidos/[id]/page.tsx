@@ -104,6 +104,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const [showSemaforo, setShowSemaforo] = useState(false)
   const [atsCount, setAtsCount] = useState(0)
   const [ocorrenciaItemIds, setOcorrenciaItemIds] = useState<Set<string>>(new Set())
+  const [atItemIds, setAtItemIds] = useState<Set<string>>(new Set())
   const [showExcluirModal, setShowExcluirModal] = useState(false)
   const [confirmacaoExcluir, setConfirmacaoExcluir] = useState('')
   const [excluindo, setExcluindo] = useState(false)
@@ -123,6 +124,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     buscarHistorico()
     buscarATs()
     buscarOcorrencias()
+    buscarATsItens()
   }, [id])
 
   async function buscarPedido() {
@@ -201,6 +203,17 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       .not('item_id', 'is', null)
     const ids = new Set((data || []).map((o: any) => o.item_id as string))
     setOcorrenciaItemIds(ids)
+  }
+
+  async function buscarATsItens() {
+    const { data } = await supabase
+      .from('assistencias_tecnicas')
+      .select('item_id')
+      .eq('pedido_id', id)
+      .in('status', ['aberta', 'aguardando_retirada', 'em_reparo', 'enviado_fornecedor', 'aguardando_devolucao'])
+      .not('item_id', 'is', null)
+    const ids = new Set((data || []).map((a: any) => a.item_id as string))
+    setAtItemIds(ids)
   }
 
   async function salvarSemaforo(cor: string) {
@@ -842,6 +855,9 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                         )}
                         {ocorrenciaItemIds.has(item.id) && (
                           <span style={{ marginLeft: '6px', background: '#FCEBEB', color: '#791F1F', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>Ocorrência aberta</span>
+                        )}
+                        {atItemIds.has(item.id) && (
+                          <span style={{ marginLeft: '6px', background: '#E6F1FB', color: '#0C447C', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>AT ativa</span>
                         )}
                       </div>
                       {(item.numero_nf || item.data_recebimento) && (
