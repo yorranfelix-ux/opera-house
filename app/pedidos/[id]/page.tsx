@@ -857,7 +857,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                           <span style={{ marginLeft: '6px', background: '#FCEBEB', color: '#791F1F', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>Ocorrência aberta</span>
                         )}
                         {atItemIds.has(item.id) && (
-                          <span style={{ marginLeft: '6px', background: '#E6F1FB', color: '#0C447C', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>AT ativa</span>
+                          <span style={{ marginLeft: '6px', background: '#FCEBEB', color: '#791F1F', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>AT ativa</span>
                         )}
                       </div>
                       {(item.numero_nf || item.data_recebimento) && (
