@@ -61,6 +61,7 @@ export default function Dashboard() {
   const [diasSemana, setDiasSemana] = useState<{ data: string; diaSemana: string; diaNum: number; hoje: boolean }[]>([])
   const [periodoCalendario, setPeriodoCalendario] = useState(7)
   const [loading, setLoading] = useState(true)
+  const [dbSize, setDbSize] = useState<{ mb: number; pct: number } | null>(null)
 
   function gerarDias(total: number) {
     const hoje = new Date()
@@ -79,6 +80,7 @@ export default function Dashboard() {
   useEffect(() => {
     buscarUsuario()
     buscar()
+    buscarDbSize()
     setLembretes(lerLembretes())
     setDiasSemana(gerarDias(7))
   }, [])
@@ -86,6 +88,18 @@ export default function Dashboard() {
   useEffect(() => {
     setDiasSemana(gerarDias(periodoCalendario))
   }, [periodoCalendario])
+
+  async function buscarDbSize() {
+    try {
+      const res = await fetch('/api/db-size')
+      if (!res.ok) return
+      const { bytes } = await res.json()
+      if (!bytes) return
+      const mb = bytes / (1024 * 1024)
+      const pct = (mb / 500) * 100
+      setDbSize({ mb, pct })
+    } catch {}
+  }
 
   async function buscarUsuario() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -115,9 +129,9 @@ export default function Dashboard() {
       supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_tecido_fornecido', true).not('status', 'in', '(entregue,cancelado)').range(0, 9999),
       supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').is('previsao_chegada', null).not('status', 'in', '(entregue,apto_entrega,conferido_ok,recebido)').range(0, 9999),
       supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_higienizacao', true).not('apto_entrega', 'is', true).not('status', 'in', '(entregue,cancelado)').range(0, 9999),
-      supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_impermeabilizacao', true).not('apto_entrega', 'is', true).not('status', 'in', '(entregue,cancelado)'),
-      supabase.from('entregas').select('data_agendada, pedidos(numero_pedido)').gte('data_agendada', hojeStr).lte('data_agendada', horizonteStr),
-      supabase.from('assistencias_tecnicas').select('data_retirada_agendada, pedidos(numero_pedido)').not('data_retirada_agendada', 'is', null).gte('data_retirada_agendada', hojeStr).lte('data_retirada_agendada', horizonteStr),
+      supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_impermeabilizacao', true).not('apto_entrega', 'is', true).not('status', 'in', '(entregue,cancelado)').range(0, 9999),
+      supabase.from('entregas').select('data_agendada, pedidos(numero_pedido)').gte('data_agendada', hojeStr).lte('data_agendada', horizonteStr).range(0, 9999),
+      supabase.from('assistencias_tecnicas').select('data_retirada_agendada, pedidos(numero_pedido)').not('data_retirada_agendada', 'is', null).gte('data_retirada_agendada', hojeStr).lte('data_retirada_agendada', horizonteStr).range(0, 9999),
     ])
 
     const nomes = ['pedidos', 'itens', 'ats', 'entregas', 'entreguesMes', 'ocorrencias', 'itensTecido', 'itensSemPrevisao', 'itensHigienizacao', 'itensImperm', 'entregasCalendario', 'atsCalendario']
@@ -572,6 +586,25 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Barra de uso do banco */}
+      {dbSize && (
+        <div style={{ height: '36px', background: '#fff', borderTop: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', padding: '0 22px', gap: '12px', flexShrink: 0 }}>
+          <span style={{ fontSize: '11px', color: '#aaa', whiteSpace: 'nowrap' }}>🗄️ Banco de dados</span>
+          <div style={{ flex: 1, maxWidth: '200px', height: '6px', background: '#f0efe9', borderRadius: '99px', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              width: `${Math.min(dbSize.pct, 100)}%`,
+              borderRadius: '99px',
+              background: dbSize.pct >= 90 ? '#A32D2D' : dbSize.pct >= 70 ? '#BA7517' : '#3B6D11',
+              transition: 'width 0.5s',
+            }} />
+          </div>
+          <span style={{ fontSize: '11px', color: dbSize.pct >= 90 ? '#A32D2D' : dbSize.pct >= 70 ? '#BA7517' : '#888', whiteSpace: 'nowrap' }}>
+            {dbSize.mb.toFixed(0)} MB de 500 MB ({dbSize.pct.toFixed(1)}%)
+          </span>
+        </div>
+      )}
     </div>
   )
 }
