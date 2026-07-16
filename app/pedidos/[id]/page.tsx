@@ -121,6 +121,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const [editandoDoc, setEditandoDoc] = useState(false)
   const [salvandoDoc, setSalvandoDoc] = useState(false)
   const [pagamentoAberto, setPagamentoAberto] = useState(false)
+  const [historicoAberto, setHistoricoAberto] = useState(false)
   const [historicoItemId, setHistoricoItemId] = useState<string | null>(null)
   const [historicoItens, setHistoricoItens] = useState<any[]>([])
 
@@ -931,27 +932,42 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
 
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
-              <span style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Histórico de alterações</span>
-            </div>
-            {historico.length === 0 ? (
-              <div style={{ padding: '24px', textAlign: 'center', color: '#aaa', fontSize: '13px' }}>Nenhuma alteração registrada ainda.</div>
-            ) : (
-              <div style={{ padding: '8px 0' }}>
-                {historico.map((h, i) => (
-                  <div key={h.id} style={{ display: 'flex', gap: '12px', padding: '10px 16px', borderTop: i > 0 ? '0.5px solid #f7f6f3' : 'none', alignItems: 'flex-start' }}>
-                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '11px', color: '#C9A84C', fontWeight: '600' }}>
-                      {h.usuario_nome?.charAt(0).toUpperCase()}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13px', color: '#1a1a2e' }}>{h.descricao}</div>
-                      <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
-                        {h.usuario_nome} · {new Date(h.created_at).toLocaleDateString('pt-BR')} às {new Date(h.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            <button onClick={() => setHistoricoAberto(a => !a)}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Histórico de alterações</span>
+                {!historicoAberto && historico.length > 0 && (
+                  <span style={{ fontSize: '10px', padding: '1px 7px', borderRadius: '5px', fontWeight: '500', background: '#f0efe9', color: '#888' }}>
+                    {historico.length} registros
+                  </span>
+                )}
+              </div>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#aaa" strokeWidth="1.5" strokeLinecap="round"
+                style={{ transform: historicoAberto ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms' }}>
+                <polyline points="2,4 6,8 10,4"/>
+              </svg>
+            </button>
+
+            {historicoAberto && (
+              historico.length === 0 ? (
+                <div style={{ padding: '24px', textAlign: 'center', color: '#aaa', fontSize: '13px' }}>Nenhuma alteração registrada ainda.</div>
+              ) : (
+                <div style={{ padding: '8px 0', borderTop: '0.5px solid #f0efe9' }}>
+                  {historico.map((h, i) => (
+                    <div key={h.id} style={{ display: 'flex', gap: '12px', padding: '10px 16px', borderTop: i > 0 ? '0.5px solid #f7f6f3' : 'none', alignItems: 'flex-start' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '11px', color: '#C9A84C', fontWeight: '600' }}>
+                        {h.usuario_nome?.charAt(0).toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '13px', color: '#1a1a2e' }}>{h.descricao}</div>
+                        <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>
+                          {h.usuario_nome} · {new Date(h.created_at).toLocaleDateString('pt-BR')} às {new Date(h.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )
             )}
           </div>
 
