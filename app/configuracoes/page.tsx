@@ -231,6 +231,197 @@ function VisualizadorBackup({ onFechar }: { onFechar: () => void }) {
   )
 }
 
+// ── Componente de limpeza ─────────────────────────────────────────────────────
+interface ResumoLimpeza {
+  pedidosIds: string[]
+  totalPedidos: number
+  totalItens: number
+  totalATs: number
+  totalOcorrencias: number
+  totalEntregas: number
+  totalHistorico: number
+}
+
+function LimpezaCard() {
+  const anoAtual = new Date().getFullYear()
+  const anos = Array.from({ length: 5 }, (_, i) => anoAtual - 1 - i)
+  const [anoSelecionado, setAnoSelecionado] = useState(anoAtual - 1)
+  const [resumo, setResumo] = useState<ResumoLimpeza | null>(null)
+  const [buscando, setBuscando] = useState(false)
+  const [confirmacao, setConfirmacao] = useState('')
+  const [excluindo, setExcluindo] = useState(false)
+  const [concluido, setConcluido] = useState(false)
+
+  async function buscarResumo() {
+    setBuscando(true)
+    setResumo(null)
+    setConfirmacao('')
+    setConcluido(false)
+    try {
+      const inicio = `${anoSelecionado}-01-01`
+      const fim = `${anoSelecionado}-12-31`
+      const { data: pedidos } = await supabase
+        .from('pedidos')
+        .select('id')
+        .in('status', ['entregue', 'cancelado'])
+        .gte('created_at', inicio)
+        .lte('created_at', fim + 'T23:59:59')
+        .range(0, 9999)
+
+      if (!pedidos || pedidos.length === 0) {
+        setResumo({ pedidosIds: [], totalPedidos: 0, totalItens: 0, totalATs: 0, totalOcorrencias: 0, totalEntregas: 0, totalHistorico: 0 })
+        setBuscando(false)
+        return
+      }
+
+      const ids = pedidos.map(p => p.id)
+
+      const [
+        { count: totalItens },
+        { count: totalATs },
+        { count: totalOcorrencias },
+        { count: totalEntregas },
+        { count: totalHist1 },
+        { count: totalHist2 },
+      ] = await Promise.all([
+        supabase.from('itens_pedido').select('id', { count: 'exact', head: true }).in('pedido_id', ids),
+        supabase.from('assistencias_tecnicas').select('id', { count: 'exact', head: true }).in('pedido_id', ids),
+        supabase.from('ocorrencias').select('id', { count: 'exact', head: true }).in('pedido_id', ids),
+        supabase.from('entregas').select('id', { count: 'exact', head: true }).in('pedido_id', ids),
+        supabase.from('historico_alteracoes').select('id', { count: 'exact', head: true }).in('pedido_id', ids),
+        supabase.from('historico_itens').select('id', { count: 'exact', head: true }).in('pedido_id', ids),
+      ])
+
+      setResumo({
+        pedidosIds: ids,
+        totalPedidos: ids.length,
+        totalItens: totalItens || 0,
+        totalATs: totalATs || 0,
+        totalOcorrencias: totalOcorrencias || 0,
+        totalEntregas: totalEntregas || 0,
+        totalHistorico: (totalHist1 || 0) + (totalHist2 || 0),
+      })
+    } catch (e: any) {
+      alert('Erro ao buscar dados: ' + e.message)
+    } finally {
+      setBuscando(false)
+    }
+  }
+
+  async function executarLimpeza() {
+    if (!resumo || resumo.pedidosIds.length === 0) return
+    setExcluindo(true)
+    try {
+      const ids = resumo.pedidosIds
+      // Ordem: histórico → filhos → pedidos
+      await supabase.from('historico_itens').delete().in('pedido_id', ids)
+      await supabase.from('historico_alteracoes').delete().in('pedido_id', ids)
+      await supabase.from('itens_pedido').delete().in('pedido_id', ids)
+      await supabase.from('assistencias_tecnicas').delete().in('pedido_id', ids)
+      await supabase.from('ocorrencias').delete().in('pedido_id', ids)
+      await supabase.from('entregas').delete().in('pedido_id', ids)
+      await supabase.from('pedidos').delete().in('id', ids)
+      setConcluido(true)
+      setResumo(null)
+      setConfirmacao('')
+    } catch (e: any) {
+      alert('Erro ao excluir dados: ' + e.message)
+    } finally {
+      setExcluindo(false)
+    }
+  }
+
+  const podeExcluir = confirmacao === 'CONFIRMAR' && resumo && resumo.totalPedidos > 0
+
+  return (
+    <div style={{ background: '#fff', borderRadius: '14px', border: '0.5px solid #e8e7e3', overflow: 'hidden', marginTop: '20px' }}>
+      <div style={{ padding: '16px 20px', borderBottom: '0.5px solid #f0efe9', background: '#f7f6f3' }}>
+        <div style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Limpeza de dados</div>
+        <div style={{ fontSize: '12px', color: '#888', marginTop: '3px' }}>Remove pedidos entregues/cancelados de um ano para liberar espaço</div>
+      </div>
+      <div style={{ padding: '20px' }}>
+
+        {concluido && (
+          <div style={{ padding: '12px 16px', borderRadius: '10px', background: '#e8f5e2', color: '#2d6a0e', fontSize: '13px', fontWeight: '500', marginBottom: '16px' }}>
+            ✓ Limpeza concluída com sucesso. O espaço foi liberado no banco de dados.
+          </div>
+        )}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ fontSize: '13px', color: '#555' }}>Excluir registros do ano:</div>
+          <select
+            value={anoSelecionado}
+            onChange={e => { setAnoSelecionado(Number(e.target.value)); setResumo(null); setConfirmacao(''); setConcluido(false) }}
+            style={{ padding: '7px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', background: '#f7f6f3', color: '#1a1a2e' }}
+          >
+            {anos.map(a => <option key={a} value={a}>{a}</option>)}
+          </select>
+          <button
+            onClick={buscarResumo}
+            disabled={buscando}
+            style={{ padding: '7px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#f7f6f3', color: '#555', fontSize: '13px', fontWeight: '500', cursor: buscando ? 'not-allowed' : 'pointer', opacity: buscando ? 0.7 : 1 }}
+          >
+            {buscando ? 'Buscando...' : 'Ver o que será excluído'}
+          </button>
+        </div>
+
+        {resumo && resumo.totalPedidos === 0 && (
+          <div style={{ padding: '12px 16px', borderRadius: '10px', background: '#f7f6f3', border: '0.5px solid #e8e7e3', fontSize: '13px', color: '#888' }}>
+            Nenhum pedido entregue ou cancelado encontrado em {anoSelecionado}.
+          </div>
+        )}
+
+        {resumo && resumo.totalPedidos > 0 && (
+          <div style={{ border: '0.5px solid #e8e7e3', borderRadius: '10px', overflow: 'hidden' }}>
+            <div style={{ padding: '12px 16px', background: '#fff8e1', borderBottom: '0.5px solid #f0d88a', fontSize: '12px', fontWeight: '600', color: '#7a5800' }}>
+              ⚠️ Resumo do que será excluído permanentemente — ano {anoSelecionado}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
+              {[
+                { label: 'Pedidos', valor: resumo.totalPedidos },
+                { label: 'Itens', valor: resumo.totalItens },
+                { label: 'Assistências técnicas', valor: resumo.totalATs },
+                { label: 'Ocorrências', valor: resumo.totalOcorrencias },
+                { label: 'Entregas', valor: resumo.totalEntregas },
+                { label: 'Registros de histórico', valor: resumo.totalHistorico },
+              ].map((item, i) => (
+                <div key={i} style={{ padding: '10px 16px', borderBottom: i < 4 ? '0.5px solid #f0efe9' : 'none', borderRight: i % 2 === 0 ? '0.5px solid #f0efe9' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '12px', color: '#555' }}>{item.label}</span>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#A32D2D' }}>{item.valor.toLocaleString('pt-BR')}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ padding: '16px', borderTop: '0.5px solid #e8e7e3', background: '#fafaf8' }}>
+              <div style={{ fontSize: '12px', color: '#888', marginBottom: '8px' }}>
+                Para confirmar, digite <strong style={{ color: '#1a1a2e', letterSpacing: '0.5px' }}>CONFIRMAR</strong> no campo abaixo:
+              </div>
+              <input
+                type="text"
+                value={confirmacao}
+                onChange={e => setConfirmacao(e.target.value)}
+                placeholder="Digite CONFIRMAR para liberar o botão"
+                style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: `0.5px solid ${podeExcluir ? '#A32D2D' : '#e8e7e3'}`, fontSize: '13px', outline: 'none', boxSizing: 'border-box', marginBottom: '12px', transition: 'border-color 0.2s' }}
+              />
+              <button
+                onClick={executarLimpeza}
+                disabled={!podeExcluir || excluindo}
+                style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: podeExcluir ? '#A32D2D' : '#e8e7e3', color: podeExcluir ? '#fff' : '#aaa', fontSize: '13px', fontWeight: '500', cursor: podeExcluir && !excluindo ? 'pointer' : 'not-allowed', transition: 'background 0.2s' }}
+              >
+                {excluindo ? 'Excluindo...' : `🗑 Excluir ${resumo.totalPedidos} pedidos e todos os registros vinculados`}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div style={{ marginTop: '14px', fontSize: '12px', color: '#aaa', lineHeight: '1.6' }}>
+          Recomendado: exporte o backup antes de executar a limpeza. Apenas pedidos com status <strong>entregue</strong> ou <strong>cancelado</strong> são removidos.
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Página principal ──────────────────────────────────────────────────────────
 export default function Configuracoes() {
   const [enderecoSaida, setEnderecoSaida] = useState('')
@@ -392,6 +583,9 @@ export default function Configuracoes() {
                 )}
               </div>
             </div>
+
+            {/* Limpeza de dados */}
+            <LimpezaCard />
 
             {/* Backup de dados */}
             <div style={{ background: '#fff', borderRadius: '14px', border: '0.5px solid #e8e7e3', overflow: 'hidden', marginTop: '20px' }}>
