@@ -79,6 +79,7 @@ export default function Ocorrencias() {
       .from('ocorrencias')
       .select('*, pedidos(numero_pedido, clientes(nome))')
       .order('created_at', { ascending: false })
+      .range(0, 9999)
     if (error) console.error('Erro ao buscar ocorrências:', error)
     const ocorrenciasData = (data as unknown as Ocorrencia[]) || []
 
@@ -106,6 +107,7 @@ export default function Ocorrencias() {
       .from('pedidos')
       .select('id, numero_pedido, clientes(nome)')
       .order('numero_pedido', { ascending: false })
+      .range(0, 9999)
     if (error) console.error('Erro ao buscar pedidos (ocorrências):', error)
     setPedidos((data as unknown as Pedido[]) || [])
   }

@@ -54,7 +54,7 @@ export default function Clientes() {
 
   async function buscarClientes() {
     setLoading(true)
-    const { data } = await supabase.from('clientes').select('*').order('nome')
+    const { data } = await supabase.from('clientes').select('*').order('nome').range(0, 9999)
     setClientes(data || [])
     setLoading(false)
   }

@@ -144,7 +144,7 @@ export default function Entregas() {
         .from('pedidos')
         .select('id, numero_pedido, clientes(nome, cidade)')
         .eq('id', incluirId)
-        .single()
+        .maybeSingle()
       if (extra) lista = [extra as unknown as Pedido, ...lista]
     }
     setPedidos(lista)

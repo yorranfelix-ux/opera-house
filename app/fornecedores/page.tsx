@@ -54,7 +54,7 @@ export default function Fornecedores() {
 
   async function buscarFornecedores() {
     setLoading(true)
-    const { data } = await supabase.from('fornecedores').select('*').order('nome_fantasia')
+    const { data } = await supabase.from('fornecedores').select('*').order('nome_fantasia').range(0, 9999)
     setFornecedores(data || [])
     setLoading(false)
   }

@@ -303,7 +303,7 @@ export default function Pedidos() {
                   ) : <span style={{ fontSize: '12px', color: '#ccc' }}>—</span>}
                 </div>
                 <span style={{ fontSize: '12px', color: '#555' }}>{p.data_venda ? new Date(p.data_venda + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}</span>
-                <span style={{ fontSize: '12px', color: p.prazo_prometido && new Date(p.prazo_prometido) < new Date() ? '#A32D2D' : '#555', fontWeight: p.prazo_prometido && new Date(p.prazo_prometido) < new Date() ? '500' : '400' }}>
+                <span style={{ fontSize: '12px', color: p.prazo_prometido && new Date(p.prazo_prometido + 'T12:00:00') < new Date() ? '#A32D2D' : '#555', fontWeight: p.prazo_prometido && new Date(p.prazo_prometido + 'T12:00:00') < new Date() ? '500' : '400' }}>
                   {p.prazo_prometido ? new Date(p.prazo_prometido + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

@@ -41,7 +41,7 @@ export default function Profissionais() {
 
   async function buscar() {
     setLoading(true)
-    const { data } = await supabase.from('profissionais').select('*').order('nome')
+    const { data } = await supabase.from('profissionais').select('*').order('nome').range(0, 9999)
     setProfissionais(data || [])
     const hoje = new Date()
     const anivs = (data || []).filter(p => {
