@@ -248,11 +248,13 @@ const SECOES: Secao[] = [
     passos: [
       { titulo: 'Endereço de saída', texto: 'Configure o endereço de onde a equipe parte para as entregas (endereço da loja, depósito ou galpão). Esse endereço é o ponto de partida da rota gerada no Google Maps pelo módulo de Entregas.' },
       { titulo: 'Monitor de banco de dados', texto: 'Exibe o uso atual do banco de dados Supabase em relação ao limite de 500 MB do plano gratuito. A barra de progresso fica verde até 70%, amarela entre 70% e 90%, e vermelha acima de 90%. Um aviso automático aparece quando o uso está elevado.' },
+      { titulo: 'Backup de dados', texto: 'Clique em "⬇ Exportar backup completo" para baixar um arquivo JSON com todos os dados do sistema: pedidos, itens, clientes, fornecedores, profissionais, ATs, ocorrências e entregas. O arquivo inclui a data de exportação e pode ser aberto em qualquer editor de texto ou importado posteriormente. Recomenda-se realizar o backup periodicamente como segurança adicional.' },
       { titulo: 'Perfil do usuário logado', texto: 'Atualize seu próprio nome e cargo que aparecem no rodapé do menu lateral. Cada usuário pode editar seu próprio perfil.' },
     ],
     dicas: [
       'O endereço de saída é compartilhado entre todos os usuários — configure uma vez e vale para toda a equipe.',
       'Acompanhe o uso do banco de dados em Configurações para saber quando o limite está se aproximando.',
+      'Realize o backup manualmente de tempos em tempos como proteção extra dos dados da empresa.',
     ],
   },
 ]
@@ -278,7 +280,10 @@ export default function Ajuda() {
             <div>
               <div style={{ fontSize: '18px', fontWeight: '600', color: '#C9A84C', marginBottom: '6px' }}>Bem-vindo ao Opera House ERP</div>
               <div style={{ fontSize: '13px', color: '#a0a0c0', lineHeight: '1.7' }}>
-                Este sistema foi desenvolvido para a <strong style={{ color: '#c8c8e0' }}>Opera House</strong> gerenciar pedidos, assistências técnicas, entregas e o relacionamento com clientes e parceiros. Use o menu abaixo para navegar pelo guia de cada módulo.
+                Este sistema foi desenvolvido para a <strong style={{ color: '#c8c8e0' }}>Opera House</strong> gerenciar pedidos, assistências técnicas, entregas e o relacionamento com clientes e parceiros. Cada membro da equipe acessa com seu próprio login — as ações de cada usuário ficam registradas no histórico do sistema. Use o menu abaixo para navegar pelo guia de cada módulo.
+              </div>
+              <div style={{ marginTop: '12px', padding: '10px 14px', background: 'rgba(201,168,76,0.12)', borderRadius: '8px', fontSize: '12px', color: '#c8b87a', lineHeight: '1.6' }}>
+                🔒 <strong>Sessão expirada:</strong> se o sistema ficar sem uso por um longo período, a sessão pode expirar. Quando isso acontecer, um aviso aparecerá na tela — basta clicar em <em>"Recarregar página"</em> para voltar a usar normalmente.
               </div>
             </div>
           </div>
