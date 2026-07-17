@@ -248,13 +248,15 @@ const SECOES: Secao[] = [
     passos: [
       { titulo: 'Endereço de saída', texto: 'Configure o endereço de onde a equipe parte para as entregas (endereço da loja, depósito ou galpão). Esse endereço é o ponto de partida da rota gerada no Google Maps pelo módulo de Entregas.' },
       { titulo: 'Monitor de banco de dados', texto: 'Exibe o uso atual do banco de dados Supabase em relação ao limite de 500 MB do plano gratuito. A barra de progresso fica verde até 70%, amarela entre 70% e 90%, e vermelha acima de 90%. Um aviso automático aparece quando o uso está elevado.' },
-      { titulo: 'Backup de dados', texto: 'Clique em "⬇ Exportar backup completo" para baixar um arquivo JSON com todos os dados do sistema: pedidos, itens, clientes, fornecedores, profissionais, ATs, ocorrências e entregas. O arquivo inclui a data de exportação e pode ser aberto em qualquer editor de texto ou importado posteriormente. Recomenda-se realizar o backup periodicamente como segurança adicional.' },
+      { titulo: 'Backup de dados', texto: 'Clique em "⬇ Exportar backup" para baixar um arquivo JSON com todos os dados do sistema: pedidos, itens, clientes, fornecedores, profissionais, ATs, ocorrências e entregas. Clique em "📂 Visualizar backup" para abrir o arquivo baixado diretamente no sistema — você pode navegar entre as tabelas e buscar qualquer registro em tempo real sem precisar do Excel.' },
+      { titulo: 'Limpeza de dados', texto: 'Permite excluir permanentemente pedidos entregues ou cancelados de um ano específico para liberar espaço no banco. Selecione o ano e clique em "Ver o que será excluído" — o sistema mostra um resumo com a quantidade exata de pedidos, itens, ATs, ocorrências, entregas e histórico que serão removidos. Para confirmar, é obrigatório digitar a palavra CONFIRMAR no campo antes de o botão de exclusão ficar disponível. Recomendado: exporte o backup antes de executar a limpeza.' },
       { titulo: 'Perfil do usuário logado', texto: 'Atualize seu próprio nome e cargo que aparecem no rodapé do menu lateral. Cada usuário pode editar seu próprio perfil.' },
     ],
     dicas: [
       'O endereço de saída é compartilhado entre todos os usuários — configure uma vez e vale para toda a equipe.',
       'Acompanhe o uso do banco de dados em Configurações para saber quando o limite está se aproximando.',
-      'Realize o backup manualmente de tempos em tempos como proteção extra dos dados da empresa.',
+      'Realize o backup antes de executar a limpeza — assim os dados ficam salvos mesmo após a exclusão.',
+      'A limpeza remove apenas pedidos com status entregue ou cancelado — pedidos em andamento nunca são afetados.',
     ],
   },
 ]
