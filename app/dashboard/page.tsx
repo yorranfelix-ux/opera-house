@@ -120,16 +120,17 @@ export default function Dashboard() {
       supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_impermeabilizacao', true).not('apto_entrega', 'is', true).not('status', 'in', '(entregue,cancelado)').range(0, 9999),
       supabase.from('entregas').select('data_agendada, pedidos(numero_pedido)').gte('data_agendada', hojeStr).lte('data_agendada', horizonteStr).range(0, 9999),
       supabase.from('assistencias_tecnicas').select('data_retirada_agendada, pedidos(numero_pedido)').not('data_retirada_agendada', 'is', null).gte('data_retirada_agendada', hojeStr).lte('data_retirada_agendada', horizonteStr).range(0, 9999),
+      supabase.from('profissionais').select('id, nome, data_nascimento').eq('ativo', true).not('data_nascimento', 'is', null).range(0, 9999),
     ])
 
-    const nomes = ['pedidos', 'itens', 'ats', 'entregas', 'entreguesMes', 'ocorrencias', 'itensTecido', 'itensSemPrevisao', 'itensHigienizacao', 'itensImperm', 'entregasCalendario', 'atsCalendario']
+    const nomes = ['pedidos', 'itens', 'ats', 'entregas', 'entreguesMes', 'ocorrencias', 'itensTecido', 'itensSemPrevisao', 'itensHigienizacao', 'itensImperm', 'entregasCalendario', 'atsCalendario', 'profissionais']
     resultados.forEach((r, i) => { if (r.error) console.error(`Erro na query do dashboard (${nomes[i]}):`, r.error) })
 
     const [
       { data: pedidos }, { data: itens }, { data: ats }, { data: entregas },
       { data: entreguesMes }, { data: ocorrencias }, { data: itensTecido },
       { data: itensSemPrevisao }, { data: itensHigienizacao }, { data: itensImperm },
-      { data: entregasCalendario }, { data: atsCalendario },
+      { data: entregasCalendario }, { data: atsCalendario }, { data: profissionaisData },
     ] = resultados
 
     const pedidosAtivos = (pedidos || []) as any[]
@@ -203,6 +204,25 @@ export default function Dashboard() {
         detalhe: `Aberta há ${diasAberta} dia${diasAberta !== 1 ? 's' : ''} sem resolução · ${(o.pedidos as any)?.clientes?.nome || ''}`,
         tag: 'Ocorrência aberta', tagColor: '#633806', tagBg: '#FAEEDA',
       })
+    })
+
+    // Aniversários nos próximos 3 dias
+    ;(profissionaisData || []).forEach((p: any) => {
+      if (!p.data_nascimento) return
+      const nasc = new Date(p.data_nascimento + 'T12:00:00')
+      for (let d = 0; d <= 3; d++) {
+        const dia = new Date(hoje)
+        dia.setDate(dia.getDate() + d)
+        if (nasc.getDate() === dia.getDate() && nasc.getMonth() === dia.getMonth()) {
+          const label = d === 0 ? 'Hoje' : d === 1 ? 'Amanhã' : `Em ${d} dias`
+          lista.push({
+            id: p.id, href: '/profissionais', tipo: d === 0 ? 'atencao' : 'info',
+            titulo: `🎂 Aniversário de ${p.nome}`,
+            detalhe: `${label} — não esqueça de parabenizar!`,
+            tag: label, tagColor: d === 0 ? '#633806' : '#0C447C', tagBg: d === 0 ? '#FAEEDA' : '#E6F1FB',
+          })
+        }
+      }
     })
 
     const pedidosTecidoVistos = new Set<string>()
