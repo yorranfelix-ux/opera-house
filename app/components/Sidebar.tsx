@@ -38,8 +38,7 @@ const ICON: Record<string, React.ReactElement> = {
   ),
   '/assistencia': (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10.5 1.5a4 4 0 0 1 0 5.657L4.828 12.83A2 2 0 1 1 2 10l5.657-5.657A4 4 0 0 1 10.5 1.5z"/>
-      <circle cx="3.5" cy="12.5" r="0.75" fill="currentColor" stroke="none"/>
+      <path d="M13.5 2.5a3 3 0 0 0-4.1 4.1L2.5 13.5l.5.5 6.9-6.9a3 3 0 0 0 4.1-4.1l-1.9 1.9-1.4-1.4 1.9-1.9z"/>
     </svg>
   ),
   '/ocorrencias': (
