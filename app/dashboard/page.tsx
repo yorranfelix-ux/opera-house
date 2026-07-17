@@ -113,7 +113,7 @@ export default function Dashboard() {
       supabase.from('entregas').select('id, pedidos(numero_pedido, clientes(nome))').eq('data_agendada', amanhaStr).range(0, 9999),
       supabase.from('pedidos').select('id').eq('status', 'entregue').gte('updated_at', inicioMes).range(0, 9999),
       supabase.from('ocorrencias').select('id, created_at, pedidos(numero_pedido, clientes(nome))').eq('status', 'aberta').lt('created_at', new Date(hoje.getTime() - 3 * 86400000).toISOString()).range(0, 9999),
-      supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_tecido_fornecido', true).not('status', 'in', '(entregue,cancelado)').range(0, 9999),
+      supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_tecido_fornecido', true).not('apto_entrega', 'is', true).not('status', 'in', '(entregue,cancelado)').range(0, 9999),
       supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').is('previsao_chegada', null).not('status', 'in', '(entregue,apto_entrega,conferido_ok,recebido)').range(0, 9999),
       supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_higienizacao', true).not('apto_entrega', 'is', true).not('status', 'in', '(entregue,cancelado)').range(0, 9999),
       supabase.from('itens_pedido').select('id, descricao, pedido_id, pedidos(numero_pedido, clientes(nome))').eq('requer_impermeabilizacao', true).not('apto_entrega', 'is', true).not('status', 'in', '(entregue,cancelado)').range(0, 9999),
