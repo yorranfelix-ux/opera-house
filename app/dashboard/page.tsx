@@ -108,7 +108,7 @@ export default function Dashboard() {
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().split('T')[0]
 
     const resultados = await Promise.all([
-      supabase.from('pedidos').select('id, numero_pedido, prazo_prometido, semaforo, clientes(nome, cidade)').not('status', 'in', '(entregue,cancelado)').range(0, 9999),
+      supabase.from('pedidos').select('id, numero_pedido, prazo_prometido, semaforo, created_at, clientes(nome, cidade)').not('status', 'in', '(entregue,cancelado)').range(0, 9999),
       supabase.from('itens_pedido').select('id, apto_entrega, pedido_id, status').range(0, 9999),
       supabase.from('assistencias_tecnicas').select('id, status, updated_at, created_at, pedidos(numero_pedido)').in('status', ['aberta', 'aguardando_retirada', 'em_reparo', 'enviado_fornecedor', 'aguardando_devolucao']).range(0, 9999),
       supabase.from('entregas').select('id, pedidos(numero_pedido, clientes(nome))').eq('data_agendada', amanhaStr).range(0, 9999),

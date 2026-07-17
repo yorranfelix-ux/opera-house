@@ -160,6 +160,7 @@ export default function Entregas() {
 
   function abrirEdicao(e: Entrega) {
     setEditandoId(e.id)
+    setBuscaPedidoForm('')
     setForm({
       pedido_id: e.pedido_id || '',
       data_agendada: e.data_agendada || '',

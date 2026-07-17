@@ -133,6 +133,7 @@ export default function Ocorrencias() {
 
   function abrirEdicao(o: Ocorrencia) {
     setEditandoId(o.id)
+    setBuscaPedidoForm('')
     setForm({
       pedido_id: o.pedido_id || '',
       item_id: o.item_id || '',
