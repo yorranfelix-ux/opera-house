@@ -60,6 +60,7 @@ export default function Ocorrencias() {
   const [itensPedido, setItensPedido] = useState<ItemPedido[]>([])
   const [showForm, setShowForm] = useState(false)
   const [busca, setBusca] = useState('')
+  const [buscaPedidoForm, setBuscaPedidoForm] = useState('')
   const [filtroStatus, setFiltroStatus] = useState<'abertas' | 'resolvidas' | 'todas'>('abertas')
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [expandidoId, setExpandidoId] = useState<string | null>(null)
@@ -126,6 +127,7 @@ export default function Ocorrencias() {
     setEditandoId(null)
     setForm(formVazio)
     setItensPedido([])
+    setBuscaPedidoForm('')
     setShowForm(true)
   }
 
@@ -359,10 +361,20 @@ export default function Ocorrencias() {
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Pedido *</div>
-              <select value={form.pedido_id} onChange={e => setForm({ ...form, pedido_id: e.target.value, item_id: '' })}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
-                <option value="">Selecione o pedido</option>
-                {pedidos.map(p => <option key={p.id} value={p.id}>{p.numero_pedido} — {(p.clientes as any)?.nome}</option>)}
+              <input
+                placeholder="Buscar por número ou cliente..."
+                value={buscaPedidoForm}
+                onChange={e => setBuscaPedidoForm(e.target.value)}
+                style={{ width: '100%', padding: '7px 12px', borderRadius: '8px 8px 0 0', border: '0.5px solid #e8e7e3', borderBottom: 'none', fontSize: '12px', outline: 'none', boxSizing: 'border-box', background: '#f7f6f3', color: '#555' }}
+              />
+              <select value={form.pedido_id} onChange={e => setForm({ ...form, pedido_id: e.target.value, item_id: '' })} size={5}
+                style={{ width: '100%', padding: '4px 0', borderRadius: '0 0 8px 8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
+                <option value="">— Selecione —</option>
+                {pedidos.filter(p => {
+                  if (!buscaPedidoForm) return true
+                  const q = buscaPedidoForm.toLowerCase()
+                  return p.numero_pedido?.toLowerCase().includes(q) || (p.clientes as any)?.nome?.toLowerCase().includes(q)
+                }).map(p => <option key={p.id} value={p.id}>{p.numero_pedido} — {(p.clientes as any)?.nome}</option>)}
               </select>
             </div>
 

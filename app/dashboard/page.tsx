@@ -61,6 +61,7 @@ export default function Dashboard() {
   const [diasSemana, setDiasSemana] = useState<{ data: string; diaSemana: string; diaNum: number; hoje: boolean }[]>([])
   const [periodoCalendario, setPeriodoCalendario] = useState(7)
   const [loading, setLoading] = useState(true)
+  const [historicoCards, setHistoricoCards] = useState<{ pedidos: number[]; ats: number[]; entregas: number[] }>({ pedidos: [], ats: [], entregas: [] })
 
   function gerarDias(total: number) {
     const hoje = new Date()
@@ -109,7 +110,7 @@ export default function Dashboard() {
     const resultados = await Promise.all([
       supabase.from('pedidos').select('id, numero_pedido, prazo_prometido, semaforo, clientes(nome, cidade)').not('status', 'in', '(entregue,cancelado)').range(0, 9999),
       supabase.from('itens_pedido').select('id, apto_entrega, pedido_id, status').range(0, 9999),
-      supabase.from('assistencias_tecnicas').select('id, status, updated_at, pedidos(numero_pedido)').in('status', ['aberta', 'aguardando_retirada', 'em_reparo', 'enviado_fornecedor', 'aguardando_devolucao']).range(0, 9999),
+      supabase.from('assistencias_tecnicas').select('id, status, updated_at, created_at, pedidos(numero_pedido)').in('status', ['aberta', 'aguardando_retirada', 'em_reparo', 'enviado_fornecedor', 'aguardando_devolucao']).range(0, 9999),
       supabase.from('entregas').select('id, pedidos(numero_pedido, clientes(nome))').eq('data_agendada', amanhaStr).range(0, 9999),
       supabase.from('pedidos').select('id').eq('status', 'entregue').gte('updated_at', inicioMes).range(0, 9999),
       supabase.from('ocorrencias').select('id, created_at, pedidos(numero_pedido, clientes(nome))').eq('status', 'aberta').lt('created_at', new Date(hoje.getTime() - 3 * 86400000).toISOString()).range(0, 9999),
@@ -267,6 +268,18 @@ export default function Dashboard() {
     })
     setEventosPorDia(epd)
 
+    // Gráfico de sparkline: pedidos por mês (últimos 6), ATs ativas por mês, entregas por mês
+    const hoje2 = new Date()
+    const spark = { pedidos: [] as number[], ats: [] as number[], entregas: [] as number[] }
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(hoje2.getFullYear(), hoje2.getMonth() - i, 1)
+      const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      spark.pedidos.push((pedidos || []).filter((p: any) => (p.created_at || '').startsWith(mes)).length)
+      spark.ats.push((ats || []).filter((a: any) => (a.created_at || '').startsWith(mes)).length)
+      spark.entregas.push((entregasCalendario || []).filter((e: any) => (e.data_agendada || '').startsWith(mes)).length)
+    }
+    setHistoricoCards(spark)
+
     setAcoes(lista)
     setDados({
       pedidosAndamento: pedidosAtivos.length,
@@ -403,16 +416,26 @@ export default function Dashboard() {
           {/* Cards topo */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
             {[
-              { label: 'Em andamento', value: dados.pedidosAndamento, color: '#1a1a2e' },
-              { label: 'Atrasados', value: dados.pedidosAtrasados, color: '#A32D2D' },
-              { label: 'Apto p/ agendar', value: dados.aptoEntrega, color: '#3B6D11' },
-              { label: 'ATs abertas', value: dados.atsAbertas, color: '#185FA5' },
-            ].map(card => (
-              <div key={card.label} style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '16px 18px' }}>
-                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '8px' }}>{card.label}</div>
-                <div style={{ fontSize: '28px', fontWeight: '600', color: card.color, lineHeight: 1 }}>{card.value}</div>
-              </div>
-            ))}
+              { label: 'Em andamento', value: dados.pedidosAndamento, color: '#1a1a2e', spark: historicoCards.pedidos },
+              { label: 'Atrasados', value: dados.pedidosAtrasados, color: '#A32D2D', spark: [] },
+              { label: 'Apto p/ agendar', value: dados.aptoEntrega, color: '#3B6D11', spark: [] },
+              { label: 'ATs abertas', value: dados.atsAbertas, color: '#185FA5', spark: historicoCards.ats },
+            ].map(card => {
+              const maxSpark = card.spark.length > 0 ? Math.max(...card.spark, 1) : 1
+              return (
+                <div key={card.label} style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '16px 18px', position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '8px' }}>{card.label}</div>
+                  <div style={{ fontSize: '28px', fontWeight: '600', color: card.color, lineHeight: 1 }}>{card.value}</div>
+                  {card.spark.length > 0 && (
+                    <svg viewBox={`0 0 ${card.spark.length * 10} 28`} style={{ position: 'absolute', bottom: 0, right: 0, width: '80px', height: '28px', opacity: 0.18 }} preserveAspectRatio="none">
+                      {card.spark.map((v, i) => (
+                        <rect key={i} x={i * 10 + 1} y={28 - Math.round((v / maxSpark) * 24)} width={8} height={Math.round((v / maxSpark) * 24)} fill={card.color} rx={2} />
+                      ))}
+                    </svg>
+                  )}
+                </div>
+              )
+            })}
           </div>
 
           {/* Calendário full-width */}

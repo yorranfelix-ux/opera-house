@@ -58,6 +58,7 @@ export default function AssistenciaTecnica() {
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
   const [itensPedido, setItensPedido] = useState<ItemPedido[]>([])
   const [showForm, setShowForm] = useState(false)
+  const [buscaPedidoForm, setBuscaPedidoForm] = useState('')
   const [showFornecedorForm, setShowFornecedorForm] = useState(false)
   const [atSelecionada, setAtSelecionada] = useState<AT | null>(null)
   const [ocorrenciaOrigem, setOcorrenciaOrigem] = useState<string | null>(null)
@@ -325,6 +326,7 @@ export default function AssistenciaTecnica() {
             setForm({ pedido_id: '', item_id: '', tipo_at: 'retirada_cliente', descricao_problema: '', requer_retirada: false, endereco_retirada: '', data_retirada_agendada: '', fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes: '' } as any)
             setOcorrenciaOrigem(null)
             setItensPedido([])
+            setBuscaPedidoForm('')
             setShowForm(true)
           }} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '7px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
             + Nova AT
@@ -466,9 +468,19 @@ export default function AssistenciaTecnica() {
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Pedido *</div>
-              <select value={form.pedido_id} onChange={e => setForm({ ...form, pedido_id: e.target.value, item_id: '' } as any)} style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
-                <option value="">Selecione o pedido</option>
-                {pedidos.map(p => <option key={p.id} value={p.id}>{p.numero_pedido} - {p.clientes?.nome}</option>)}
+              <input
+                placeholder="Buscar por número ou cliente..."
+                value={buscaPedidoForm}
+                onChange={e => setBuscaPedidoForm(e.target.value)}
+                style={{ width: '100%', padding: '7px 12px', borderRadius: '8px 8px 0 0', border: '0.5px solid #e8e7e3', borderBottom: 'none', fontSize: '12px', outline: 'none', boxSizing: 'border-box', background: '#f7f6f3', color: '#555' }}
+              />
+              <select value={form.pedido_id} onChange={e => setForm({ ...form, pedido_id: e.target.value, item_id: '' } as any)} size={5} style={{ width: '100%', padding: '4px 0', borderRadius: '0 0 8px 8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
+                <option value="">— Selecione —</option>
+                {pedidos.filter(p => {
+                  if (!buscaPedidoForm) return true
+                  const q = buscaPedidoForm.toLowerCase()
+                  return p.numero_pedido?.toLowerCase().includes(q) || (p.clientes as any)?.nome?.toLowerCase().includes(q)
+                }).map(p => <option key={p.id} value={p.id}>{p.numero_pedido} — {(p.clientes as any)?.nome}</option>)}
               </select>
             </div>
 
