@@ -422,15 +422,17 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       await registrarHistorico({ tipo: 'item_editado', descricao, pedidoId: id, itemId: editandoItemId || undefined })
 
       if (itemAnterior && itemAnterior.status !== itemForm.status) {
-        const { data: { user } } = await supabase.auth.getUser()
-        const { data: perfil } = await supabase.from('profiles').select('nome').eq('id', user?.id || '').single()
-        await supabase.from('historico_itens').insert([{
+        const { data: authData } = await supabase.auth.getUser()
+        const user = authData?.user
+        const { data: perfil } = await supabase.from('profiles').select('nome').eq('id', user?.id || '').maybeSingle()
+        const { error: errHist } = await supabase.from('historico_itens').insert([{
           item_id: editandoItemId,
           pedido_id: id,
           status_anterior: itemAnterior.status,
           status_novo: itemForm.status,
           usuario_nome: perfil?.nome || user?.email || 'Usuário',
         }])
+        if (errHist) console.error('Erro ao salvar histórico de status:', errHist)
       }
     } else {
       const { error } = await supabase.from('itens_pedido').insert([{ ...payload, pedido_id: id, status: 'aguardando_compra' }])
