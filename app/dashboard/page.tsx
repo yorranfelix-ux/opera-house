@@ -91,7 +91,7 @@ export default function Dashboard() {
   async function buscarUsuario() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    const { data } = await supabase.from('profiles').select('nome, cargo').eq('id', user.id).single()
+    const { data } = await supabase.from('profiles').select('nome, cargo').eq('id', user.id).maybeSingle()
     if (data) setUsuario(data as { nome: string; cargo: string })
   }
 
@@ -139,7 +139,18 @@ export default function Dashboard() {
     const itensTecidoData = (itensTecido || []) as any[]
     const itensSemPrevisaoData = (itensSemPrevisao || []) as any[]
 
-    const aptoIds = new Set(itensData.filter(i => i.apto_entrega).map(i => i.pedido_id))
+    // Agrupar itens por pedido, ignorando os já finalizados
+    const itensPorPedido: Record<string, any[]> = {}
+    itensData.forEach(i => {
+      if (!itensPorPedido[i.pedido_id]) itensPorPedido[i.pedido_id] = []
+      if (!['entregue', 'cancelado'].includes(i.status)) itensPorPedido[i.pedido_id].push(i)
+    })
+    // "Apto p/ agendar" só quando TODOS os itens ativos do pedido estão prontos
+    const aptoIds = new Set(
+      Object.entries(itensPorPedido)
+        .filter(([, itens]) => itens.length > 0 && itens.every(i => i.apto_entrega))
+        .map(([pedidoId]) => pedidoId)
+    )
     const atsSemUpdate = atsData.filter(a => !a.updated_at || new Date(a.updated_at) < seteDiasAtras)
     const atrasados = pedidosAtivos.filter(p => p.prazo_prometido && p.prazo_prometido < hojeStr)
 

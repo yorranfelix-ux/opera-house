@@ -142,6 +142,7 @@ export default function AssistenciaTecnica() {
       .from('assistencias_tecnicas')
       .select('*, pedidos(numero_pedido, clientes(nome, cidade)), fornecedores(nome_fantasia, razao_social)')
       .order('created_at', { ascending: false })
+      .range(0, 9999)
     if (error) console.error('Erro ao buscar ATs:', error)
     setAts((data as unknown as AT[]) || [])
     setLoadingATs(false)
@@ -152,6 +153,7 @@ export default function AssistenciaTecnica() {
       .from('pedidos')
       .select('id, numero_pedido, clientes(nome)')
       .order('numero_pedido', { ascending: false })
+      .range(0, 9999)
     setPedidos((data as unknown as Pedido[]) || [])
   }
 
@@ -319,7 +321,12 @@ export default function AssistenciaTecnica() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
           <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Assistencia Tecnica</span>
-          <button onClick={() => setShowForm(true)} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '7px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
+          <button onClick={() => {
+            setForm({ pedido_id: '', item_id: '', tipo_at: 'retirada_cliente', descricao_problema: '', requer_retirada: false, endereco_retirada: '', data_retirada_agendada: '', fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes: '' } as any)
+            setOcorrenciaOrigem(null)
+            setItensPedido([])
+            setShowForm(true)
+          }} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '7px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
             + Nova AT
           </button>
         </div>

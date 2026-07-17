@@ -181,7 +181,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     if (!todosItens || todosItens.length === 0) return
     const todosAptos = todosItens.every((i: any) => i.apto_entrega === true)
     if (todosAptos) {
-      const { data: p } = await supabase.from('pedidos').select('status').eq('id', id).single()
+      const { data: p } = await supabase.from('pedidos').select('status').eq('id', id).maybeSingle()
       if (p && p.status !== 'entregue' && p.status !== 'cancelado' && p.status !== 'apto_agendamento') {
         await supabase.from('pedidos').update({ status: 'apto_agendamento' }).eq('id', id)
         await registrarHistorico({ tipo: 'pedido_editado', descricao: 'Status atualizado automaticamente para Apto p/ agendamento (todos os itens prontos)', pedidoId: id })
@@ -404,7 +404,6 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       }
       if (itemAnterior?.apto_entrega !== itemForm.apto_entrega) {
         mudancas.push(`Apto entrega: ${itemForm.apto_entrega ? 'Sim' : 'Não'}`)
-        if (itemForm.apto_entrega) setTimeout(() => verificarStatusPedido(), 500)
       }
       if (itemAnterior?.requer_icamento !== itemForm.requer_icamento) {
         mudancas.push(`Içamento: ${itemForm.requer_icamento ? 'Sim' : 'Não'}`)
@@ -444,7 +443,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     setItemForm(itemFormVazio)
     setEditandoItemId(null)
     setItemAnterior(null)
-    buscarItens()
+    await buscarItens()
+    await verificarStatusPedido()
     buscarHistorico()
     } finally {
       setSalvandoItem(false)
