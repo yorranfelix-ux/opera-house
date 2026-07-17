@@ -40,6 +40,7 @@ const SECOES: Secao[] = [
       { titulo: 'Filtrar por situação', texto: 'Use os botões "Em aberto / Entregues / Todos" para filtrar pelo status geral. "Em aberto" mostra todos os pedidos em andamento; "Entregues" mostra os concluídos e cancelados.' },
       { titulo: 'Filtrar por profissional', texto: 'Use o select de profissional na barra de filtros para ver apenas os pedidos vinculados a um arquiteto ou designer específico. Esse filtro combina com os demais.' },
       { titulo: 'Abrir detalhes', texto: 'Clique no número do pedido (em dourado) ou no nome do cliente para abrir a página de detalhes, onde você gerencia itens, semáforo, pagamento e imprime o resumo.' },
+      { titulo: 'Data de entrega', texto: 'Pedidos entregues exibem a data de entrega logo abaixo do badge de status na listagem. Essa data é preenchida automaticamente quando o pedido é marcado como "Entregue" — seja pela conclusão de uma entrega no módulo Entregas, seja por alteração manual do status.' },
       { titulo: 'Editar um pedido', texto: 'Clique em "Editar" na linha do pedido para alterar dados como status, prazo prometido, profissional vinculado e observações gerais.' },
       { titulo: 'Exportar CSV', texto: 'Clique em "↓ Exportar CSV" para baixar a lista de pedidos em formato compatível com Excel.' },
     ],
@@ -58,6 +59,7 @@ const SECOES: Secao[] = [
       { titulo: 'Adicionar itens', texto: 'Na seção "Itens" clique em "+ Adicionar item". Informe a descrição, quantidade, status do item, fornecedor responsável e previsão de chegada. Marque as flags necessárias: "Requer içamento na entrega", "Requer envio de tecido fornecido", "Requer retirada na loja" e os tratamentos especiais "Higienização" e/ou "Impermeabilização". Cada flag gera uma tag visual no item e alertas no Dashboard enquanto não forem concluídas.' },
       { titulo: 'Retirada na loja', texto: 'Ao marcar "Requer retirada na loja" em um item, uma tag amarela "Retirada loja" aparece no item para sinalizar que o produto precisa ser buscado na loja antes da entrega ao cliente. Use para produtos do Outlet, peças entregues na loja, ou qualquer situação em que a equipe precise buscar o item antes da entrega.' },
       { titulo: 'Tratamentos especiais', texto: 'Marque "Requer higienização" ou "Requer impermeabilização" nos itens que precisam de procedimento antes da entrega. Tags azuis aparecem no item para lembrete visual da equipe. O Dashboard exibe um alerta enquanto o item não for marcado como "Apto entrega", sinalizando que o tratamento ainda está pendente.' },
+      { titulo: 'Data de recebimento na lista de itens', texto: 'Na tabela de itens do pedido, a coluna "Recebido" exibe a data em que o item chegou ao estoque. Esse campo é preenchido ao editar o item — informe a data de recebimento no formulário de edição. Quando ainda não preenchido aparece "—".' },
       { titulo: 'Status dos itens', texto: 'Cada item tem seu próprio status independente: Criado → Aguard. compra → Em produção → Em transporte → Recebido → Conferido OK → Apto entrega → Entregue. Atualize conforme a produção avança.' },
       { titulo: 'Status automático: Apto p/ agendamento', texto: 'Quando todos os itens do pedido são marcados como "Apto entrega", o status do pedido muda automaticamente para "Apto p/ agendamento". Isso sinaliza que o pedido pode ser incluído na programação de entregas sem intervenção manual.' },
       { titulo: 'NF / Romaneio de entrega', texto: 'No cabeçalho do pedido há um campo para registrar o documento fiscal. Escolha o tipo (NF para Nota Fiscal ou Romaneio para entregas sem NF) e informe o número. Esse número aparece no resumo impresso do pedido.' },
@@ -169,7 +171,7 @@ const SECOES: Secao[] = [
       { titulo: 'Imprimir observações', texto: 'Clique em "📋 Observações" para imprimir a folha de observações da equipe — lista cada entrega com endereço completo, içamento destacado em laranja e todas as observações especiais. Ideal para a equipe em campo.' },
       { titulo: 'Abrir rota no Maps', texto: 'Clique em "📍 Abrir rota no Maps" para abrir o Google Maps com a rota otimizada do dia, partindo do endereço de saída configurado em Configurações.' },
       { titulo: 'Responsável / montador', texto: 'No formulário de agendamento há um campo "Responsável / montador" para registrar o nome de quem realizará a entrega ou montagem. Esse nome aparece no cartão da entrega (ícone 👷) e é listado automaticamente na linha EQUIPE da folha de sequência do motorista.' },
-      { titulo: 'Marcar como realizada', texto: 'Após a entrega, abra o registro e marque como "Realizada" informando a data de entrega efetiva. Quando não há outras entregas pendentes do mesmo pedido, o pedido é marcado automaticamente como "Entregue".' },
+      { titulo: 'Marcar como realizada', texto: 'Após a entrega, abra o registro e marque como "Realizada" informando a data de entrega efetiva. Quando não há outras entregas pendentes do mesmo pedido, o pedido é marcado automaticamente como "Entregue" e a data de entrega é registrada automaticamente.' },
       { titulo: 'Reagendar', texto: 'Se a entrega não for realizada, marque como "Reagendada" informando o motivo. O motivo aparece no cartão da lista para referência.' },
     ],
     dicas: [
@@ -237,10 +239,12 @@ const SECOES: Secao[] = [
     descricao: 'Personalizações do sistema para a operação da empresa.',
     passos: [
       { titulo: 'Endereço de saída', texto: 'Configure o endereço de onde a equipe parte para as entregas (endereço da loja, depósito ou galpão). Esse endereço é o ponto de partida da rota gerada no Google Maps pelo módulo de Entregas.' },
+      { titulo: 'Monitor de banco de dados', texto: 'Exibe o uso atual do banco de dados Supabase em relação ao limite de 500 MB do plano gratuito. A barra de progresso fica verde até 70%, amarela entre 70% e 90%, e vermelha acima de 90%. Um aviso automático aparece quando o uso está elevado.' },
       { titulo: 'Perfil do usuário logado', texto: 'Atualize seu próprio nome e cargo que aparecem no rodapé do menu lateral. Cada usuário pode editar seu próprio perfil.' },
     ],
     dicas: [
       'O endereço de saída é compartilhado entre todos os usuários — configure uma vez e vale para toda a equipe.',
+      'Acompanhe o uso do banco de dados em Configurações para saber quando o limite está se aproximando.',
     ],
   },
 ]
