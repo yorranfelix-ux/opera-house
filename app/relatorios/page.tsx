@@ -31,6 +31,40 @@ function exportarCSV(linhas: string[][], nomeArquivo: string) {
   URL.revokeObjectURL(url)
 }
 
+function abrirJanelaPDF(titulo: string, periodoLabel: string, html: string) {
+  const w = window.open('', '_blank')
+  if (!w) return
+  w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head>
+    <meta charset="UTF-8">
+    <title>${titulo} — Opera House</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a2e; padding: 32px; }
+      h1 { font-size: 18px; color: #1a1a2e; margin-bottom: 4px; }
+      .sub { font-size: 11px; color: #888; margin-bottom: 24px; }
+      table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+      th { background: #f7f6f3; font-size: 10px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.4px; padding: 6px 10px; text-align: left; border-bottom: 1px solid #e8e7e3; }
+      td { padding: 8px 10px; border-bottom: 0.5px solid #f0efe9; font-size: 12px; }
+      tr:nth-child(even) { background: #faf9f7; }
+      .num { text-align: right; }
+      .card-row { display: flex; gap: 16px; margin-bottom: 24px; }
+      .card { border: 1px solid #e8e7e3; border-radius: 8px; padding: 14px 18px; flex: 1; }
+      .card-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+      .card-value { font-size: 24px; font-weight: 600; }
+      .card-sub { font-size: 11px; color: #888; margin-top: 4px; }
+      .bar-bg { display: inline-block; width: 60px; height: 6px; background: #f0efe9; border-radius: 3px; vertical-align: middle; }
+      .bar-fill { display: inline-block; height: 6px; border-radius: 3px; }
+      @media print { body { padding: 16px; } @page { margin: 1.5cm; } }
+    </style>
+  </head><body>
+    <h1>${titulo}</h1>
+    <p class="sub">Opera House · ${periodoLabel} · Gerado em ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+    ${html}
+    <script>window.onload = () => { window.print() }<\/script>
+  </body></html>`)
+  w.document.close()
+}
+
 type Aba = 'ats' | 'entregas' | 'ocorrencias' | 'pedidos' | 'prazos' | 'profissionais' | 'fornecedores' | 'tratamentos'
 type Periodo = '6m' | '12m' | 'ano_atual' | 'ano_anterior' | 'todos'
 
@@ -229,6 +263,57 @@ export default function Relatorios() {
     })))
   }
 
+  function gerarPDF() {
+    const pl = PERIODO_LABEL[periodo]
+    const pct = (v: number, total: number) => total > 0 ? Math.round(v / total * 100) + '%' : '—'
+    const barHtml = (v: number, total: number, cor: string) =>
+      `<span class="bar-bg"><span class="bar-fill" style="width:${pct(v,total).replace('%','') === '—' ? 0 : pct(v,total).replace('%','')}%;background:${cor}"></span></span> ${pct(v, total)}`
+
+    let html = ''
+
+    if (aba === 'pedidos') {
+      html += `<table><thead><tr><th>Mês</th><th class="num">Novos</th><th class="num">Entregues</th></tr></thead><tbody>
+        ${pedidosMes.map(p => `<tr><td>${mesLabel(p.mes)}</td><td class="num">${p.novos}</td><td class="num">${p.entregues}</td></tr>`).join('')}
+      </tbody></table>
+      <table><thead><tr><th>Status</th><th class="num">Total</th><th class="num">%</th></tr></thead><tbody>
+        ${pedidosStatus.map(p => `<tr><td>${STATUS_PEDIDO_LABEL[p.status] || p.status}</td><td class="num">${p.total}</td><td class="num">${pct(p.total, totalPedidos)}</td></tr>`).join('')}
+      </tbody></table>`
+    } else if (aba === 'entregas') {
+      html += `<table><thead><tr><th>Mês</th><th class="num">Agendadas</th><th class="num">Realizadas</th><th class="num">Taxa</th></tr></thead><tbody>
+        ${entregasMes.map(e => `<tr><td>${mesLabel(e.mes)}</td><td class="num">${e.total}</td><td class="num">${e.realizadas}</td><td class="num">${e.total > 0 ? Math.round(e.realizadas / e.total * 100) + '%' : '—'}</td></tr>`).join('')}
+      </tbody></table>`
+    } else if (aba === 'prazos') {
+      html += `<div class="card-row">
+        <div class="card"><div class="card-label">Tempo médio venda → entrega</div><div class="card-value" style="color:#185FA5">${tempoMedioEntrega !== null ? tempoMedioEntrega + ' dias' : '—'}</div></div>
+        <div class="card"><div class="card-label">Dentro do prazo</div><div class="card-value" style="color:#27500A">${dentroPrazo}</div><div class="card-sub">${pct(dentroPrazo, dentroPrazo + foraPrazo)}</div></div>
+        <div class="card"><div class="card-label">Fora do prazo</div><div class="card-value" style="color:#A32D2D">${foraPrazo}</div><div class="card-sub">${pct(foraPrazo, dentroPrazo + foraPrazo)}</div></div>
+      </div>`
+    } else if (aba === 'profissionais') {
+      html += `<table><thead><tr><th>Profissional</th><th class="num">Total</th><th class="num">Entregues</th><th class="num">%</th></tr></thead><tbody>
+        ${porProfissional.map(p => `<tr><td>${p.nome}</td><td class="num">${p.total}</td><td class="num">${p.entregues}</td><td class="num">${pct(p.total, totalPedidos)}</td></tr>`).join('')}
+      </tbody></table>`
+    } else if (aba === 'ats') {
+      html += `<table><thead><tr><th>Status</th><th class="num">Total</th><th class="num">%</th></tr></thead><tbody>
+        ${resumoATs.map(r => `<tr><td>${STATUS_AT_LABEL[r.status] || r.status}</td><td class="num">${r.total}</td><td class="num">${pct(r.total, totalATs)}</td></tr>`).join('')}
+      </tbody></table>`
+    } else if (aba === 'fornecedores') {
+      html += `<table><thead><tr><th>Fornecedor</th><th class="num">Total ATs</th><th class="num">%</th></tr></thead><tbody>
+        ${atsFornecedor.map(f => `<tr><td>${f.nome}</td><td class="num">${f.total}</td><td class="num">${pct(f.total, totalATs)}</td></tr>`).join('')}
+      </tbody></table>`
+    } else if (aba === 'ocorrencias') {
+      html += `<table><thead><tr><th>Tipo</th><th class="num">Total</th><th class="num">Abertas</th><th class="num">%</th></tr></thead><tbody>
+        ${ocorrenciasTipo.map(o => `<tr><td>${o.tipo}</td><td class="num">${o.total}</td><td class="num">${o.abertas}</td><td class="num">${pct(o.total, totalOcorrencias)}</td></tr>`).join('')}
+      </tbody></table>`
+    } else if (aba === 'tratamentos') {
+      html += `<table><thead><tr><th>Tratamento</th><th class="num">Total itens</th><th class="num">Já aptos</th><th class="num">% do total</th></tr></thead><tbody>
+        ${tratamentos.map(t => `<tr><td>${t.label}</td><td class="num">${t.total}</td><td class="num">${t.aptos}</td><td class="num">${pct(t.total, totalItens)}</td></tr>`).join('')}
+      </tbody></table><p style="font-size:11px;color:#888">Total de itens cadastrados: ${totalItens}</p>`
+    }
+
+    const nomeAba = abas.find(a => a.id === aba)?.label || aba
+    abrirJanelaPDF(`Relatório: ${nomeAba}`, pl, html)
+  }
+
   const abas: { id: Aba; label: string }[] = [
     { id: 'pedidos', label: 'Pedidos' },
     { id: 'entregas', label: 'Entregas' },
@@ -260,9 +345,16 @@ export default function Relatorios() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
           <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Relatórios</span>
-          <button onClick={buscar} style={{ padding: '6px 14px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>
-            Atualizar
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={buscar} style={{ padding: '6px 14px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>
+              Atualizar
+            </button>
+            {!loading && (
+              <button onClick={gerarPDF} style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>
+                🖨️ Exportar PDF
+              </button>
+            )}
+          </div>
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
