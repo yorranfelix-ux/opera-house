@@ -12,6 +12,7 @@ interface Pedido {
   profissional_id: string
   data_venda: string
   prazo_prometido: string
+  data_entrega: string | null
   status: string
   semaforo: string
   observacoes_gerais: string
@@ -160,7 +161,11 @@ export default function Pedidos() {
     if (!form.data_venda) return alert('Data da venda é obrigatória')
     setSalvando(true)
     try {
-      const payload = { ...form, profissional_id: form.profissional_id || null }
+      const pedidoAtual = pedidos.find(p => p.id === editandoId)
+      const payload: any = { ...form, profissional_id: form.profissional_id || null }
+      if (editandoId && form.status === 'entregue' && !pedidoAtual?.data_entrega) {
+        payload.data_entrega = new Date().toISOString().split('T')[0]
+      }
       if (editandoId) {
         const { error } = await supabase.from('pedidos').update(payload).eq('id', editandoId)
         if (error) return alert('Erro ao atualizar: ' + error.message)
@@ -304,13 +309,20 @@ export default function Pedidos() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: SEMAFORO_COLOR[p.semaforo] || '#888' }} />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '10px', fontWeight: '500', background: STATUS_COLOR[p.status]?.bg || '#f0efe9', color: STATUS_COLOR[p.status]?.color || '#555' }}>
-                    {STATUS_LABEL[p.status] || p.status}
-                  </span>
-                  {pedidosComAT.has(p.id) && (
-                    <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '6px', fontWeight: '500', background: '#FCEBEB', color: '#791F1F' }}>
-                      AT ativa
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '10px', fontWeight: '500', background: STATUS_COLOR[p.status]?.bg || '#f0efe9', color: STATUS_COLOR[p.status]?.color || '#555' }}>
+                      {STATUS_LABEL[p.status] || p.status}
+                    </span>
+                    {pedidosComAT.has(p.id) && (
+                      <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '6px', fontWeight: '500', background: '#FCEBEB', color: '#791F1F' }}>
+                        AT ativa
+                      </span>
+                    )}
+                  </div>
+                  {p.data_entrega && (
+                    <span style={{ fontSize: '10px', color: '#888' }}>
+                      Entregue {new Date(p.data_entrega + 'T12:00:00').toLocaleDateString('pt-BR')}
                     </span>
                   )}
                 </div>

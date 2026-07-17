@@ -17,6 +17,7 @@ interface Pedido {
   observacoes_gerais: string
   tipo_documento: string | null
   numero_documento: string | null
+  data_entrega: string | null
   status_pagamento: string | null
   observacao_pagamento: string | null
   clientes: { nome: string; endereco: string; numero: string; cidade: string; estado: string; telefone: string }
@@ -727,13 +728,27 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                 )}
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '11px', color: '#6a6a8a', marginBottom: '4px' }}>Prazo prometido</div>
-                <div style={{ fontSize: '15px', fontWeight: '500', color: '#C9A84C' }}>
-                  {pedido.prazo_prometido ? new Date(pedido.prazo_prometido + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
-                </div>
-                <div style={{ fontSize: '11px', color: '#6a6a8a', marginTop: '4px' }}>
-                  Venda: {pedido.data_venda ? new Date(pedido.data_venda + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
-                </div>
+                {pedido.data_entrega ? (
+                  <>
+                    <div style={{ fontSize: '11px', color: '#6a6a8a', marginBottom: '4px' }}>Data de entrega</div>
+                    <div style={{ fontSize: '15px', fontWeight: '500', color: '#7BC67E' }}>
+                      {new Date(pedido.data_entrega + 'T12:00:00').toLocaleDateString('pt-BR')}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#6a6a8a', marginTop: '4px' }}>
+                      Prazo: {pedido.prazo_prometido ? new Date(pedido.prazo_prometido + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: '11px', color: '#6a6a8a', marginBottom: '4px' }}>Prazo prometido</div>
+                    <div style={{ fontSize: '15px', fontWeight: '500', color: '#C9A84C' }}>
+                      {pedido.prazo_prometido ? new Date(pedido.prazo_prometido + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#6a6a8a', marginTop: '4px' }}>
+                      Venda: {pedido.data_venda ? new Date(pedido.data_venda + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             {pedido.observacoes_gerais && (

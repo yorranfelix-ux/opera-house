@@ -123,6 +123,7 @@ export default function Entregas() {
     const { data, error } = await supabase
       .from('entregas')
       .select('*, motivo_reagendamento, data_anterior, pedidos(numero_pedido, clientes(nome, cidade, estado, endereco, numero, bairro, cep, telefone))')
+      .range(0, 9999)
       .order('data_agendada', { ascending: true })
     if (error) console.error('Erro ao buscar entregas:', error)
     setEntregas((data as unknown as Entrega[]) || [])
@@ -133,6 +134,7 @@ export default function Entregas() {
       .from('pedidos')
       .select('id, numero_pedido, clientes(nome, cidade)')
       .not('status', 'in', '(entregue,cancelado)')
+      .range(0, 9999)
       .order('numero_pedido', { ascending: false })
     if (error) console.error('Erro ao buscar pedidos (entregas):', error)
     let lista = (data as unknown as Pedido[]) || []
@@ -215,7 +217,7 @@ export default function Entregas() {
             .in('status', ['agendada', 'reagendada'])
             .neq('id', editandoId)
           if (!pendentes || pendentes.length === 0) {
-            await supabase.from('pedidos').update({ status: 'entregue' }).eq('id', form.pedido_id)
+            await supabase.from('pedidos').update({ status: 'entregue', data_entrega: new Date().toISOString().split('T')[0] }).eq('id', form.pedido_id)
             await registrarHistorico({ tipo: 'pedido_editado', descricao: `Pedido marcado como entregue automaticamente após entrega realizada`, pedidoId: form.pedido_id })
           }
         }

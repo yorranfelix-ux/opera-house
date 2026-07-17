@@ -9,8 +9,23 @@ export default function Configuracoes() {
   const [nomeSaida, setNomeSaida] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [salvo, setSalvo] = useState(false)
+  const [dbSize, setDbSize] = useState<{ mb: number; pct: number } | null>(null)
 
-  useEffect(() => { carregar() }, [])
+  useEffect(() => {
+    carregar()
+    buscarDbSize()
+  }, [])
+
+  async function buscarDbSize() {
+    try {
+      const res = await fetch('/api/db-size')
+      if (!res.ok) return
+      const { bytes } = await res.json()
+      if (!bytes) return
+      const mb = bytes / (1024 * 1024)
+      setDbSize({ mb, pct: (mb / 500) * 100 })
+    } catch {}
+  }
 
   async function carregar() {
     const { data } = await supabase
@@ -92,6 +107,43 @@ export default function Configuracoes() {
                 >
                   {salvo ? '✓ Salvo' : salvando ? 'Salvando...' : 'Salvar configurações'}
                 </button>
+              </div>
+            </div>
+
+            <div style={{ background: '#fff', borderRadius: '14px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '0.5px solid #f0efe9', background: '#f7f6f3' }}>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Banco de dados</div>
+                <div style={{ fontSize: '12px', color: '#888', marginTop: '3px' }}>Uso do plano gratuito Supabase (limite: 500 MB)</div>
+              </div>
+              <div style={{ padding: '20px' }}>
+                {dbSize ? (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                      <div style={{ flex: 1, height: '8px', background: '#f0efe9', borderRadius: '99px', overflow: 'hidden' }}>
+                        <div style={{
+                          height: '100%',
+                          width: `${Math.min(dbSize.pct, 100)}%`,
+                          borderRadius: '99px',
+                          background: dbSize.pct >= 90 ? '#A32D2D' : dbSize.pct >= 70 ? '#BA7517' : '#3B6D11',
+                          transition: 'width 0.5s',
+                        }} />
+                      </div>
+                      <span style={{ fontSize: '13px', fontWeight: '500', color: dbSize.pct >= 90 ? '#A32D2D' : dbSize.pct >= 70 ? '#BA7517' : '#3B6D11', whiteSpace: 'nowrap' }}>
+                        {dbSize.pct.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#888' }}>
+                      {dbSize.mb.toFixed(1)} MB utilizados de 500 MB
+                    </div>
+                    {dbSize.pct >= 70 && (
+                      <div style={{ marginTop: '10px', padding: '8px 12px', borderRadius: '8px', background: dbSize.pct >= 90 ? '#FCEBEB' : '#FFF3CD', fontSize: '12px', color: dbSize.pct >= 90 ? '#791F1F' : '#7A5800' }}>
+                        {dbSize.pct >= 90 ? '⚠️ Banco próximo do limite. Considere limpar dados ou migrar para o plano pago.' : '⚠️ Uso elevado. Fique atento ao limite.'}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ fontSize: '13px', color: '#aaa' }}>Carregando...</div>
+                )}
               </div>
             </div>
 
