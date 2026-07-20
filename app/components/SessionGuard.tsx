@@ -52,14 +52,14 @@ export default function SessionGuard() {
           Sua sessão expirou. Recarregue a página para continuar.
         </div>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => window.location.href = '/'}
           style={{
             padding: '10px 28px', borderRadius: '8px', border: 'none',
             background: '#1a1a2e', color: '#C9A84C',
             fontSize: '13px', fontWeight: '500', cursor: 'pointer',
           }}
         >
-          Recarregar página
+          Ir para o login
         </button>
       </div>
     </div>
