@@ -1,25 +1,35 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { supabase } from '../lib/supabase'
 
 export default function SessionGuard() {
+  const pathname = usePathname()
   const [expirou, setExpirou] = useState(false)
 
   useEffect(() => {
+    // Não atuar na página de login
+    if (pathname === '/' || pathname === '/login') return
+
+    let estavaLogado = false
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-        if (event === 'SIGNED_OUT') setExpirou(true)
-      }
+      if (event === 'SIGNED_IN') estavaLogado = true
+      if (event === 'SIGNED_OUT' && estavaLogado) setExpirou(true)
     })
 
-    // Check if current session is already expired
+    // Verificar sessão atual — só marcar expirado se havia sessão antes
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) setExpirou(true)
+      if (session) {
+        estavaLogado = true
+      }
+      // Se não há sessão e não é a tela de login, é porque expirou durante o uso
+      // Mas só mostramos o aviso se o usuário estava logado nesta sessão do navegador
     })
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [pathname])
 
   if (!expirou) return null
 
