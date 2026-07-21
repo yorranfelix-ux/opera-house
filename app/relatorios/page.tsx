@@ -65,7 +65,7 @@ function abrirJanelaPDF(titulo: string, periodoLabel: string, html: string) {
   w.document.close()
 }
 
-type Aba = 'ats' | 'entregas' | 'ocorrencias' | 'pedidos' | 'prazos' | 'profissionais' | 'fornecedores' | 'tratamentos'
+type Aba = 'ats' | 'entregas' | 'ocorrencias' | 'pedidos' | 'prazos' | 'profissionais' | 'fornecedores' | 'tratamentos' | 'pendencias'
 type Periodo = '6m' | '12m' | 'ano_atual' | 'ano_anterior' | 'todos'
 
 const PERIODO_LABEL: Record<Periodo, string> = {
@@ -87,6 +87,8 @@ export default function Relatorios() {
   const [rawOcorrencias, setRawOcorrencias] = useState<any[]>([])
   const [rawPedidos, setRawPedidos] = useState<any[]>([])
   const [rawItens, setRawItens] = useState<any[]>([])
+  const [rawPendencias, setRawPendencias] = useState<any[]>([])
+  const [expandidoForn, setExpandidoForn] = useState<string | null>(null)
 
   // Computed stats
   const [resumoATs, setResumoATs] = useState<{ status: string; total: number }[]>([])
@@ -155,18 +157,20 @@ export default function Relatorios() {
 
   async function buscar() {
     setLoading(true)
-    const [atsRes, entregasRes, ocorrenciasRes, pedidosRes, itensRes] = await Promise.all([
+    const [atsRes, entregasRes, ocorrenciasRes, pedidosRes, itensRes, pendenciasRes] = await Promise.all([
       supabase.from('assistencias_tecnicas').select('status, created_at, itens_pedido(fornecedores(nome_fantasia, razao_social))').range(0, 9999),
       supabase.from('entregas').select('status, data_agendada, data_realizada').range(0, 9999),
       supabase.from('ocorrencias').select('tipo, status, created_at').range(0, 9999),
       supabase.from('pedidos').select('status, data_venda, data_entrega, prazo_prometido, created_at, profissionais(nome)').range(0, 9999),
       supabase.from('itens_pedido').select('requer_icamento, requer_tecido_fornecido, requer_retirada_loja, requer_higienizacao, requer_impermeabilizacao, apto_entrega, status').range(0, 9999),
+      supabase.from('itens_pedido').select('id, descricao, status, previsao_chegada, pedido_id, pedidos(numero_pedido, status, clientes(nome)), fornecedores(nome_fantasia, razao_social)').not('status', 'in', '(entregue,cancelado)').not('fornecedor_id', 'is', null).range(0, 9999),
     ])
     setRawATs(atsRes.data || [])
     setRawEntregas(entregasRes.data || [])
     setRawOcorrencias(ocorrenciasRes.data || [])
     setRawPedidos(pedidosRes.data || [])
     setRawItens(itensRes.data || [])
+    setRawPendencias((pendenciasRes as any).data || [])
     setLoading(false)
   }
 
@@ -314,6 +318,28 @@ export default function Relatorios() {
     abrirJanelaPDF(`Relatório: ${nomeAba}`, pl, html)
   }
 
+  // Agrupar pendências por fornecedor
+  const pendenciasPorFornecedor = (() => {
+    const mapa: Record<string, { nome: string; pedidos: Set<string>; itens: { descricao: string; status: string; previsao: string; numeroPedido: string; cliente: string; pedidoId: string }[] }> = {}
+    rawPendencias.forEach((item: any) => {
+      const pedidoStatus = item.pedidos?.status || ''
+      if (['entregue', 'cancelado'].includes(pedidoStatus)) return
+      const nomeForn = item.fornecedores?.nome_fantasia || item.fornecedores?.razao_social || 'Sem nome'
+      if (!mapa[nomeForn]) mapa[nomeForn] = { nome: nomeForn, pedidos: new Set(), itens: [] }
+      mapa[nomeForn].pedidos.add(item.pedido_id)
+      mapa[nomeForn].itens.push({
+        descricao: item.descricao || '—',
+        status: item.status || '—',
+        previsao: item.previsao_chegada || '',
+        numeroPedido: item.pedidos?.numero_pedido || '—',
+        cliente: item.pedidos?.clientes?.nome || '—',
+        pedidoId: item.pedido_id,
+      })
+    })
+    return Object.values(mapa)
+      .sort((a, b) => b.pedidos.size - a.pedidos.size)
+  })()
+
   const abas: { id: Aba; label: string }[] = [
     { id: 'pedidos', label: 'Pedidos' },
     { id: 'entregas', label: 'Entregas' },
@@ -321,6 +347,7 @@ export default function Relatorios() {
     { id: 'profissionais', label: 'Profissionais' },
     { id: 'ats', label: 'ATs' },
     { id: 'fornecedores', label: 'ATs p/ Fornecedor' },
+    { id: 'pendencias', label: 'Pedidos p/ Fornecedor' },
     { id: 'ocorrencias', label: 'Ocorrências' },
     { id: 'tratamentos', label: 'Tratamentos' },
   ]
@@ -622,6 +649,71 @@ export default function Relatorios() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* === PEDIDOS P/ FORNECEDOR === */}
+              {aba === 'pendencias' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ padding: '10px 16px', background: '#fff', borderRadius: '10px', border: '0.5px solid #e8e7e3', fontSize: '12px', color: '#888', marginBottom: '4px' }}>
+                    Mostra apenas fornecedores com itens pendentes em pedidos ativos — estado atual, independente do período selecionado.
+                    {pendenciasPorFornecedor.length === 0 && <span style={{ color: '#27500A', fontWeight: '500', marginLeft: '8px' }}>✓ Nenhuma pendência encontrada.</span>}
+                  </div>
+
+                  {pendenciasPorFornecedor.map(forn => {
+                    const aberto = expandidoForn === forn.nome
+                    const pedidosUnicos = Array.from(forn.pedidos)
+                    return (
+                      <div key={forn.nome} style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
+                        <button
+                          onClick={() => setExpandidoForn(aberto ? null : forn.nome)}
+                          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '14px', fontWeight: '500', color: '#1a1a2e' }}>{forn.nome}</div>
+                            <div style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>
+                              {pedidosUnicos.length} pedido{pedidosUnicos.length !== 1 ? 's' : ''} em aberto · {forn.itens.length} item{forn.itens.length !== 1 ? 'ns' : ''}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <span style={{ background: '#FFF3CD', color: '#7a5800', fontSize: '11px', fontWeight: '600', padding: '3px 10px', borderRadius: '99px' }}>
+                              {pedidosUnicos.length} pedido{pedidosUnicos.length !== 1 ? 's' : ''}
+                            </span>
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#aaa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                              style={{ transform: aberto ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 200ms', flexShrink: 0 }}>
+                              <polyline points="2,4 7,10 12,4"/>
+                            </svg>
+                          </div>
+                        </button>
+
+                        {aberto && (
+                          <div style={{ borderTop: '0.5px solid #f0efe9' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 120px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
+                              <span>Pedido</span><span>Cliente</span><span>Item</span><span style={{ textAlign: 'right' }}>Previsão chegada</span>
+                            </div>
+                            {forn.itens.map((item, i) => (
+                              <div key={i} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 120px', padding: '11px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+                                <span style={{ fontSize: '13px', fontWeight: '600', color: '#C9A84C' }}>{item.numeroPedido}</span>
+                                <span style={{ fontSize: '13px', color: '#555' }}>{item.cliente}</span>
+                                <span style={{ fontSize: '12px', color: '#888' }}>{item.descricao}</span>
+                                <span style={{ fontSize: '12px', color: item.previsao ? '#555' : '#bbb', textAlign: 'right' }}>
+                                  {item.previsao ? new Date(item.previsao + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
+                                </span>
+                              </div>
+                            ))}
+                            <div style={{ padding: '10px 16px', borderTop: '0.5px solid #f0efe9', background: '#fffbf0' }}>
+                              <button onClick={() => exportarCSV(
+                                [['Pedido', 'Cliente', 'Item', 'Previsão chegada'], ...forn.itens.map(i => [i.numeroPedido, i.cliente, i.descricao, i.previsao ? new Date(i.previsao + 'T12:00:00').toLocaleDateString('pt-BR') : ''])],
+                                `pendencias_${forn.nome.replace(/\s+/g, '_')}.csv`
+                              )} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', cursor: 'pointer', color: '#555' }}>
+                                Exportar CSV deste fornecedor
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
 
