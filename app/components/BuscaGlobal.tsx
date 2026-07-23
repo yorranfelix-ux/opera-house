@@ -52,11 +52,11 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
     setCarregando(true)
 
     async function buscar() {
-      const [pedidosRes, clientesRes, fornecedoresRes, atsRes] = await Promise.all([
+      const [pedidosRes, clientesRes, fornecedoresRes, atsRes, itensRes] = await Promise.all([
         supabase
           .from('pedidos')
-          .select('id, numero_pedido, status, clientes(nome, cidade)')
-          .or(`numero_pedido.ilike.%${q}%`)
+          .select('id, numero_pedido, status, numero_documento, tipo_documento, clientes(nome, cidade)')
+          .or(`numero_pedido.ilike.%${q}%,numero_documento.ilike.%${q}%`)
           .limit(5),
         supabase
           .from('clientes')
@@ -73,6 +73,11 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
           .select('id, numero_at, descricao_problema, pedidos(numero_pedido, clientes(nome))')
           .or(`numero_at.ilike.%${q}%,descricao_problema.ilike.%${q}%`)
           .limit(4),
+        supabase
+          .from('itens_pedido')
+          .select('id, descricao, pedido_id, pedidos(id, numero_pedido, status, clientes(nome, cidade))')
+          .ilike('descricao', `%${q}%`)
+          .limit(5),
       ])
 
       if (cancelado) return
@@ -81,6 +86,7 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
       if (clientesRes.error) console.error('BuscaGlobal clientes:', clientesRes.error)
       if (fornecedoresRes.error) console.error('BuscaGlobal fornecedores:', fornecedoresRes.error)
       if (atsRes.error) console.error('BuscaGlobal ATs:', atsRes.error)
+      if (itensRes.error) console.error('BuscaGlobal itens:', itensRes.error)
 
       const novosGrupos: GrupoResultado[] = []
 
@@ -89,12 +95,37 @@ function BuscaModal({ onClose }: { onClose: () => void }) {
           label: 'Pedidos',
           items: pedidosRes.data.map((p: any) => {
             const cliente = Array.isArray(p.clientes) ? p.clientes[0] : p.clientes
+            const docLabel = p.numero_documento ? ` · ${p.tipo_documento || 'NF'} ${p.numero_documento}` : ''
             return {
               id: p.id,
-              titulo: `Pedido ${p.numero_pedido}`,
+              titulo: `Pedido ${p.numero_pedido}${docLabel}`,
               detalhe: cliente ? `${cliente.nome} · ${cliente.cidade}` : undefined,
               url: `/pedidos/${p.id}`,
               _status: p.status,
+            }
+          }),
+        })
+      }
+
+      if (itensRes.data && itensRes.data.length > 0) {
+        // Deduplicar por pedido_id para não mostrar o mesmo pedido várias vezes
+        const pedidosVistos = new Set<string>()
+        const itensFiltrados = itensRes.data.filter((i: any) => {
+          if (pedidosVistos.has(i.pedido_id)) return false
+          pedidosVistos.add(i.pedido_id)
+          return true
+        })
+        novosGrupos.push({
+          label: 'Itens de pedido',
+          items: itensFiltrados.map((i: any) => {
+            const pedido = Array.isArray(i.pedidos) ? i.pedidos[0] : i.pedidos
+            const cliente = pedido?.clientes ? (Array.isArray(pedido.clientes) ? pedido.clientes[0] : pedido.clientes) : null
+            return {
+              id: i.id,
+              titulo: i.descricao,
+              detalhe: pedido ? `Pedido ${pedido.numero_pedido}${cliente ? ' · ' + cliente.nome : ''}` : undefined,
+              url: pedido ? `/pedidos/${pedido.id}` : '/pedidos',
+              _status: pedido?.status,
             }
           }),
         })
