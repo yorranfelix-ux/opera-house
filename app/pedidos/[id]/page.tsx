@@ -1058,7 +1058,10 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                 </div>
 
                 <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <input type="checkbox" id="apto" checked={itemForm.apto_entrega} onChange={e => setItemForm({ ...itemForm, apto_entrega: e.target.checked })} />
+                  <input type="checkbox" id="apto" checked={itemForm.apto_entrega} onChange={e => {
+                    const marcado = e.target.checked
+                    setItemForm({ ...itemForm, apto_entrega: marcado, status: marcado ? 'apto_entrega' : itemForm.status })
+                  }} />
                   <label htmlFor="apto" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Apto para entrega</label>
                 </div>
               </>
