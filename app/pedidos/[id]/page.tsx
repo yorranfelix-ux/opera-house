@@ -1042,7 +1042,10 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
               <>
                 <div style={{ marginBottom: '12px' }}>
                   <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Status</div>
-                  <select value={itemForm.status} onChange={e => setItemForm({ ...itemForm, status: e.target.value })}
+                  <select value={itemForm.status} onChange={e => {
+                    const novoStatus = e.target.value
+                    setItemForm({ ...itemForm, status: novoStatus, apto_entrega: novoStatus === 'apto_entrega' ? true : novoStatus === 'entregue' ? true : itemForm.apto_entrega })
+                  }}
                     style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
                     {Object.entries(STATUS_ITEM).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                   </select>
