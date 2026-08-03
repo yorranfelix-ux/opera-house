@@ -17,9 +17,9 @@ export const metadata: Metadata = {
   title: "Opera House",
   description: "Sistema operacional Delinear Móveis",
   icons: {
-    icon: "/icon.svg",
-    shortcut: "/icon.svg",
-    apple: "/icon.svg",
+    icon: "/icon.jpg",
+    shortcut: "/icon.jpg",
+    apple: "/icon.jpg",
   },
 };
 
