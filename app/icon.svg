@@ -5,10 +5,10 @@
   <rect x="8" y="8" width="84" height="84" fill="white"/>
   <!-- Quadrado dourado interno -->
   <rect x="16" y="16" width="68" height="68" fill="#B8924A"/>
-  <!-- Barra esquerda do h -->
-  <rect x="27" y="24" width="10" height="46" fill="white"/>
-  <!-- Crossbar horizontal -->
-  <rect x="27" y="48" width="38" height="9" fill="white"/>
+  <!-- Barra esquerda (centralizada: h total 38x46, centro do quadrado em 50,50) -->
+  <rect x="31" y="27" width="10" height="46" fill="white"/>
+  <!-- Crossbar -->
+  <rect x="31" y="53" width="38" height="9" fill="white"/>
   <!-- Perna direita -->
-  <rect x="55" y="48" width="10" height="22" fill="white"/>
+  <rect x="59" y="53" width="10" height="20" fill="white"/>
 </svg>
