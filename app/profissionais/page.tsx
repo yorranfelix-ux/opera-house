@@ -197,7 +197,7 @@ export default function Profissionais() {
           </div>
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px 140px 60px 130px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px 140px 70px 175px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
               <span>Nome</span><span>Tipo</span><span>Telefone</span><span>E-mail</span><span>Status</span><span></span>
             </div>
 
@@ -205,7 +205,7 @@ export default function Profissionais() {
             {!loading && filtrados.length === 0 && <div style={{ padding: '24px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhum profissional cadastrado.</div>}
 
             {filtrados.map((p, i) => (
-              <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px 140px 60px 130px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+              <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 160px 140px 140px 70px 175px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{p.nome}</div>
                   {p.observacoes && <div style={{ fontSize: '11px', color: '#aaa', marginTop: '2px' }}>{p.observacoes}</div>}
