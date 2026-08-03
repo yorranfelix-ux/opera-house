@@ -45,6 +45,7 @@ export default function Profissionais() {
   const [filtroAtivo, setFiltroAtivo] = useState<'ativos' | 'inativos' | 'todos'>('ativos')
   const [salvando, setSalvando] = useState(false)
   const [aniversariantes, setAniversariantes] = useState<string[]>([])
+  const [visualizandoId, setVisualizandoId] = useState<string | null>(null)
 
   useEffect(() => { buscar() }, [])
 
@@ -219,6 +220,7 @@ export default function Profissionais() {
                   {p.ativo ? 'Ativo' : 'Inativo'}
                 </span>
                 <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={() => setVisualizandoId(p.id)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>Ver</button>
                   <button onClick={() => abrirEdicao(p)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>Editar</button>
                   <button onClick={() => setExcluindoId(p.id)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #f0c0c0', background: '#FCEBEB', fontSize: '12px', cursor: 'pointer', color: '#791F1F' }}>Excluir</button>
                 </div>
@@ -227,6 +229,66 @@ export default function Profissionais() {
           </div>
         </div>
       </div>
+
+      {visualizandoId && (() => {
+        const p = profissionais.find(x => x.id === visualizandoId)!
+        const linha = (label: string, valor: string | null | undefined) => valor ? (
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '2px' }}>{label}</div>
+            <div style={{ fontSize: '13px', color: '#1a1a2e' }}>{valor}</div>
+          </div>
+        ) : null
+        const temDadosBancarios = p.banco || p.agencia || p.conta || p.chave_pix || p.nome_titular || p.cpf_cnpj_titular
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+            <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '480px', maxHeight: '88vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                <div>
+                  <div style={{ fontSize: '17px', fontWeight: '600', color: '#1a1a2e' }}>{p.nome}</div>
+                  <div style={{ fontSize: '13px', color: '#888', marginTop: '2px' }}>{p.tipo}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '8px', fontWeight: '500', background: p.ativo ? '#EAF3DE' : '#f0efe9', color: p.ativo ? '#27500A' : '#888' }}>
+                    {p.ativo ? 'Ativo' : 'Inativo'}
+                  </span>
+                  <button onClick={() => setVisualizandoId(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+                </div>
+              </div>
+
+              <div style={{ borderTop: '0.5px solid #f0efe9', paddingTop: '16px', marginBottom: '8px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Contato</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
+                  {linha('Telefone', p.telefone)}
+                  {linha('WhatsApp', p.whatsapp)}
+                  {linha('E-mail', p.email)}
+                  {linha('Data de nascimento', p.data_nascimento ? new Date(p.data_nascimento + 'T12:00:00').toLocaleDateString('pt-BR') : null)}
+                </div>
+                {linha('Observações', p.observacoes)}
+              </div>
+
+              {temDadosBancarios && (
+                <div style={{ borderTop: '0.5px solid #f0efe9', paddingTop: '16px', marginTop: '8px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Dados Bancários</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
+                    {linha('Nome do titular', p.nome_titular)}
+                    {linha('CPF / CNPJ', p.cpf_cnpj_titular)}
+                    {linha('Banco', p.banco)}
+                    {linha('Tipo de conta', p.tipo_conta ? p.tipo_conta.charAt(0).toUpperCase() + p.tipo_conta.slice(1) : null)}
+                    {linha('Agência', p.agencia)}
+                    {linha('Conta', p.conta)}
+                  </div>
+                  {linha('Chave PIX', p.chave_pix)}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '20px' }}>
+                <button onClick={() => setVisualizandoId(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Fechar</button>
+                <button onClick={() => { setVisualizandoId(null); abrirEdicao(p) }} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Editar</button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {excluindoId && (() => {
         const p = profissionais.find(x => x.id === excluindoId)!
