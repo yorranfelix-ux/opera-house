@@ -42,7 +42,7 @@ export default function Profissionais() {
   const [form, setForm] = useState(formVazio)
   const [busca, setBusca] = useState('')
   const [excluindoId, setExcluindoId] = useState<string | null>(null)
-  const [filtroAtivo, setFiltroAtivo] = useState<'ativos' | 'todos'>('ativos')
+  const [filtroAtivo, setFiltroAtivo] = useState<'ativos' | 'inativos' | 'todos'>('ativos')
   const [salvando, setSalvando] = useState(false)
   const [aniversariantes, setAniversariantes] = useState<string[]>([])
 
@@ -146,6 +146,7 @@ export default function Profissionais() {
       p.email?.toLowerCase().includes(busca.toLowerCase())
     if (!ok) return false
     if (filtroAtivo === 'ativos') return p.ativo
+    if (filtroAtivo === 'inativos') return !p.ativo
     return true
   })
 
@@ -182,6 +183,7 @@ export default function Profissionais() {
             <div style={{ display: 'flex', gap: '4px', background: '#fff', border: '0.5px solid #e8e7e3', borderRadius: '8px', padding: '3px' }}>
               {([
                 { key: 'ativos', label: 'Ativos' },
+                { key: 'inativos', label: 'Inativos' },
                 { key: 'todos', label: 'Todos' },
               ] as const).map(op => (
                 <button key={op.key} onClick={() => setFiltroAtivo(op.key)}
