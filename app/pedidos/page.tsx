@@ -16,6 +16,7 @@ interface Pedido {
   status: string
   semaforo: string
   observacoes_gerais: string
+  motivo_cancelamento: string | null
   clientes: { nome: string; cidade: string; estado: string }
   profissionais: { nome: string; tipo: string } | null
 }
@@ -56,7 +57,7 @@ const SEMAFORO_COLOR: Record<string, string> = {
 
 const formVazio = {
   numero_pedido: '', cliente_id: '', profissional_id: '', data_venda: '',
-  prazo_prometido: '', observacoes_gerais: '', status: 'criado',
+  prazo_prometido: '', observacoes_gerais: '', status: 'criado', motivo_cancelamento: '',
 }
 
 export default function Pedidos() {
@@ -67,7 +68,7 @@ export default function Pedidos() {
   const [clientes, setClientes] = useState<{ id: string; nome: string }[]>([])
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
-  const [filtroStatus, setFiltroStatus] = useState<'abertos' | 'entregues' | 'todos'>('abertos')
+  const [filtroStatus, setFiltroStatus] = useState<'abertos' | 'entregues' | 'cancelados' | 'todos'>('abertos')
   const [filtroProfissional, setFiltroProfissional] = useState<string>('')
   const [profissionais, setProfissionais] = useState<{ id: string; nome: string; tipo: string }[]>([])
   const [salvando, setSalvando] = useState(false)
@@ -151,6 +152,7 @@ export default function Pedidos() {
       prazo_prometido: p.prazo_prometido || '',
       observacoes_gerais: p.observacoes_gerais || '',
       status: p.status || 'criado',
+      motivo_cancelamento: p.motivo_cancelamento || '',
     })
     setShowForm(true)
   }
@@ -159,17 +161,30 @@ export default function Pedidos() {
     if (!form.numero_pedido) return alert('Número do pedido é obrigatório')
     if (!form.cliente_id) return alert('Selecione um cliente')
     if (!form.data_venda) return alert('Data da venda é obrigatória')
+    if (form.status === 'cancelado' && !form.motivo_cancelamento.trim()) return alert('Informe o motivo do cancelamento')
+
+    // Validar número duplicado (inclusive contra cancelados)
+    const duplicado = pedidos.find(p => p.numero_pedido === form.numero_pedido && p.id !== editandoId)
+    if (duplicado) return alert(`Número ${form.numero_pedido} já está em uso no pedido de ${duplicado.clientes?.nome} (${STATUS_LABEL[duplicado.status]})`)
+
     setSalvando(true)
     try {
       const pedidoAtual = pedidos.find(p => p.id === editandoId)
-      const payload: any = { ...form, profissional_id: form.profissional_id || null }
+      const payload: any = {
+        ...form,
+        profissional_id: form.profissional_id || null,
+        motivo_cancelamento: form.status === 'cancelado' ? form.motivo_cancelamento.trim() : null,
+      }
       if (editandoId && form.status === 'entregue' && !pedidoAtual?.data_entrega) {
         payload.data_entrega = new Date().toISOString().split('T')[0]
       }
       if (editandoId) {
         const { error } = await supabase.from('pedidos').update(payload).eq('id', editandoId)
         if (error) return alert('Erro ao atualizar: ' + error.message)
-        await registrarHistorico({ tipo: 'pedido_editado', descricao: `Pedido ${form.numero_pedido} editado`, pedidoId: editandoId })
+        const descHistorico = form.status === 'cancelado'
+          ? `Pedido ${form.numero_pedido} cancelado. Motivo: ${form.motivo_cancelamento.trim()}`
+          : `Pedido ${form.numero_pedido} editado`
+        await registrarHistorico({ tipo: 'pedido_editado', descricao: descHistorico, pedidoId: editandoId })
       } else {
         const { data: novo, error } = await supabase.from('pedidos').insert([{ ...payload, semaforo: 'verde' }]).select('id').single()
         if (error) return alert('Erro ao salvar: ' + error.message)
@@ -190,7 +205,8 @@ export default function Pedidos() {
     const buscaOk = !busca || p.numero_pedido?.toLowerCase().includes(busca.toLowerCase()) || p.clientes?.nome?.toLowerCase().includes(busca.toLowerCase())
     if (!buscaOk) return false
     if (filtroStatus === 'abertos' && !STATUS_ABERTOS.includes(p.status)) return false
-    if (filtroStatus === 'entregues' && p.status !== 'entregue' && p.status !== 'cancelado') return false
+    if (filtroStatus === 'entregues' && p.status !== 'entregue') return false
+    if (filtroStatus === 'cancelados' && p.status !== 'cancelado') return false
     if (filtroProfissional && p.profissional_id !== filtroProfissional) return false
     return true
   })
@@ -250,6 +266,7 @@ export default function Pedidos() {
               {([
                 { key: 'abertos', label: 'Em aberto' },
                 { key: 'entregues', label: 'Entregues' },
+                { key: 'cancelados', label: 'Cancelados' },
                 { key: 'todos', label: 'Todos' },
               ] as const).map(op => (
                 <button
@@ -314,6 +331,11 @@ export default function Pedidos() {
                     <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '10px', fontWeight: '500', background: STATUS_COLOR[p.status]?.bg || '#f0efe9', color: STATUS_COLOR[p.status]?.color || '#555' }}>
                       {STATUS_LABEL[p.status] || p.status}
                     </span>
+                    {p.status === 'cancelado' && p.motivo_cancelamento && (
+                      <span style={{ fontSize: '10px', color: '#791F1F', fontStyle: 'italic' }}>
+                        Motivo: {p.motivo_cancelamento}
+                      </span>
+                    )}
                     {pedidosComAT.has(p.id) && (
                       <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '6px', fontWeight: '500', background: '#FCEBEB', color: '#791F1F' }}>
                         AT ativa
@@ -404,6 +426,13 @@ export default function Pedidos() {
                   {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 </select>
               </div>
+              {form.status === 'cancelado' && (
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '11px', color: '#791F1F', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Motivo do cancelamento *</div>
+                  <textarea value={form.motivo_cancelamento} onChange={e => setForm({ ...form, motivo_cancelamento: e.target.value })} rows={3}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #f5b5b5', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
+                </div>
+              )}
             )}
 
             <div style={{ marginBottom: '20px' }}>
