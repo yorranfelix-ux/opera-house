@@ -426,13 +426,13 @@ export default function Pedidos() {
                   {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 </select>
               </div>
-              {form.status === 'cancelado' && (
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '11px', color: '#791F1F', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Motivo do cancelamento *</div>
-                  <textarea value={form.motivo_cancelamento} onChange={e => setForm({ ...form, motivo_cancelamento: e.target.value })} rows={3}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #f5b5b5', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
-                </div>
-              )}
+            )}
+            {form.status === 'cancelado' && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '11px', color: '#791F1F', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Motivo do cancelamento *</div>
+                <textarea value={form.motivo_cancelamento} onChange={e => setForm({ ...form, motivo_cancelamento: e.target.value })} rows={3}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #f5b5b5', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
+              </div>
             )}
 
             <div style={{ marginBottom: '20px' }}>
