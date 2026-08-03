@@ -16,6 +16,13 @@ interface Profissional {
   ativo: boolean
   created_at: string
   data_nascimento: string | null
+  banco: string | null
+  tipo_conta: string | null
+  agencia: string | null
+  conta: string | null
+  cpf_cnpj_titular: string | null
+  nome_titular: string | null
+  chave_pix: string | null
 }
 
 const TIPOS = ['Arquiteto(a)', 'Designer de Interiores', 'Decorador(a)', 'Engenheiro(a)', 'Outro']
@@ -23,6 +30,8 @@ const TIPOS = ['Arquiteto(a)', 'Designer de Interiores', 'Decorador(a)', 'Engenh
 const formVazio = {
   nome: '', tipo: 'Arquiteto(a)', telefone: '', whatsapp: '',
   email: '', observacoes: '', ativo: true, data_nascimento: '',
+  banco: '', tipo_conta: 'corrente', agencia: '', conta: '',
+  cpf_cnpj_titular: '', nome_titular: '', chave_pix: '',
 }
 
 export default function Profissionais() {
@@ -70,6 +79,13 @@ export default function Profissionais() {
       observacoes: p.observacoes || '',
       ativo: p.ativo ?? true,
       data_nascimento: p.data_nascimento || '',
+      banco: p.banco || '',
+      tipo_conta: p.tipo_conta || 'corrente',
+      agencia: p.agencia || '',
+      conta: p.conta || '',
+      cpf_cnpj_titular: p.cpf_cnpj_titular || '',
+      nome_titular: p.nome_titular || '',
+      chave_pix: p.chave_pix || '',
     })
     setShowForm(true)
   }
@@ -98,6 +114,13 @@ export default function Profissionais() {
         observacoes: form.observacoes || null,
         ativo: form.ativo,
         data_nascimento: form.data_nascimento || null,
+        banco: form.banco || null,
+        tipo_conta: form.tipo_conta || null,
+        agencia: form.agencia || null,
+        conta: form.conta || null,
+        cpf_cnpj_titular: form.cpf_cnpj_titular || null,
+        nome_titular: form.nome_titular || null,
+        chave_pix: form.chave_pix || null,
       }
       if (editandoId) {
         const { error } = await supabase.from('profissionais').update(payload).eq('id', editandoId)
@@ -272,6 +295,48 @@ export default function Profissionais() {
                 <label htmlFor="ativo" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Profissional ativo</label>
               </div>
             )}
+
+            <div style={{ borderTop: '0.5px solid #e8e7e3', margin: '8px 0 16px', paddingTop: '16px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a2e', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dados Bancários</div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <label style={labelStyle}>Nome do titular</label>
+                <input value={form.nome_titular} onChange={e => setForm({ ...form, nome_titular: e.target.value })} style={inputStyle} placeholder="Nome completo do titular" />
+              </div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <label style={labelStyle}>CPF / CNPJ do titular</label>
+                <input value={form.cpf_cnpj_titular} onChange={e => setForm({ ...form, cpf_cnpj_titular: e.target.value })} style={inputStyle} placeholder="000.000.000-00" />
+              </div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <label style={labelStyle}>Banco</label>
+                <input value={form.banco} onChange={e => setForm({ ...form, banco: e.target.value })} style={inputStyle} placeholder="Ex: Itaú, Bradesco, Nubank..." />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                <div>
+                  <label style={labelStyle}>Tipo de conta</label>
+                  <select value={form.tipo_conta} onChange={e => setForm({ ...form, tipo_conta: e.target.value })} style={inputStyle}>
+                    <option value="corrente">Corrente</option>
+                    <option value="poupança">Poupança</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Agência</label>
+                  <input value={form.agencia} onChange={e => setForm({ ...form, agencia: e.target.value })} style={inputStyle} placeholder="0000" />
+                </div>
+                <div>
+                  <label style={labelStyle}>Conta</label>
+                  <input value={form.conta} onChange={e => setForm({ ...form, conta: e.target.value })} style={inputStyle} placeholder="00000-0" />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '12px' }}>
+                <label style={labelStyle}>Chave PIX</label>
+                <input value={form.chave_pix} onChange={e => setForm({ ...form, chave_pix: e.target.value })} style={inputStyle} placeholder="CPF, e-mail, telefone ou chave aleatória" />
+              </div>
+            </div>
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
