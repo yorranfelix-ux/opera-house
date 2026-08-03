@@ -1,0 +1,14 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fundo circular dourado -->
+  <circle cx="100" cy="100" r="100" fill="#B8935A"/>
+  <!-- Moldura quadrada branca -->
+  <rect x="22" y="22" width="156" height="156" fill="white"/>
+  <!-- Área dourada interna -->
+  <rect x="34" y="34" width="132" height="132" fill="#B8935A"/>
+  <!-- Barra esquerda (letra h) -->
+  <rect x="58" y="52" width="18" height="96" fill="white"/>
+  <!-- Crossbar (barra horizontal) -->
+  <rect x="58" y="90" width="76" height="16" fill="white"/>
+  <!-- Perna direita (do crossbar para baixo) -->
+  <rect x="116" y="90" width="18" height="58" fill="white"/>
+</svg>
