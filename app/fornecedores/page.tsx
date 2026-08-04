@@ -32,6 +32,7 @@ export default function Fornecedores() {
   const [excluindoId, setExcluindoId] = useState<string | null>(null)
   const [salvando, setSalvando] = useState(false)
   const [pagina, setPagina] = useState(1)
+  const [visualizandoId, setVisualizandoId] = useState<string | null>(null)
   const ITEMS_POR_PAGINA = 25
 
   useEffect(() => {
@@ -145,7 +146,7 @@ export default function Fornecedores() {
           />
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px 130px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px 175px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
               <span>Nome fantasia</span><span>Razão social</span><span>Telefone</span><span>Contato</span><span>Prazo</span><span></span>
             </div>
 
@@ -156,13 +157,14 @@ export default function Fornecedores() {
             )}
 
             {paginados.map((f, i) => (
-              <div key={f.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px 130px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+              <div key={f.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px 175px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{f.nome_fantasia || f.razao_social}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{f.razao_social}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{f.telefone || '—'}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{f.contato_comercial || '—'}</span>
                 <span style={{ fontSize: '12px', color: '#555', textAlign: 'center' }}>{f.prazo_medio_prometido ? `${f.prazo_medio_prometido}d` : '—'}</span>
                 <div style={{ display: 'flex', gap: '6px' }}>
+                  <button onClick={() => setVisualizandoId(f.id)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>Ver</button>
                   <button onClick={() => abrirEdicao(f)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>Editar</button>
                   <button onClick={() => setExcluindoId(f.id)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #f0c0c0', background: '#FCEBEB', fontSize: '12px', cursor: 'pointer', color: '#791F1F' }}>Excluir</button>
                 </div>
@@ -185,6 +187,45 @@ export default function Fornecedores() {
           </div>
         </div>
       </div>
+
+      {visualizandoId && (() => {
+        const f = fornecedores.find(x => x.id === visualizandoId)!
+        const linha = (label: string, valor: string | number | null | undefined) => valor ? (
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '2px' }}>{label}</div>
+            <div style={{ fontSize: '13px', color: '#1a1a2e' }}>{valor}</div>
+          </div>
+        ) : null
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+            <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '480px', maxHeight: '88vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                <div>
+                  <div style={{ fontSize: '17px', fontWeight: '600', color: '#1a1a2e' }}>{f.nome_fantasia || f.razao_social}</div>
+                  {f.nome_fantasia && <div style={{ fontSize: '13px', color: '#888', marginTop: '2px' }}>{f.razao_social}</div>}
+                </div>
+                <button onClick={() => setVisualizandoId(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+              </div>
+              <div style={{ borderTop: '0.5px solid #f0efe9', paddingTop: '16px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Contato</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
+                  {linha('Telefone', f.telefone)}
+                  {linha('WhatsApp', f.whatsapp)}
+                  {linha('E-mail', f.email)}
+                  {linha('Contato comercial', f.contato_comercial)}
+                  {linha('CNPJ', (f as any).cnpj)}
+                  {linha('Prazo médio prometido', f.prazo_medio_prometido ? `${f.prazo_medio_prometido} dias` : null)}
+                </div>
+                {linha('Observações', (f as any).observacoes)}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '20px' }}>
+                <button onClick={() => setVisualizandoId(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Fechar</button>
+                <button onClick={() => { setVisualizandoId(null); abrirEdicao(f) }} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Editar</button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {excluindoId && (() => {
         const f = fornecedores.find(x => x.id === excluindoId)!
