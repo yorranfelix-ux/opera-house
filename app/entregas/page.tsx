@@ -19,7 +19,8 @@ interface ClienteEntrega {
 
 interface Entrega {
   id: string
-  pedido_id: string
+  pedido_id: string | null
+  assistencia_tecnica_id: string | null
   data_agendada: string
   data_realizada: string
   status: string
@@ -32,13 +33,27 @@ interface Entrega {
   pedidos: {
     numero_pedido: string
     clientes: ClienteEntrega
-  }
+  } | null
+  assistencias_tecnicas: {
+    numero_at: string
+    descricao_problema: string
+    pedidos: { numero_pedido: string; clientes: ClienteEntrega } | null
+  } | null
 }
 
 interface Pedido {
   id: string
   numero_pedido: string
   clientes: { nome: string; cidade: string }
+}
+
+interface AT {
+  id: string
+  numero_at: string
+  status: string
+  descricao_problema: string
+  observacoes: string
+  pedidos: { numero_pedido: string; clientes: { nome: string; cidade: string; estado: string; endereco: string; numero: string; bairro: string; cep: string; telefone: string } }
 }
 
 const STATUS_COR: Record<string, { bg: string; color: string; label: string }> = {
@@ -51,7 +66,8 @@ const STATUS_COR: Record<string, { bg: string; color: string; label: string }> =
 const STATUS_LISTA = ['agendada', 'realizada', 'reagendada', 'cancelada']
 
 const formVazio = {
-  pedido_id: '', data_agendada: '', data_realizada: '',
+  tipo: 'pedido' as 'pedido' | 'at',
+  pedido_id: '', assistencia_tecnica_id: '', data_agendada: '', data_realizada: '',
   status: 'agendada', requer_icamento: false,
   observacoes_icamento: '', observacoes: '', responsavel_campo: '',
 }
@@ -63,7 +79,10 @@ function montarEnderecoCliente(c: ClienteEntrega): string {
 
 async function abrirRotaMaps(entregas: Entrega[]) {
   const enderecos = entregas
-    .map(e => montarEnderecoCliente(e.pedidos?.clientes))
+    .map(e => {
+      const c = e.assistencia_tecnica_id ? e.assistencias_tecnicas?.pedidos?.clientes : e.pedidos?.clientes
+      return c ? montarEnderecoCliente(c as ClienteEntrega) : ''
+    })
     .filter(Boolean)
   if (enderecos.length === 0) return alert('Nenhum endereço cadastrado para os clientes deste dia.')
 
@@ -89,8 +108,10 @@ interface ImpressaoInfo {
 export default function Entregas() {
   const [entregas, setEntregas] = useState<Entrega[]>([])
   const [pedidos, setPedidos] = useState<Pedido[]>([])
+  const [ats, setAts] = useState<AT[]>([])
   const [showForm, setShowForm] = useState(false)
   const [buscaPedidoForm, setBuscaPedidoForm] = useState('')
+  const [buscaATForm, setBuscaATForm] = useState('')
   const [filtro, setFiltro] = useState<'pendentes' | 'realizadas' | 'todas'>('pendentes')
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
@@ -118,16 +139,27 @@ export default function Entregas() {
   useEffect(() => {
     buscarEntregas()
     buscarPedidos()
+    buscarATs()
   }, [])
 
   async function buscarEntregas() {
     const { data, error } = await supabase
       .from('entregas')
-      .select('*, motivo_reagendamento, data_anterior, pedidos(numero_pedido, clientes(nome, cidade, estado, endereco, numero, bairro, cep, telefone))')
+      .select('*, motivo_reagendamento, data_anterior, assistencia_tecnica_id, pedidos(numero_pedido, clientes(nome, cidade, estado, endereco, numero, bairro, cep, telefone)), assistencias_tecnicas(numero_at, descricao_problema, pedidos(numero_pedido, clientes(nome, cidade, estado, endereco, numero, bairro, cep, telefone)))')
       .range(0, 9999)
       .order('data_agendada', { ascending: true })
     if (error) console.error('Erro ao buscar entregas:', error)
     setEntregas((data as unknown as Entrega[]) || [])
+  }
+
+  async function buscarATs() {
+    const { data } = await supabase
+      .from('assistencias_tecnicas')
+      .select('id, numero_at, status, descricao_problema, observacoes, pedidos(numero_pedido, clientes(nome, cidade, estado, endereco, numero, bairro, cep, telefone))')
+      .not('status', 'in', '(resolvida,cancelada)')
+      .order('numero_at', { ascending: false })
+      .range(0, 9999)
+    setAts((data as unknown as AT[]) || [])
   }
 
   async function buscarPedidos(incluirId?: string) {
@@ -155,14 +187,19 @@ export default function Entregas() {
     setEditandoId(null)
     setForm(formVazio)
     setBuscaPedidoForm('')
+    setBuscaATForm('')
     setShowForm(true)
   }
 
   function abrirEdicao(e: Entrega) {
     setEditandoId(e.id)
     setBuscaPedidoForm('')
+    setBuscaATForm('')
+    const isAT = !!e.assistencia_tecnica_id
     setForm({
+      tipo: isAT ? 'at' : 'pedido',
       pedido_id: e.pedido_id || '',
+      assistencia_tecnica_id: e.assistencia_tecnica_id || '',
       data_agendada: e.data_agendada || '',
       data_realizada: e.data_realizada || '',
       status: e.status || 'agendada',
@@ -171,12 +208,13 @@ export default function Entregas() {
       observacoes: e.observacoes || '',
       responsavel_campo: e.responsavel_campo || '',
     })
-    buscarPedidos(e.pedido_id)
+    if (!isAT) buscarPedidos(e.pedido_id || undefined)
     setShowForm(true)
   }
 
   async function salvar() {
-    if (!form.pedido_id) return alert('Selecione o pedido')
+    if (form.tipo === 'pedido' && !form.pedido_id) return alert('Selecione o pedido')
+    if (form.tipo === 'at' && !form.assistencia_tecnica_id) return alert('Selecione a assistência técnica')
     if (!form.data_agendada) return alert('Data agendada é obrigatória')
 
     if (editandoId && !pendingSaveRef.current) {
@@ -191,7 +229,8 @@ export default function Entregas() {
     setSalvando(true)
     try {
       const payload: any = {
-        pedido_id: form.pedido_id,
+        pedido_id: form.tipo === 'pedido' ? form.pedido_id : null,
+        assistencia_tecnica_id: form.tipo === 'at' ? form.assistencia_tecnica_id : null,
         data_agendada: form.data_agendada,
         data_realizada: form.data_realizada || null,
         status: form.status,
@@ -201,7 +240,8 @@ export default function Entregas() {
         responsavel_campo: form.responsavel_campo || null,
       }
       const pedidoSel = pedidos.find(p => p.id === form.pedido_id)
-      const numPedido = pedidoSel?.numero_pedido || '?'
+      const atSel = ats.find(a => a.id === form.assistencia_tecnica_id)
+      const numPedido = form.tipo === 'at' ? `AT ${atSel?.numero_at || '?'}` : (pedidoSel?.numero_pedido || '?')
       if (editandoId) {
         const entregaAtual = entregas.find(e => e.id === editandoId)
         if (entregaAtual?.data_agendada !== form.data_agendada) {
@@ -595,7 +635,7 @@ ${alertaHtml}
           {diasOrdenados.map(dia => {
             const entregasDia = porDia[dia]
             const atrasado = dia < hoje && entregasDia.some(e => e.status === 'agendada' || e.status === 'reagendada')
-            const temEndereco = entregasDia.some(e => e.pedidos?.clientes?.endereco)
+            const temEndereco = entregasDia.some(e => (e.pedidos?.clientes?.endereco) || (e.assistencias_tecnicas?.pedidos?.clientes?.endereco))
 
             return (
               <div key={dia} style={{ marginBottom: '20px' }}>
@@ -634,16 +674,22 @@ ${alertaHtml}
 
                 <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
                   {entregasDia.map((e, i) => {
-                    const c = e.pedidos?.clientes
-                    const enderecoCompleto = c ? montarEnderecoCliente(c) : ''
+                    const isAT = !!e.assistencia_tecnica_id
+                    const c = isAT ? e.assistencias_tecnicas?.pedidos?.clientes : e.pedidos?.clientes
+                    const nomeCliente = c?.nome
+                    const enderecoCompleto = c ? montarEnderecoCliente(c as ClienteEntrega) : ''
+                    const titulo = isAT
+                      ? `AT ${e.assistencias_tecnicas?.numero_at} — Pedido ${e.assistencias_tecnicas?.pedidos?.numero_pedido}`
+                      : `Pedido ${e.pedidos?.numero_pedido}`
                     return (
                       <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderTop: i > 0 ? '0.5px solid #f0efe9' : 'none', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '11px', color: '#C9A84C', fontWeight: '600' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: isAT ? '#3C3489' : '#1a1a2e', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '11px', color: '#C9A84C', fontWeight: '600' }}>
                           {i + 1}
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>Pedido {e.pedidos?.numero_pedido}</span>
+                            {isAT && <span style={{ fontSize: '10px', background: '#EEEDFE', color: '#3C3489', padding: '1px 6px', borderRadius: '6px', fontWeight: '600' }}>🔧 AT</span>}
+                            <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{titulo}</span>
                             <span style={{ fontSize: '11px', padding: '1px 7px', borderRadius: '6px', fontWeight: '500', background: STATUS_COR[e.status]?.bg || '#f0efe9', color: STATUS_COR[e.status]?.color || '#555' }}>
                               {STATUS_COR[e.status]?.label || e.status}
                             </span>
@@ -651,7 +697,10 @@ ${alertaHtml}
                               <span style={{ fontSize: '10px', background: '#FAEEDA', color: '#633806', padding: '1px 6px', borderRadius: '6px', fontWeight: '500' }}>🏗️ Içamento</span>
                             )}
                           </div>
-                          <div style={{ fontSize: '12px', color: '#555' }}>{c?.nome}</div>
+                          {isAT && e.assistencias_tecnicas?.descricao_problema && (
+                            <div style={{ fontSize: '11px', color: '#3C3489', marginBottom: '2px', fontStyle: 'italic' }}>📋 {e.assistencias_tecnicas.descricao_problema}</div>
+                          )}
+                          <div style={{ fontSize: '12px', color: '#555' }}>{nomeCliente}</div>
                           {enderecoCompleto ? (
                             <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>{enderecoCompleto}</div>
                           ) : (
@@ -804,23 +853,60 @@ ${alertaHtml}
             </div>
 
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Pedido *</div>
-              <input
-                placeholder="Buscar por número ou cliente..."
-                value={buscaPedidoForm}
-                onChange={e => setBuscaPedidoForm(e.target.value)}
-                style={{ width: '100%', padding: '7px 12px', borderRadius: '8px 8px 0 0', border: '0.5px solid #e8e7e3', borderBottom: 'none', fontSize: '12px', outline: 'none', boxSizing: 'border-box', background: '#f7f6f3', color: '#555' }}
-              />
-              <select value={form.pedido_id} onChange={e => setForm({ ...form, pedido_id: e.target.value })} size={5}
-                style={{ width: '100%', padding: '4px 0', borderRadius: '0 0 8px 8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
-                <option value="">— Selecione —</option>
-                {pedidos.filter(p => {
-                  if (!buscaPedidoForm) return true
-                  const q = buscaPedidoForm.toLowerCase()
-                  return (p.numero_pedido as any)?.toLowerCase().includes(q) || (p.clientes as any)?.nome?.toLowerCase().includes(q)
-                }).map(p => <option key={p.id} value={p.id}>{p.numero_pedido} — {(p.clientes as any)?.nome}</option>)}
-              </select>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Tipo *</div>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                <button onClick={() => setForm({ ...form, tipo: 'pedido', assistencia_tecnica_id: '' })}
+                  style={{ flex: 1, padding: '8px', borderRadius: '8px', border: `0.5px solid ${form.tipo === 'pedido' ? '#1a1a2e' : '#e8e7e3'}`, background: form.tipo === 'pedido' ? '#1a1a2e' : '#fff', color: form.tipo === 'pedido' ? '#C9A84C' : '#888', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
+                  🚚 Entrega
+                </button>
+                <button onClick={() => setForm({ ...form, tipo: 'at', pedido_id: '' })}
+                  style={{ flex: 1, padding: '8px', borderRadius: '8px', border: `0.5px solid ${form.tipo === 'at' ? '#3C3489' : '#e8e7e3'}`, background: form.tipo === 'at' ? '#3C3489' : '#fff', color: form.tipo === 'at' ? '#fff' : '#888', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
+                  🔧 Assistência
+                </button>
+              </div>
             </div>
+
+            {form.tipo === 'pedido' && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Pedido *</div>
+                <input
+                  placeholder="Buscar por número ou cliente..."
+                  value={buscaPedidoForm}
+                  onChange={e => setBuscaPedidoForm(e.target.value)}
+                  style={{ width: '100%', padding: '7px 12px', borderRadius: '8px 8px 0 0', border: '0.5px solid #e8e7e3', borderBottom: 'none', fontSize: '12px', outline: 'none', boxSizing: 'border-box', background: '#f7f6f3', color: '#555' }}
+                />
+                <select value={form.pedido_id} onChange={e => setForm({ ...form, pedido_id: e.target.value })} size={5}
+                  style={{ width: '100%', padding: '4px 0', borderRadius: '0 0 8px 8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
+                  <option value="">— Selecione —</option>
+                  {pedidos.filter(p => {
+                    if (!buscaPedidoForm) return true
+                    const q = buscaPedidoForm.toLowerCase()
+                    return (p.numero_pedido as any)?.toLowerCase().includes(q) || (p.clientes as any)?.nome?.toLowerCase().includes(q)
+                  }).map(p => <option key={p.id} value={p.id}>{p.numero_pedido} — {(p.clientes as any)?.nome}</option>)}
+                </select>
+              </div>
+            )}
+
+            {form.tipo === 'at' && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Assistência Técnica *</div>
+                <input
+                  placeholder="Buscar por número AT ou cliente..."
+                  value={buscaATForm}
+                  onChange={e => setBuscaATForm(e.target.value)}
+                  style={{ width: '100%', padding: '7px 12px', borderRadius: '8px 8px 0 0', border: '0.5px solid #e8e7e3', borderBottom: 'none', fontSize: '12px', outline: 'none', boxSizing: 'border-box', background: '#f7f6f3', color: '#555' }}
+                />
+                <select value={form.assistencia_tecnica_id} onChange={e => setForm({ ...form, assistencia_tecnica_id: e.target.value })} size={5}
+                  style={{ width: '100%', padding: '4px 0', borderRadius: '0 0 8px 8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
+                  <option value="">— Selecione —</option>
+                  {ats.filter(a => {
+                    if (!buscaATForm) return true
+                    const q = buscaATForm.toLowerCase()
+                    return a.numero_at?.toLowerCase().includes(q) || (a.pedidos as any)?.clientes?.nome?.toLowerCase().includes(q)
+                  }).map(a => <option key={a.id} value={a.id}>AT {a.numero_at} — {(a.pedidos as any)?.clientes?.nome} — {a.descricao_problema?.substring(0, 40)}</option>)}
+                </select>
+              </div>
+            )}
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Data da entrega *</div>
