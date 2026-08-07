@@ -141,7 +141,7 @@ export default function AssistenciaTecnica() {
     setLoadingATs(true)
     const { data, error } = await supabase
       .from('assistencias_tecnicas')
-      .select('*, pedidos(numero_pedido, clientes(nome, cidade)), fornecedores(nome_fantasia, razao_social)')
+      .select('*, pedidos(numero_pedido, clientes(nome, cidade)), fornecedores(nome_fantasia, razao_social), itens_pedido(descricao)')
       .order('created_at', { ascending: false })
       .range(0, 9999)
     if (error) console.error('Erro ao buscar ATs:', error)
@@ -268,7 +268,9 @@ export default function AssistenciaTecnica() {
     if (!atSelecionada) return
     setProcessando(true)
     try {
-      const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'em_reparo' }).eq('id', atSelecionada.id)
+      const obsAtual = (atSelecionada as any).observacoes || ''
+      const novaObs = processoObs ? (obsAtual ? obsAtual + '\n' + processoObs : processoObs) : obsAtual
+      const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'em_reparo', observacoes: novaObs }).eq('id', atSelecionada.id)
       if (error) return alert('Erro: ' + error.message)
       await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Em reparo${processoObs ? ': ' + processoObs : ''}`, pedidoId: (atSelecionada as any).pedido_id })
       setShowProcessoModal(false); setAtSelecionada(null); setProcessoObs(''); buscarATs()
@@ -294,7 +296,9 @@ export default function AssistenciaTecnica() {
     if (!atSelecionada) return
     setProcessando(true)
     try {
-      const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'resolvida' }).eq('id', atSelecionada.id)
+      const obsAtual = (atSelecionada as any).observacoes || ''
+      const novaObs = resolvidaObs ? (obsAtual ? obsAtual + '\n' + resolvidaObs : resolvidaObs) : obsAtual
+      const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'resolvida', observacoes: novaObs }).eq('id', atSelecionada.id)
       if (error) return alert('Erro: ' + error.message)
       await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Resolvida${resolvidaObs ? ': ' + resolvidaObs : ''}`, pedidoId: (atSelecionada as any).pedido_id })
       setShowResolvidaModal(false); setAtSelecionada(null); setResolvidaObs(''); buscarATs()

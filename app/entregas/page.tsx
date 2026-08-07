@@ -748,7 +748,7 @@ ${alertaHtml}
                             Editar
                           </button>
                           <button
-                            onClick={() => deletarEntrega(e.id, e.pedidos?.numero_pedido || '—')}
+                            onClick={() => deletarEntrega(e.id, isAT ? `AT ${e.assistencias_tecnicas?.numero_at}` : e.pedidos?.numero_pedido || '—')}
                             style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #FCEBEB', background: '#FCEBEB', fontSize: '12px', cursor: 'pointer', color: '#A32D2D', whiteSpace: 'nowrap' }}
                           >
                             ✕
@@ -811,11 +811,13 @@ ${alertaHtml}
                 <div style={{ marginTop: '16px', padding: '12px', background: '#f7f6f3', borderRadius: '8px', border: '0.5px solid #e8e7e3' }}>
                   <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', marginBottom: '8px' }}>Entregas que aparecem na folha:</div>
                   {impressao.entregas.map((e, i) => {
-                    const c = e.pedidos?.clientes
+                    const isAT = !!e.assistencia_tecnica_id
+                    const c = isAT ? e.assistencias_tecnicas?.pedidos?.clientes : e.pedidos?.clientes
+                    const numero = isAT ? `🔧 AT.${e.assistencias_tecnicas?.numero_at}` : `P.${e.pedidos?.numero_pedido}`
                     return (
                       <div key={e.id} style={{ display: 'flex', gap: '8px', fontSize: '12px', color: '#555', padding: '3px 0', borderTop: i > 0 ? '0.5px solid #e8e7e3' : 'none' }}>
                         <span style={{ color: '#C9A84C', fontWeight: '600', minWidth: '16px' }}>{i + 1}.</span>
-                        <span style={{ fontWeight: '500' }}>P.{e.pedidos?.numero_pedido}</span>
+                        <span style={{ fontWeight: '500' }}>{numero}</span>
                         <span>—</span>
                         <span>{c?.nome}</span>
                         <span style={{ marginLeft: 'auto', color: '#888' }}>{c?.cidade}</span>
