@@ -314,10 +314,21 @@ export default function Entregas() {
     const equipeList = [...new Set(info.entregas.map(e => e.responsavel_campo).filter(Boolean))].join(' · ')
 
     const rowsHtml = info.entregas.map(e => {
-      const c = e.pedidos?.clientes
-      const nomeAbrev = (c?.nome || '').substring(0, 20).toUpperCase()
-      const label = `P.${e.pedidos?.numero_pedido} — ${nomeAbrev}`
-      const regiao = (c?.cidade || '').toUpperCase()
+      const isAT = !!e.assistencia_tecnica_id
+      let label = ''
+      let regiao = ''
+      if (isAT) {
+        const at = e.assistencias_tecnicas
+        const c = at?.pedidos?.clientes
+        const nomeAbrev = (c?.nome || '').substring(0, 20).toUpperCase()
+        label = `🔧 AT.${at?.numero_at} — ${nomeAbrev}`
+        regiao = (c?.cidade || '').toUpperCase()
+      } else {
+        const c = e.pedidos?.clientes
+        const nomeAbrev = (c?.nome || '').substring(0, 20).toUpperCase()
+        label = `P.${e.pedidos?.numero_pedido} — ${nomeAbrev}`
+        regiao = (c?.cidade || '').toUpperCase()
+      }
       return `
         <tr style="height:30px;">
           <td style="padding:5px 10px;border-right:1px solid #000;font-size:11px;font-weight:600;">${label}</td>
@@ -469,7 +480,12 @@ export default function Entregas() {
     const comObs = entregasDia.filter(e => e.requer_icamento || e.observacoes_icamento || e.observacoes)
 
     const rowsHtml = entregasDia.map((e, i) => {
-      const c = e.pedidos?.clientes
+      const isAT = !!e.assistencia_tecnica_id
+      const c = isAT ? e.assistencias_tecnicas?.pedidos?.clientes : e.pedidos?.clientes
+      const numero = isAT ? `🔧 AT. ${e.assistencias_tecnicas?.numero_at || '—'}` : `P. ${e.pedidos?.numero_pedido || '—'}`
+      const descricaoAT = isAT && e.assistencias_tecnicas?.descricao_problema
+        ? `<div style="margin-top:4px;font-size:10px;color:#555;font-style:italic;">Problema: ${e.assistencias_tecnicas.descricao_problema}</div>`
+        : ''
       const endereco = c ? montarEnderecoCliente(c) : '—'
       const icamentoHtml = e.requer_icamento
         ? `<div style="margin-top:4px;padding:4px 8px;background:#FFF3E0;border-left:3px solid #E65100;font-size:10px;">
@@ -488,13 +504,14 @@ export default function Entregas() {
         <tr>
           <td style="padding:10px 12px;width:5%;text-align:center;font-size:14px;font-weight:700;vertical-align:top;">${i + 1}</td>
           <td style="padding:10px 12px;width:18%;vertical-align:top;">
-            <div style="font-size:12px;font-weight:700;">P. ${e.pedidos?.numero_pedido || '—'}</div>
+            <div style="font-size:12px;font-weight:700;">${numero}</div>
             <div style="font-size:10px;color:#555;margin-top:2px;">${STATUS_COR[e.status]?.label || e.status}</div>
           </td>
           <td style="padding:10px 12px;width:25%;vertical-align:top;">
             <div style="font-size:11px;font-weight:600;">${c?.nome || '—'}</div>
             <div style="font-size:10px;color:#555;margin-top:2px;">${endereco}</div>
             ${c?.telefone ? `<div style="font-size:10px;color:#555;margin-top:2px;">📞 ${c.telefone}</div>` : ''}
+            ${descricaoAT}
           </td>
           <td style="padding:10px 12px;vertical-align:top;">
             ${icamentoHtml}${obsHtml}${reagendHtml}
