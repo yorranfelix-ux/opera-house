@@ -37,10 +37,11 @@ const SECOES: Secao[] = [
     passos: [
       { titulo: 'Criar um pedido', texto: 'Clique em "+ Novo pedido". Preencha o número do pedido (geralmente o código do orçamento), selecione o cliente, o profissional responsável (arquiteto/designer), a data da venda e o prazo prometido ao cliente. O status inicial é "Criado" automaticamente.' },
       { titulo: 'Buscar pedidos', texto: 'Use a barra de busca para localizar por número do pedido ou nome do cliente.' },
-      { titulo: 'Filtrar por situação', texto: 'Use os botões "Em aberto / Entregues / Todos" para filtrar pelo status geral. "Em aberto" mostra todos os pedidos em andamento; "Entregues" mostra os concluídos e cancelados.' },
+      { titulo: 'Filtrar por situação', texto: 'Use os botões "Em aberto / Entregues / Cancelados / Todos" para filtrar pelo status geral. "Em aberto" mostra todos os pedidos em andamento; "Entregues" mostra os concluídos; "Cancelados" mostra apenas os pedidos cancelados com o motivo do cancelamento.' },
       { titulo: 'Filtrar por profissional', texto: 'Use o select de profissional na barra de filtros para ver apenas os pedidos vinculados a um arquiteto ou designer específico. Esse filtro combina com os demais.' },
       { titulo: 'Abrir detalhes', texto: 'Clique no número do pedido (em dourado) ou no nome do cliente para abrir a página de detalhes, onde você gerencia itens, semáforo, pagamento e imprime o resumo.' },
       { titulo: 'Data de entrega', texto: 'Pedidos entregues exibem a data de entrega logo abaixo do badge de status na listagem. Essa data é preenchida automaticamente quando o pedido é marcado como "Entregue" — seja pela conclusão de uma entrega no módulo Entregas, seja por alteração manual do status.' },
+      { titulo: 'Cancelar pedido', texto: 'Ao editar um pedido e selecionar o status "Cancelado", aparece um campo obrigatório para informar o motivo do cancelamento. O número do pedido cancelado não pode ser reutilizado em novos pedidos — o sistema avisa caso haja conflito.' },
       { titulo: 'Editar um pedido', texto: 'Clique em "Editar" na linha do pedido para alterar dados como status, prazo prometido, profissional vinculado e observações gerais.' },
       { titulo: 'Exportar CSV', texto: 'Clique em "↓ Exportar CSV" para baixar a lista de pedidos em formato compatível com Excel.' },
     ],
@@ -83,6 +84,7 @@ const SECOES: Secao[] = [
     passos: [
       { titulo: 'Cadastrar cliente', texto: 'Clique em "+ Novo cliente". Preencha nome completo, telefone, e-mail e o endereço completo: rua, número, bairro, cidade, estado e CEP. O endereço é usado automaticamente para montar a rota no Google Maps no módulo de Entregas.' },
       { titulo: 'Buscar cliente', texto: 'Use a barra de busca para localizar por nome ou cidade.' },
+      { titulo: 'Visualizar cadastro', texto: 'Clique em "Ver" na linha do cliente para abrir um painel de leitura com todos os dados cadastrados — contato, endereço completo e observações — sem precisar entrar no modo de edição.' },
       { titulo: 'Editar cliente', texto: 'Clique em "Editar" para atualizar qualquer dado do cadastro, incluindo endereço e contato.' },
     ],
     dicas: [
@@ -98,6 +100,7 @@ const SECOES: Secao[] = [
     passos: [
       { titulo: 'Cadastrar fornecedor', texto: 'Clique em "+ Novo fornecedor". Informe razão social, nome fantasia, CNPJ, telefone de contato e observações. Fornecedores cadastrados ficam disponíveis para seleção nos itens de pedido e nas ATs.' },
       { titulo: 'Buscar fornecedor', texto: 'Use a busca por nome fantasia ou razão social.' },
+      { titulo: 'Visualizar cadastro', texto: 'Clique em "Ver" na linha do fornecedor para abrir um painel de leitura com todos os dados cadastrados — razão social, contatos, CNPJ, prazo médio e observações — sem precisar entrar no modo de edição.' },
       { titulo: 'Editar fornecedor', texto: 'Clique em "Editar" para atualizar dados de contato ou observações.' },
     ],
     dicas: [
@@ -112,6 +115,9 @@ const SECOES: Secao[] = [
     descricao: 'Cadastro de arquitetos, designers e outros profissionais parceiros.',
     passos: [
       { titulo: 'Cadastrar profissional', texto: 'Clique em "+ Novo profissional". Informe nome, tipo (Arquiteto, Designer de Interiores, Decorador…), dados de contato e a data de nascimento. O profissional fica disponível para seleção na criação de pedidos.' },
+      { titulo: 'Dados bancários', texto: 'Na seção "Dados Bancários" do cadastro informe banco, tipo de conta (corrente ou poupança), agência, conta, CPF/CNPJ do titular, nome do titular e chave Pix. Essas informações ficam salvas no cadastro do profissional e podem ser consultadas a qualquer momento clicando em "Ver".' },
+      { titulo: 'Visualizar cadastro', texto: 'Clique em "Ver" na linha do profissional para abrir um painel de leitura com todos os dados cadastrados — contato, dados bancários e Pix — sem precisar entrar no modo de edição.' },
+      { titulo: 'Filtrar por situação', texto: 'Use os botões "Ativos / Inativos / Todos" para filtrar a lista. "Inativos" mostra profissionais que foram desativados mas mantêm o histórico de pedidos preservado.' },
       { titulo: 'Ativar / Desativar', texto: 'Profissionais inativos não aparecem nas opções de seleção de novos pedidos, mas os pedidos já vinculados a eles não são afetados.' },
       { titulo: 'Filtrar pedidos por profissional', texto: 'Na listagem de Pedidos, use o select "Todos os profissionais" para filtrar e ver apenas os pedidos de um parceiro específico — útil para calcular comissões ou preparar relatórios por parceiro.' },
       { titulo: 'Lembrete de aniversário', texto: 'Ao acessar a aba de Profissionais, se houver algum profissional fazendo aniversário no dia, um banner amarelo é exibido no topo da lista com os nomes dos aniversariantes — por exemplo: "🎂 Aniversariante de hoje: João Silva". Use para enviar uma lembrança ou mensagem ao colaborador.' },
@@ -119,6 +125,7 @@ const SECOES: Secao[] = [
     dicas: [
       'Desative profissionais que não trabalham mais com a empresa em vez de excluí-los — assim o histórico dos pedidos antigos fica preservado.',
       'Cadastre a data de nascimento dos profissionais para receber o lembrete automático de aniversário ao acessar a aba.',
+      'Use o botão "Ver" para consultar rapidamente os dados bancários na hora de efetuar um pagamento — sem precisar entrar no modo de edição.',
     ],
   },
   {
@@ -165,10 +172,11 @@ const SECOES: Secao[] = [
     titulo: 'Entregas',
     descricao: 'Programação e controle das entregas com rota no Maps e impressão para a equipe.',
     passos: [
-      { titulo: 'Agendar entrega', texto: 'Clique em "+ Agendar entrega". No campo de pedido, use a caixa de busca para localizar pelo número ou nome do cliente. Selecione o pedido e a data. Se a entrega requer içamento (apartamentos sem acesso de escada, peças muito pesadas), marque "Requer içamento" e descreva as condições no campo "Observações de içamento" — ex: "Apartamento 12º andar, içamento pela varanda".' },
+      { titulo: 'Agendar entrega de pedido', texto: 'Clique em "+ Agendar entrega" e selecione o tipo "🚚 Entrega". Use a caixa de busca para localizar o pedido pelo número ou nome do cliente. Selecione o pedido e a data. Se a entrega requer içamento, marque "Requer içamento" e descreva as condições — ex: "Apartamento 12º andar, içamento pela varanda".' },
+      { titulo: 'Agendar Assistência Técnica nas Entregas', texto: 'Clique em "+ Agendar entrega" e selecione o tipo "🔧 Assistência". Use a caixa de busca para localizar a AT pelo número ou descrição do problema. Isso permite centralizar na aba Entregas tanto as entregas de pedido quanto as ATs do mesmo dia, facilitando o planejamento da equipe.' },
       { titulo: 'Observações visíveis na lista', texto: 'As observações de içamento aparecem em destaque laranja diretamente no cartão da entrega, sem precisar abrir o modal. Observações gerais aparecem logo abaixo com o ícone 📝.' },
-      { titulo: 'Imprimir sequência', texto: 'Clique em "🖨️ Sequência" para imprimir a folha de rota em formato paisagem — inclui motorista, veículo, placa, rodízio, data e a ordem das entregas com espaço para horários de chegada e saída em cada endereço.' },
-      { titulo: 'Imprimir observações', texto: 'Clique em "📋 Observações" para imprimir a folha de observações da equipe — lista cada entrega com endereço completo, içamento destacado em laranja e todas as observações especiais. Ideal para a equipe em campo.' },
+      { titulo: 'Imprimir sequência', texto: 'Clique em "🖨️ Sequência" para imprimir a folha de rota em formato paisagem — inclui motorista, veículo, placa, rodízio, data e a ordem das entregas. Pedidos aparecem como "P.123 — NOME CLIENTE" e ATs aparecem como "🔧 AT.123 — NOME CLIENTE", com a cidade na coluna Região.' },
+      { titulo: 'Imprimir observações', texto: 'Clique em "📋 Observações" para imprimir a folha de observações da equipe — lista cada entrega e AT com endereço completo, içamento destacado em laranja, descrição do problema (para ATs) e todas as observações especiais. Ideal para a equipe em campo.' },
       { titulo: 'Abrir rota no Maps', texto: 'Clique em "📍 Abrir rota no Maps" para abrir o Google Maps com a rota otimizada do dia, partindo do endereço de saída configurado em Configurações.' },
       { titulo: 'Responsável / montador', texto: 'No formulário de agendamento há um campo "Responsável / montador" para registrar o nome de quem realizará a entrega ou montagem. Esse nome aparece no cartão da entrega (ícone 👷) e é listado automaticamente na linha EQUIPE da folha de sequência do motorista.' },
       { titulo: 'Marcar como realizada', texto: 'Após a entrega, abra o registro e marque como "Realizada" informando a data de entrega efetiva. Quando não há outras entregas pendentes do mesmo pedido, o pedido é marcado automaticamente como "Entregue" e a data de entrega é registrada automaticamente.' },
