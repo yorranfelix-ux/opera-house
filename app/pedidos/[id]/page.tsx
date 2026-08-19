@@ -20,7 +20,7 @@ interface Pedido {
   data_entrega: string | null
   status_pagamento: string | null
   observacao_pagamento: string | null
-  clientes: { nome: string; endereco: string; numero: string; cidade: string; estado: string; telefone: string }
+  clientes: { nome: string; endereco: string; numero: string; complemento: string; bairro: string; cidade: string; estado: string; telefone: string }
   profissionais: { nome: string; tipo: string } | null
 }
 
@@ -141,7 +141,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   async function buscarPedido() {
     const { data, error } = await supabase
       .from('pedidos')
-      .select('*, clientes(nome, endereco, numero, cidade, estado, telefone), profissionais(nome, tipo)')
+      .select('*, clientes(nome, endereco, numero, complemento, bairro, cidade, estado, telefone), profissionais(nome, tipo)')
       .eq('id', id)
       .single()
     if (error) console.error('Erro ao buscar pedido:', error)
@@ -717,6 +717,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                           pedido.clientes?.endereco && pedido.clientes?.numero
                             ? `${pedido.clientes.endereco}, ${pedido.clientes.numero}`
                             : pedido.clientes?.endereco,
+                          pedido.clientes?.complemento,
+                          pedido.clientes?.bairro,
                           pedido.clientes?.cidade,
                           pedido.clientes?.estado,
                         ].filter(Boolean).join(', ')}
