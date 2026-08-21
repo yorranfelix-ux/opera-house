@@ -70,6 +70,7 @@ export default function Pedidos() {
   const [form, setForm] = useState(formVazio)
   const [filtroStatus, setFiltroStatus] = useState<'abertos' | 'entregues' | 'cancelados' | 'todos'>('abertos')
   const [filtroProfissional, setFiltroProfissional] = useState<string>('')
+  const [ordenacao, setOrdenacao] = useState<{ campo: string; dir: 'asc' | 'desc' }>({ campo: 'created_at', dir: 'desc' })
   const [profissionais, setProfissionais] = useState<{ id: string; nome: string; tipo: string }[]>([])
   const [salvando, setSalvando] = useState(false)
   const [pagina, setPagina] = useState(1)
@@ -209,9 +210,19 @@ export default function Pedidos() {
     if (filtroStatus === 'cancelados' && p.status !== 'cancelado') return false
     if (filtroProfissional && p.profissional_id !== filtroProfissional) return false
     return true
+  }).sort((a, b) => {
+    const dir = ordenacao.dir === 'asc' ? 1 : -1
+    if (ordenacao.campo === 'numero_pedido') return dir * (parseInt(a.numero_pedido) - parseInt(b.numero_pedido))
+    if (ordenacao.campo === 'prazo_prometido') return dir * ((a.prazo_prometido || '').localeCompare(b.prazo_prometido || ''))
+    if (ordenacao.campo === 'status') return dir * (a.status || '').localeCompare(b.status || '')
+    return dir * ((a as any).created_at || '').localeCompare((b as any).created_at || '')
   })
   const totalPaginas = Math.max(1, Math.ceil(filtrados.length / ITEMS_POR_PAGINA))
   const paginados = filtrados.slice((pagina - 1) * ITEMS_POR_PAGINA, pagina * ITEMS_POR_PAGINA)
+
+  function toggleOrdenacao(campo: string) {
+    setOrdenacao(prev => prev.campo === campo ? { campo, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { campo, dir: 'asc' })
+  }
 
   function exportarCSV() {
     const linhas = [
@@ -255,14 +266,16 @@ export default function Pedidos() {
         </div>
 
         <div style={{ padding: '24px', flex: 1, overflow: 'auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+          {/* Barra de filtros */}
+          <div style={{ background: '#fff', border: '0.5px solid #e8e7e3', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <input
               placeholder="Buscar por número ou cliente..."
               value={busca}
               onChange={e => setBusca(e.target.value)}
-              style={{ width: '280px', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none' }}
+              style={{ width: '220px', padding: '7px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', flexShrink: 0 }}
             />
-            <div style={{ display: 'flex', gap: '4px', background: '#fff', border: '0.5px solid #e8e7e3', borderRadius: '8px', padding: '3px' }}>
+            <div style={{ width: '0.5px', height: '28px', background: '#e8e7e3', flexShrink: 0 }} />
+            <div style={{ display: 'flex', gap: '4px', background: '#f7f6f3', border: '0.5px solid #e8e7e3', borderRadius: '8px', padding: '3px', flexShrink: 0 }}>
               {([
                 { key: 'abertos', label: 'Em aberto' },
                 { key: 'entregues', label: 'Entregues' },
@@ -278,11 +291,12 @@ export default function Pedidos() {
                 </button>
               ))}
             </div>
+            <div style={{ width: '0.5px', height: '28px', background: '#e8e7e3', flexShrink: 0 }} />
             {profissionais.length > 0 && (
               <select
                 value={filtroProfissional}
                 onChange={e => setFiltroProfissional(e.target.value)}
-                style={{ padding: '7px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '12px', background: filtroProfissional ? '#1a1a2e' : '#fff', color: filtroProfissional ? '#C9A84C' : '#888', outline: 'none', cursor: 'pointer' }}
+                style={{ padding: '7px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '12px', background: filtroProfissional ? '#1a1a2e' : '#fff', color: filtroProfissional ? '#C9A84C' : '#888', outline: 'none', cursor: 'pointer', flexShrink: 0 }}
               >
                 <option value="">Todos os profissionais</option>
                 {profissionais.map(p => (
@@ -290,12 +304,27 @@ export default function Pedidos() {
                 ))}
               </select>
             )}
-            <span style={{ fontSize: '12px', color: '#aaa' }}>{filtrados.length} pedido{filtrados.length !== 1 ? 's' : ''}</span>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+              <span style={{ fontSize: '11px', color: '#aaa' }}>{filtrados.length} pedido{filtrados.length !== 1 ? 's' : ''}</span>
+            </div>
           </div>
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 140px 100px 100px 80px 120px 72px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
-              <span>Pedido</span><span>Cliente</span><span>Profissional</span><span>Data venda</span><span>Prazo</span><span>Semáforo</span><span>Status</span><span></span>
+            <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 160px 100px 110px 70px 130px 72px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px', alignItems: 'center' }}>
+              <button onClick={() => toggleOrdenacao('numero_pedido')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '500', color: ordenacao.campo === 'numero_pedido' ? '#1a1a2e' : '#888', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}>
+                Pedido {ordenacao.campo === 'numero_pedido' ? (ordenacao.dir === 'asc' ? '↑' : '↓') : '↕'}
+              </button>
+              <span>Cliente</span>
+              <span>Profissional</span>
+              <span>Data venda</span>
+              <button onClick={() => toggleOrdenacao('prazo_prometido')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '500', color: ordenacao.campo === 'prazo_prometido' ? '#1a1a2e' : '#888', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}>
+                Prazo {ordenacao.campo === 'prazo_prometido' ? (ordenacao.dir === 'asc' ? '↑' : '↓') : '↕'}
+              </button>
+              <span>Semáforo</span>
+              <button onClick={() => toggleOrdenacao('status')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '500', color: ordenacao.campo === 'status' ? '#1a1a2e' : '#888', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}>
+                Status {ordenacao.campo === 'status' ? (ordenacao.dir === 'asc' ? '↑' : '↓') : '↕'}
+              </button>
+              <span></span>
             </div>
 
             {loading && <div style={{ padding: '24px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Carregando...</div>}
@@ -305,7 +334,7 @@ export default function Pedidos() {
             )}
 
             {paginados.map((p, i) => (
-              <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 140px 100px 100px 80px 120px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+              <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 160px 100px 110px 70px 130px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <a href={`/pedidos/${p.id}`} style={{ fontSize: '12px', fontWeight: '500', color: '#C9A84C', textDecoration: 'none' }}>{p.numero_pedido}</a>
                 <a href={`/pedidos/${p.id}`} style={{ textDecoration: 'none' }}>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{p.clientes?.nome}</div>
