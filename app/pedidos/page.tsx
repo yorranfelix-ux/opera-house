@@ -214,7 +214,10 @@ export default function Pedidos() {
     const dir = ordenacao.dir === 'asc' ? 1 : -1
     if (ordenacao.campo === 'numero_pedido') return dir * (parseInt(a.numero_pedido) - parseInt(b.numero_pedido))
     if (ordenacao.campo === 'prazo_prometido') return dir * ((a.prazo_prometido || '').localeCompare(b.prazo_prometido || ''))
-    if (ordenacao.campo === 'status') return dir * (a.status || '').localeCompare(b.status || '')
+    if (ordenacao.campo === 'status') {
+      const ordem = ['criado','aguardando_compra','em_producao','em_transporte','recebido','conferido_ok','apto_agendamento','agendado','entregue','com_at','cancelado']
+      return dir * (ordem.indexOf(a.status) - ordem.indexOf(b.status))
+    }
     return dir * ((a as any).created_at || '').localeCompare((b as any).created_at || '')
   })
   const totalPaginas = Math.max(1, Math.ceil(filtrados.length / ITEMS_POR_PAGINA))
