@@ -955,12 +955,14 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                     <span style={{ fontSize: '11px', color: '#555' }}>
                       {item.data_recebimento ? new Date(item.data_recebimento + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
                     </span>
-                    <button onClick={() => abrirEdicaoItem(item)} style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>
-                      Editar
-                    </button>
-                    <button onClick={() => setItemParaExcluir(item)} style={{ padding: '5px 8px', borderRadius: '6px', border: '0.5px solid #f5c6c6', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#A32D2D' }} title="Excluir item">
-                      🗑
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
+                      <button onClick={() => abrirEdicaoItem(item)} style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555', width: '100%' }}>
+                        Editar
+                      </button>
+                      <button onClick={() => setItemParaExcluir(item)} style={{ padding: '3px 8px', borderRadius: '6px', border: '0.5px solid #f5c6c6', background: '#fff', fontSize: '10px', cursor: 'pointer', color: '#A32D2D', width: '100%' }} title="Excluir item">
+                        Excluir
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
