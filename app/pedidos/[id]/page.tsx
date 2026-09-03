@@ -118,6 +118,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const [showExcluirModal, setShowExcluirModal] = useState(false)
   const [confirmacaoExcluir, setConfirmacaoExcluir] = useState('')
   const [excluindo, setExcluindo] = useState(false)
+  const [itemParaExcluir, setItemParaExcluir] = useState<Item | null>(null)
+  const [excluindoItem, setExcluindoItem] = useState(false)
   const [salvandoItem, setSalvandoItem] = useState(false)
   const [pagamento, setPagamento] = useState({ status_pagamento: 'pendente', observacao_pagamento: '' })
   const [docForm, setDocForm] = useState({ tipo_documento: 'NF', numero_documento: '' })
@@ -232,6 +234,17 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     setPedido(prev => prev ? { ...prev, semaforo: cor } : prev)
     setShowSemaforo(false)
     await registrarHistorico({ tipo: 'pedido_editado', descricao: `Semáforo alterado para ${cor}`, pedidoId: id })
+  }
+
+  async function excluirItem() {
+    if (!itemParaExcluir) return
+    setExcluindoItem(true)
+    const { error } = await supabase.from('itens_pedido').delete().eq('id', itemParaExcluir.id)
+    if (error) { alert('Erro ao excluir item: ' + error.message); setExcluindoItem(false); return }
+    await registrarHistorico({ tipo: 'item_excluido', descricao: `Item excluído: ${itemParaExcluir.descricao}`, pedidoId: id })
+    setItens(prev => prev.filter(i => i.id !== itemParaExcluir.id))
+    setItemParaExcluir(null)
+    setExcluindoItem(false)
   }
 
   async function excluirPedido() {
@@ -945,6 +958,9 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                     <button onClick={() => abrirEdicaoItem(item)} style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>
                       Editar
                     </button>
+                    <button onClick={() => setItemParaExcluir(item)} style={{ padding: '5px 8px', borderRadius: '6px', border: '0.5px solid #f5c6c6', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#A32D2D' }} title="Excluir item">
+                      🗑
+                    </button>
                   </div>
                 ))}
               </div>
@@ -1148,6 +1164,26 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                 </div>
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {itemParaExcluir && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '420px' }}>
+            <div style={{ fontSize: '16px', fontWeight: '600', color: '#A32D2D', marginBottom: '12px' }}>Excluir item</div>
+            <p style={{ fontSize: '13px', color: '#555', marginBottom: '20px', lineHeight: '1.6' }}>
+              Tem certeza que deseja excluir o item:<br />
+              <strong>{itemParaExcluir.descricao}</strong>
+            </p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setItemParaExcluir(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>
+                Cancelar
+              </button>
+              <button onClick={excluirItem} disabled={excluindoItem} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#A32D2D', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: excluindoItem ? 'not-allowed' : 'pointer' }}>
+                {excluindoItem ? 'Excluindo...' : 'Excluir item'}
+              </button>
+            </div>
           </div>
         </div>
       )}
