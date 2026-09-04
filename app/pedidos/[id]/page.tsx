@@ -46,6 +46,8 @@ interface Item {
   fornecedor_id: string
   data_recebimento: string
   numero_nf: string
+  data_envio_tecido: string
+  nf_envio_tecido: string
   fornecedores: { nome_fantasia: string; razao_social: string }
 }
 
@@ -97,7 +99,7 @@ const itemFormVazio = {
   requer_impermeabilizacao: false,
   tipo: 'movel',
   status: 'aguardando_compra', previsao_chegada: '', apto_entrega: false,
-  data_recebimento: '', numero_nf: '',
+  data_recebimento: '', numero_nf: '', data_envio_tecido: '', nf_envio_tecido: '',
 }
 
 export default function CentralPedido({ params }: { params: Promise<{ id: string }> }) {
@@ -339,6 +341,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       apto_entrega: item.apto_entrega || false,
       data_recebimento: item.data_recebimento || '',
       numero_nf: item.numero_nf || '',
+      data_envio_tecido: item.data_envio_tecido || '',
+      nf_envio_tecido: item.nf_envio_tecido || '',
     })
     setShowItemForm(true)
   }
@@ -367,6 +371,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       apto_entrega: itemForm.apto_entrega,
       data_recebimento: itemForm.data_recebimento || null,
       numero_nf: itemForm.numero_nf || null,
+      data_envio_tecido: itemForm.data_envio_tecido || null,
+      nf_envio_tecido: itemForm.nf_envio_tecido || null,
     }
 
     if (editandoItemId) {
@@ -917,6 +923,11 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                         {item.requer_tecido_fornecido && (
                           <span style={{ marginLeft: '6px', background: '#EEEDFE', color: '#3C3489', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>Tecido a enviar</span>
                         )}
+                        {item.tipo === 'tecido' && item.data_envio_tecido && (
+                          <span style={{ marginLeft: '6px', color: '#3C3489', fontSize: '10px' }}>
+                            Enviado: {new Date(item.data_envio_tecido + 'T12:00:00').toLocaleDateString('pt-BR')}{item.nf_envio_tecido ? ` · NF ${item.nf_envio_tecido}` : ''}
+                          </span>
+                        )}
                         {ocorrenciaItemIds.has(item.id) && (
                           <span style={{ marginLeft: '6px', background: '#FCEBEB', color: '#791F1F', padding: '1px 6px', borderRadius: '6px', fontSize: '10px' }}>Ocorrência aberta</span>
                         )}
@@ -1085,6 +1096,25 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                   <label htmlFor="apto" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Apto para entrega</label>
                 </div>
               </>
+            )}
+
+            {itemForm.tipo === 'tecido' && (
+              <div style={{ marginBottom: '16px', background: '#F5F0FF', borderRadius: '10px', padding: '12px' }}>
+                <div style={{ fontSize: '11px', color: '#3C3489', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.4px', fontWeight: '500' }}>Envio do tecido</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <div>
+                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Data de envio</div>
+                    <input type="date" value={itemForm.data_envio_tecido} onChange={e => setItemForm({ ...itemForm, data_envio_tecido: e.target.value })}
+                      style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #d0c8f0', fontSize: '13px', outline: 'none', boxSizing: 'border-box', background: '#fff' }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>NF de envio</div>
+                    <input type="text" value={itemForm.nf_envio_tecido} onChange={e => setItemForm({ ...itemForm, nf_envio_tecido: e.target.value })}
+                      placeholder="Ex: 354"
+                      style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #d0c8f0', fontSize: '13px', outline: 'none', boxSizing: 'border-box', background: '#fff' }} />
+                  </div>
+                </div>
+              </div>
             )}
 
             <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
