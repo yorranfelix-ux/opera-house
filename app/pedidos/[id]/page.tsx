@@ -117,6 +117,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
   const [atsCount, setAtsCount] = useState(0)
   const [ocorrenciaItemIds, setOcorrenciaItemIds] = useState<Set<string>>(new Set())
   const [atItemIds, setAtItemIds] = useState<Set<string>>(new Set())
+  const [buscaItem, setBuscaItem] = useState('')
   const [showExcluirModal, setShowExcluirModal] = useState(false)
   const [confirmacaoExcluir, setConfirmacaoExcluir] = useState('')
   const [excluindo, setExcluindo] = useState(false)
@@ -903,10 +904,25 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
 
             {itens.length > 0 && (
               <div>
+                <div style={{ padding: '8px 16px', borderBottom: '0.5px solid #f0efe9' }}>
+                  <input
+                    type="text"
+                    value={buscaItem}
+                    onChange={e => setBuscaItem(e.target.value)}
+                    placeholder="Buscar item ou fornecedor..."
+                    style={{ width: '100%', padding: '7px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', background: '#faf9f7', color: '#1a1a2e' }}
+                  />
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 45px 120px 120px 85px 40px 80px 72px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
                   <span>Item</span><span>Qtd</span><span>Fornecedor</span><span>Status</span><span>Previsão</span><span>Apto</span><span>Recebido</span><span></span>
                 </div>
-                {itens.map((item, i) => (
+                {itens.filter(item => {
+                  if (!buscaItem.trim()) return true
+                  const q = buscaItem.toLowerCase()
+                  return item.descricao?.toLowerCase().includes(q) ||
+                    item.fornecedores?.nome_fantasia?.toLowerCase().includes(q) ||
+                    item.fornecedores?.razao_social?.toLowerCase().includes(q)
+                }).map((item, i) => (
                   <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 45px 120px 120px 85px 40px 80px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: item.tipo === 'tecido' ? '#F5F0FF' : item.tipo === 'outro' ? '#F5F5F5' : i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
