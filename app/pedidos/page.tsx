@@ -207,7 +207,7 @@ export default function Pedidos() {
     if (!buscaOk) return false
     if (filtroStatus === 'abertos' && !STATUS_ABERTOS.includes(p.status)) return false
     if (filtroStatus === 'prontos' && p.status !== 'apto_agendamento') return false
-    if (filtroStatus === 'atrasados' && p.semaforo !== 'vermelho') return false
+    if (filtroStatus === 'atrasados' && !(p.prazo_prometido && new Date(p.prazo_prometido) < new Date() && p.status !== 'entregue' && p.status !== 'cancelado')) return false
     if (filtroStatus === 'entregues' && p.status !== 'entregue') return false
     if (filtroStatus === 'cancelados' && p.status !== 'cancelado') return false
     if (filtroProfissional && p.profissional_id !== filtroProfissional) return false
