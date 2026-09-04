@@ -68,7 +68,7 @@ export default function Pedidos() {
   const [clientes, setClientes] = useState<{ id: string; nome: string }[]>([])
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
-  const [filtroStatus, setFiltroStatus] = useState<'abertos' | 'entregues' | 'cancelados' | 'todos'>('abertos')
+  const [filtroStatus, setFiltroStatus] = useState<'abertos' | 'prontos' | 'entregues' | 'cancelados' | 'todos'>('abertos')
   const [filtroProfissional, setFiltroProfissional] = useState<string>('')
   const [ordenacao, setOrdenacao] = useState<{ campo: string; dir: 'asc' | 'desc' }>({ campo: 'created_at', dir: 'desc' })
   const [profissionais, setProfissionais] = useState<{ id: string; nome: string; tipo: string }[]>([])
@@ -206,6 +206,7 @@ export default function Pedidos() {
     const buscaOk = !busca || p.numero_pedido?.toLowerCase().includes(busca.toLowerCase()) || p.clientes?.nome?.toLowerCase().includes(busca.toLowerCase())
     if (!buscaOk) return false
     if (filtroStatus === 'abertos' && !STATUS_ABERTOS.includes(p.status)) return false
+    if (filtroStatus === 'prontos' && p.status !== 'apto_agendamento') return false
     if (filtroStatus === 'entregues' && p.status !== 'entregue') return false
     if (filtroStatus === 'cancelados' && p.status !== 'cancelado') return false
     if (filtroProfissional && p.profissional_id !== filtroProfissional) return false
@@ -281,6 +282,7 @@ export default function Pedidos() {
             <div style={{ display: 'flex', gap: '4px', background: '#f7f6f3', border: '0.5px solid #e8e7e3', borderRadius: '8px', padding: '3px', flexShrink: 0 }}>
               {([
                 { key: 'abertos', label: 'Em aberto' },
+                { key: 'prontos', label: 'Prontos' },
                 { key: 'entregues', label: 'Entregues' },
                 { key: 'cancelados', label: 'Cancelados' },
                 { key: 'todos', label: 'Todos' },
