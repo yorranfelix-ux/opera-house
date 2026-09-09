@@ -80,6 +80,7 @@ const SEMAFORO_COLOR: Record<string, string> = {
   vermelho: '#A32D2D',
   azul: '#185FA5',
   roxo: '#534AB7',
+  turquesa: '#0E7C7B',
 }
 
 const SEMAFORO_LABEL: Record<string, string> = {
@@ -88,6 +89,7 @@ const SEMAFORO_LABEL: Record<string, string> = {
   vermelho: 'Atrasado',
   azul: 'Aguardando cliente',
   roxo: 'Aguardando fornecedor',
+  turquesa: 'Pronto p/ entrega',
 }
 
 const itemFormVazio = {
@@ -188,7 +190,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     if (todosAptos) {
       const { data: p } = await supabase.from('pedidos').select('status').eq('id', id).maybeSingle()
       if (p && p.status !== 'entregue' && p.status !== 'cancelado' && p.status !== 'apto_agendamento') {
-        await supabase.from('pedidos').update({ status: 'apto_agendamento' }).eq('id', id)
+        await supabase.from('pedidos').update({ status: 'apto_agendamento', semaforo: 'turquesa' }).eq('id', id)
         await registrarHistorico({ tipo: 'pedido_editado', descricao: 'Status atualizado automaticamente para Apto p/ agendamento (todos os itens prontos)', pedidoId: id })
         buscarPedido()
       }
