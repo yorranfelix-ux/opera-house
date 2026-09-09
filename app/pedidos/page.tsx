@@ -53,7 +53,7 @@ const SEMAFORO_COLOR: Record<string, string> = {
   vermelho: '#A32D2D',
   azul: '#185FA5',
   roxo: '#534AB7',
-  turquesa: '#0E7C7B',
+  turquesa: '#6DB33F',
 }
 
 const formVazio = {
