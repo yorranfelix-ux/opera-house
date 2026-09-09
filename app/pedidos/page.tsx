@@ -299,20 +299,19 @@ export default function Pedidos() {
                 </button>
               ))}
             </div>
-            <div style={{ width: '0.5px', height: '28px', background: '#e8e7e3', flexShrink: 0 }} />
-            {profissionais.length > 0 && (
-              <select
-                value={filtroProfissional}
-                onChange={e => setFiltroProfissional(e.target.value)}
-                style={{ padding: '7px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '12px', background: filtroProfissional ? '#1a1a2e' : '#fff', color: filtroProfissional ? '#C9A84C' : '#888', outline: 'none', cursor: 'pointer', flexShrink: 0 }}
-              >
-                <option value="">Todos os profissionais</option>
-                {profissionais.map(p => (
-                  <option key={p.id} value={p.id}>{p.nome}</option>
-                ))}
-              </select>
-            )}
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+              {profissionais.length > 0 && (
+                <select
+                  value={filtroProfissional}
+                  onChange={e => setFiltroProfissional(e.target.value)}
+                  style={{ padding: '7px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '12px', background: filtroProfissional ? '#1a1a2e' : '#fff', color: filtroProfissional ? '#C9A84C' : '#888', outline: 'none', cursor: 'pointer', flexShrink: 0 }}
+                >
+                  <option value="">Todos os profissionais</option>
+                  {profissionais.map(p => (
+                    <option key={p.id} value={p.id}>{p.nome}</option>
+                  ))}
+                </select>
+              )}
               <span style={{ fontSize: '11px', color: '#aaa' }}>{filtrados.length} pedido{filtrados.length !== 1 ? 's' : ''}</span>
             </div>
           </div>
