@@ -80,7 +80,7 @@ const SEMAFORO_COLOR: Record<string, string> = {
   vermelho: '#A32D2D',
   azul: '#185FA5',
   roxo: '#534AB7',
-  turquesa: '#6DB33F',
+  turquesa: '#A8E63D',
 }
 
 const SEMAFORO_LABEL: Record<string, string> = {
@@ -701,12 +701,12 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             {showSemaforo && (
               <>
                 <div onClick={() => setShowSemaforo(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
-                <div style={{ position: 'absolute', top: '36px', right: 0, background: '#fff', borderRadius: '10px', border: '0.5px solid #e8e7e3', boxShadow: '0 8px 24px rgba(0,0,0,0.1)', zIndex: 50, overflow: 'hidden', minWidth: '140px' }}>
+                <div style={{ position: 'absolute', top: '36px', right: 0, background: '#fff', borderRadius: '10px', border: '0.5px solid #e8e7e3', boxShadow: '0 8px 24px rgba(0,0,0,0.1)', zIndex: 50, overflow: 'hidden', minWidth: '160px' }}>
                   {Object.entries(SEMAFORO_COLOR).map(([cor, hex]) => (
                     <div key={cor} onClick={() => salvarSemaforo(cor)}
                       style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', cursor: 'pointer', background: pedido.semaforo === cor ? '#f7f6f3' : '#fff', borderBottom: '0.5px solid #f0efe9' }}>
-                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: hex }} />
-                      <span style={{ fontSize: '13px', color: '#1a1a2e' }}>{SEMAFORO_LABEL[cor]}</span>
+                      <div style={{ width: '10px', height: '10px', minWidth: '10px', borderRadius: '50%', background: hex }} />
+                      <span style={{ fontSize: '13px', color: '#1a1a2e', whiteSpace: 'nowrap' }}>{SEMAFORO_LABEL[cor]}</span>
                     </div>
                   ))}
                 </div>
