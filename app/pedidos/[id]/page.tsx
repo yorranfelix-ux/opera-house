@@ -157,6 +157,25 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
         status_pagamento: (data as any).status_pagamento || 'pendente',
         observacao_pagamento: (data as any).observacao_pagamento || '',
       })
+
+      // Semáforo automático por prazo (não sobrescreve turquesa nem pedidos encerrados)
+      const statusFinal = ['entregue', 'cancelado', 'apto_agendamento']
+      if (!statusFinal.includes(data.status) && data.semaforo !== 'turquesa') {
+        const hoje = new Date()
+        hoje.setHours(0, 0, 0, 0)
+        let novoSemaforo: string | null = null
+        if (data.prazo_prometido) {
+          const prazo = new Date(data.prazo_prometido + 'T00:00:00')
+          const diasRestantes = Math.ceil((prazo.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
+          if (diasRestantes < 0) novoSemaforo = 'vermelho'
+          else if (diasRestantes <= 7) novoSemaforo = 'amarelo'
+          else novoSemaforo = 'verde'
+        }
+        if (novoSemaforo && novoSemaforo !== data.semaforo) {
+          await supabase.from('pedidos').update({ semaforo: novoSemaforo }).eq('id', id)
+          data.semaforo = novoSemaforo
+        }
+      }
     }
     setPedido(data)
     setLoading(false)
