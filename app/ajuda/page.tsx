@@ -35,9 +35,10 @@ const SECOES: Secao[] = [
     titulo: 'Pedidos',
     descricao: 'Cadastro e acompanhamento de todos os pedidos de venda.',
     passos: [
-      { titulo: 'Criar um pedido', texto: 'Clique em "+ Novo pedido". Preencha o número do pedido (geralmente o código do orçamento), selecione o cliente, o profissional responsável (arquiteto/designer), a data da venda e o prazo prometido ao cliente. O status inicial é "Criado" automaticamente.' },
+      { titulo: 'Criar um pedido', texto: 'Clique em "+ Novo pedido". O formulário abre com um seletor de status: escolha "Compra confirmada" para lançar um pedido normal, ou "Pendente" para registrar um pedido que ainda aguarda alguma informação antes de ser finalizado no sistema. Preencha o número do pedido (geralmente o código do orçamento), selecione o cliente, o profissional responsável (arquiteto/designer), a data da venda e o prazo prometido ao cliente.' },
+      { titulo: 'Pedidos pendentes', texto: 'Use o status "Pendente" para registrar pedidos já vendidos que ainda aguardam alguma informação para ser cadastrados por completo — por exemplo, aguardando liberação de uma consultora ou aprovação financeira. Ao escolher "Pendente", aparecem dois campos extras: "Responsável" (quem está aguardando a resolução) e "O que está pendente?" (descrição livre do que falta). Essa descrição aparece na listagem ao lado do badge roxo. Quando a pendência for resolvida, edite o pedido e mude o status para "Compra confirmada".' },
       { titulo: 'Buscar pedidos', texto: 'Use a barra de busca para localizar por número do pedido ou nome do cliente.' },
-      { titulo: 'Filtrar por situação', texto: 'Use os botões de filtro para segmentar a lista: "Em aberto" mostra todos os pedidos em andamento; "Prontos" mostra apenas os pedidos com status Apto p/ agendamento (todos os itens prontos); "Atrasados" mostra pedidos cujo prazo prometido já venceu e ainda não foram entregues; "Entregues" mostra os concluídos; "Cancelados" mostra apenas os cancelados com o motivo.' },
+      { titulo: 'Filtrar por situação', texto: 'Use os botões de filtro para segmentar a lista: "Em aberto" mostra todos os pedidos em andamento (incluindo pendentes); "Pendente" mostra apenas os pedidos aguardando informações; "Prontos" mostra apenas os pedidos com status Apto p/ agendamento (todos os itens prontos); "Atrasados" mostra pedidos cujo prazo prometido já venceu e ainda não foram entregues; "Entregues" mostra os concluídos; "Cancelados" mostra apenas os cancelados com o motivo.' },
       { titulo: 'Filtrar por profissional', texto: 'Use o select de profissional na barra de filtros para ver apenas os pedidos vinculados a um arquiteto ou designer específico. Esse filtro combina com os demais.' },
       { titulo: 'Abrir detalhes', texto: 'Clique no número do pedido (em dourado) ou no nome do cliente para abrir a página de detalhes, onde você gerencia itens, semáforo, pagamento e imprime o resumo.' },
       { titulo: 'Data de entrega', texto: 'Pedidos entregues exibem a data de entrega logo abaixo do badge de status na listagem. Essa data é preenchida automaticamente quando o pedido é marcado como "Entregue" — seja pela conclusão de uma entrega no módulo Entregas, seja por alteração manual do status.' },
@@ -47,6 +48,7 @@ const SECOES: Secao[] = [
     ],
     dicas: [
       'Todos os filtros (busca, status, profissional) são salvos automaticamente — ao voltar para a página eles estarão como você deixou.',
+      'Pedidos pendentes aparecem em "Em aberto" e também no filtro "Pendente". Ao resolver a pendência, edite o pedido e mude o status para "Compra confirmada".',
       'Pedidos entregues ou cancelados somem do filtro "Em aberto". Use "Todos" para encontrá-los.',
       'Pedidos entregues que ainda possuem AT ativa exibem a tag vermelha "AT ativa" diretamente na lista — facilitando identificar clientes que precisam de atenção pós-entrega.',
     ],
