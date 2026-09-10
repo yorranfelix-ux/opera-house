@@ -43,7 +43,8 @@ const SECOES: Secao[] = [
       { titulo: 'Abrir detalhes', texto: 'Clique no número do pedido (em dourado) ou no nome do cliente para abrir a página de detalhes, onde você gerencia itens, semáforo, pagamento e imprime o resumo.' },
       { titulo: 'Data de entrega', texto: 'Pedidos entregues exibem a data de entrega logo abaixo do badge de status na listagem. Essa data é preenchida automaticamente quando o pedido é marcado como "Entregue" — seja pela conclusão de uma entrega no módulo Entregas, seja por alteração manual do status.' },
       { titulo: 'Cancelar pedido', texto: 'Ao editar um pedido e selecionar o status "Cancelado", aparece um campo obrigatório para informar o motivo do cancelamento. O número do pedido cancelado não pode ser reutilizado em novos pedidos — o sistema avisa caso haja conflito.' },
-      { titulo: 'Editar um pedido', texto: 'Clique em "Editar" na linha do pedido para alterar dados como status, prazo prometido, profissional vinculado e observações gerais.' },
+      { titulo: 'Consultora responsável', texto: 'No formulário do pedido há um campo "Consultora responsável" disponível em todos os pedidos — informe o nome da consultora vinculada ao projeto (ex: Carolina, Adriana). Esse campo é independente do status e pode ser preenchido tanto em pedidos normais quanto em pedidos com status Pendente.' },
+      { titulo: 'Editar um pedido', texto: 'Clique em "Editar" na linha do pedido para alterar dados como status, prazo prometido, profissional vinculado, consultora responsável e observações gerais.' },
       { titulo: 'Exportar CSV', texto: 'Clique em "↓ Exportar CSV" para baixar a lista de pedidos em formato compatível com Excel.' },
     ],
     dicas: [
