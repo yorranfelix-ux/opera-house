@@ -17,6 +17,7 @@ interface Pedido {
   semaforo: string
   observacoes_gerais: string
   motivo_cancelamento: string | null
+  consultora: string | null
   responsavel_prevenda: string | null
   obs_prevenda: string | null
   clientes: { nome: string; cidade: string; estado: string }
@@ -63,7 +64,7 @@ const SEMAFORO_COLOR: Record<string, string> = {
 const formVazio = {
   numero_pedido: '', cliente_id: '', profissional_id: '', data_venda: '',
   prazo_prometido: '', observacoes_gerais: '', status: 'criado', motivo_cancelamento: '',
-  responsavel_prevenda: '', obs_prevenda: '', pendencia: '',
+  consultora: '', responsavel_prevenda: '', obs_prevenda: '', pendencia: '',
 }
 
 export default function Pedidos() {
@@ -160,6 +161,7 @@ export default function Pedidos() {
       observacoes_gerais: p.observacoes_gerais || '',
       status: p.status || 'criado',
       motivo_cancelamento: p.motivo_cancelamento || '',
+      consultora: (p as any).consultora || '',
       responsavel_prevenda: (p as any).responsavel_prevenda || '',
       obs_prevenda: (p as any).obs_prevenda || '',
       pendencia: (p as any).pendencia || '',
@@ -184,6 +186,7 @@ export default function Pedidos() {
         ...form,
         profissional_id: form.profissional_id || null,
         motivo_cancelamento: form.status === 'cancelado' ? form.motivo_cancelamento.trim() : null,
+        consultora: form.consultora || null,
         responsavel_prevenda: form.responsavel_prevenda || null,
         obs_prevenda: form.obs_prevenda || null,
         pendencia: form.pendencia || null,
@@ -458,6 +461,13 @@ export default function Pedidos() {
                 <option value="">Nenhum</option>
                 {profissionais.map(p => <option key={p.id} value={p.id}>{p.nome} — {p.tipo}</option>)}
               </select>
+            </div>
+
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Consultora responsável</div>
+              <input value={form.consultora} onChange={e => setForm({ ...form, consultora: e.target.value })}
+                placeholder="Ex: Carolina, Adriana..."
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
             </div>
 
             {form.status !== 'pendente' && (
