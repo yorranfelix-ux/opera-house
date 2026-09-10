@@ -474,15 +474,13 @@ export default function Pedidos() {
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
             </div>
 
-            {editandoId && (
-              <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Status</div>
-                <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
-                  {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                </select>
-              </div>
-            )}
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Status</div>
+              <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
+                {Object.entries(STATUS_LABEL).filter(([k]) => editandoId || ['pendente','criado'].includes(k)).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
 
             {/* Bloco pendente */}
             {form.status === 'pendente' && (
