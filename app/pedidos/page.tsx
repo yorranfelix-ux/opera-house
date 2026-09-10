@@ -17,12 +17,18 @@ interface Pedido {
   semaforo: string
   observacoes_gerais: string
   motivo_cancelamento: string | null
+  responsavel_prevenda: string | null
+  obs_prevenda: string | null
   clientes: { nome: string; cidade: string; estado: string }
   profissionais: { nome: string; tipo: string } | null
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  criado: 'Criado',
+  proposta: 'Proposta',
+  aguard_aprovacao: 'Aguard. aprovação',
+  aguard_financeiro: 'Aguard. financeiro',
+  aguard_lib_consultora: 'Aguard. lib. consultora',
+  criado: 'Compra confirmada',
   aguardando_compra: 'Aguard. compra',
   em_producao: 'Em produção',
   em_transporte: 'Em transporte',
@@ -35,6 +41,10 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
+  proposta: { bg: '#F0EDF8', color: '#4A3B8C' },
+  aguard_aprovacao: { bg: '#F0EDF8', color: '#4A3B8C' },
+  aguard_financeiro: { bg: '#F0EDF8', color: '#4A3B8C' },
+  aguard_lib_consultora: { bg: '#F0EDF8', color: '#4A3B8C' },
   criado: { bg: '#f0efe9', color: '#555' },
   aguardando_compra: { bg: '#FAECE7', color: '#712B13' },
   em_producao: { bg: '#E6F1FB', color: '#0C447C' },
@@ -46,6 +56,8 @@ const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
   com_at: { bg: '#EEEDFE', color: '#3C3489' },
   cancelado: { bg: '#FCEBEB', color: '#791F1F' },
 }
+
+const STATUS_PREVENDA = ['proposta', 'aguard_aprovacao', 'aguard_financeiro', 'aguard_lib_consultora']
 
 const SEMAFORO_COLOR: Record<string, string> = {
   verde: '#3B6D11',
@@ -59,6 +71,7 @@ const SEMAFORO_COLOR: Record<string, string> = {
 const formVazio = {
   numero_pedido: '', cliente_id: '', profissional_id: '', data_venda: '',
   prazo_prometido: '', observacoes_gerais: '', status: 'criado', motivo_cancelamento: '',
+  responsavel_prevenda: '', obs_prevenda: '',
 }
 
 export default function Pedidos() {
@@ -69,7 +82,7 @@ export default function Pedidos() {
   const [clientes, setClientes] = useState<{ id: string; nome: string }[]>([])
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [form, setForm] = useState(formVazio)
-  const [filtroStatus, setFiltroStatus] = useState<'abertos' | 'prontos' | 'atrasados' | 'entregues' | 'cancelados' | 'todos'>('abertos')
+  const [filtroStatus, setFiltroStatus] = useState<'abertos' | 'prevenda' | 'prontos' | 'atrasados' | 'entregues' | 'cancelados' | 'todos'>('abertos')
   const [filtroProfissional, setFiltroProfissional] = useState<string>('')
   const [ordenacao, setOrdenacao] = useState<{ campo: string; dir: 'asc' | 'desc' }>({ campo: 'created_at', dir: 'desc' })
   const [profissionais, setProfissionais] = useState<{ id: string; nome: string; tipo: string }[]>([])
@@ -77,6 +90,7 @@ export default function Pedidos() {
   const [pagina, setPagina] = useState(1)
   const ITEMS_POR_PAGINA = 25
   const [pedidosComAT, setPedidosComAT] = useState<Set<string>>(new Set())
+  const [modoCriacao, setModoCriacao] = useState<'pergunta' | 'prevenda' | 'confirmado'>('pergunta')
 
   useEffect(() => {
     try {
@@ -139,6 +153,7 @@ export default function Pedidos() {
   function abrirNovo() {
     setEditandoId(null)
     setForm(formVazio)
+    setModoCriacao('pergunta')
     setShowForm(true)
   }
 
@@ -146,6 +161,7 @@ export default function Pedidos() {
     e.preventDefault()
     e.stopPropagation()
     setEditandoId(p.id)
+    setModoCriacao('confirmado')
     setForm({
       numero_pedido: p.numero_pedido || '',
       cliente_id: p.cliente_id || '',
@@ -155,6 +171,8 @@ export default function Pedidos() {
       observacoes_gerais: p.observacoes_gerais || '',
       status: p.status || 'criado',
       motivo_cancelamento: p.motivo_cancelamento || '',
+      responsavel_prevenda: (p as any).responsavel_prevenda || '',
+      obs_prevenda: (p as any).obs_prevenda || '',
     })
     setShowForm(true)
   }
@@ -162,7 +180,8 @@ export default function Pedidos() {
   async function salvarPedido() {
     if (!form.numero_pedido) return alert('Número do pedido é obrigatório')
     if (!form.cliente_id) return alert('Selecione um cliente')
-    if (!form.data_venda) return alert('Data da venda é obrigatória')
+    const isPrevenda = STATUS_PREVENDA.includes(form.status)
+    if (!isPrevenda && !form.data_venda) return alert('Data da venda é obrigatória')
     if (form.status === 'cancelado' && !form.motivo_cancelamento.trim()) return alert('Informe o motivo do cancelamento')
 
     // Validar número duplicado (inclusive contra cancelados)
@@ -176,6 +195,8 @@ export default function Pedidos() {
         ...form,
         profissional_id: form.profissional_id || null,
         motivo_cancelamento: form.status === 'cancelado' ? form.motivo_cancelamento.trim() : null,
+        responsavel_prevenda: form.responsavel_prevenda || null,
+        obs_prevenda: form.obs_prevenda || null,
       }
       if (editandoId && form.status === 'entregue' && !pedidoAtual?.data_entrega) {
         payload.data_entrega = new Date().toISOString().split('T')[0]
@@ -207,6 +228,7 @@ export default function Pedidos() {
     const buscaOk = !busca || p.numero_pedido?.toLowerCase().includes(busca.toLowerCase()) || p.clientes?.nome?.toLowerCase().includes(busca.toLowerCase())
     if (!buscaOk) return false
     if (filtroStatus === 'abertos' && !STATUS_ABERTOS.includes(p.status)) return false
+    if (filtroStatus === 'prevenda' && !STATUS_PREVENDA.includes(p.status)) return false
     if (filtroStatus === 'prontos' && p.status !== 'apto_agendamento') return false
     if (filtroStatus === 'atrasados' && !(p.prazo_prometido && new Date(p.prazo_prometido) < new Date() && p.status !== 'entregue' && p.status !== 'cancelado')) return false
     if (filtroStatus === 'entregues' && p.status !== 'entregue') return false
@@ -218,7 +240,7 @@ export default function Pedidos() {
     if (ordenacao.campo === 'numero_pedido') return dir * (parseInt(a.numero_pedido) - parseInt(b.numero_pedido))
     if (ordenacao.campo === 'prazo_prometido') return dir * ((a.prazo_prometido || '').localeCompare(b.prazo_prometido || ''))
     if (ordenacao.campo === 'status') {
-      const ordem = ['criado','aguardando_compra','em_producao','em_transporte','recebido','conferido_ok','apto_agendamento','agendado','entregue','com_at','cancelado']
+      const ordem = ['proposta','aguard_aprovacao','aguard_financeiro','aguard_lib_consultora','criado','aguardando_compra','em_producao','em_transporte','recebido','conferido_ok','apto_agendamento','agendado','entregue','com_at','cancelado']
       return dir * (ordem.indexOf(a.status) - ordem.indexOf(b.status))
     }
     return dir * ((a as any).created_at || '').localeCompare((b as any).created_at || '')
@@ -284,6 +306,7 @@ export default function Pedidos() {
             <div style={{ display: 'flex', gap: '4px', background: '#f7f6f3', border: '0.5px solid #e8e7e3', borderRadius: '8px', padding: '3px', flexShrink: 0 }}>
               {([
                 { key: 'abertos', label: 'Em aberto' },
+                { key: 'prevenda', label: 'Pré-venda' },
                 { key: 'prontos', label: 'Prontos' },
                 { key: 'atrasados', label: 'Atrasados' },
                 { key: 'entregues', label: 'Entregues' },
@@ -418,6 +441,54 @@ export default function Pedidos() {
               <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
             </div>
 
+            {/* Pergunta inicial apenas para novo pedido */}
+            {!editandoId && modoCriacao === 'pergunta' && (
+              <div style={{ textAlign: 'center', padding: '16px 0 8px' }}>
+                <div style={{ fontSize: '14px', fontWeight: '500', color: '#1a1a2e', marginBottom: '20px' }}>A compra já foi confirmada?</div>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button
+                    onClick={() => { setModoCriacao('confirmado'); setForm(f => ({ ...f, status: 'criado' })) }}
+                    style={{ padding: '10px 24px', borderRadius: '10px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', fontWeight: '500', cursor: 'pointer', color: '#1a1a2e' }}
+                  >
+                    Sim — criar pedido
+                  </button>
+                  <button
+                    onClick={() => { setModoCriacao('prevenda'); setForm(f => ({ ...f, status: 'proposta' })) }}
+                    style={{ padding: '10px 24px', borderRadius: '10px', border: 'none', background: '#F0EDF8', fontSize: '13px', fontWeight: '500', cursor: 'pointer', color: '#4A3B8C' }}
+                  >
+                    Não — iniciar pré-venda
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {(!editandoId && modoCriacao === 'pergunta') ? null : (<>
+
+            {/* Bloco pré-venda */}
+            {(modoCriacao === 'prevenda' || (editandoId && STATUS_PREVENDA.includes(form.status))) && (
+              <div style={{ background: '#F0EDF8', borderRadius: '10px', padding: '14px', marginBottom: '16px', border: '1px solid #D8D0F0' }}>
+                <div style={{ fontSize: '11px', fontWeight: '600', color: '#4A3B8C', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Pré-venda</div>
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ fontSize: '11px', color: '#4A3B8C', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Status</div>
+                  <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #D8D0F0', fontSize: '13px', outline: 'none', boxSizing: 'border-box', background: '#fff' }}>
+                    {STATUS_PREVENDA.map(k => <option key={k} value={k}>{STATUS_LABEL[k]}</option>)}
+                  </select>
+                </div>
+                <div style={{ marginBottom: '10px' }}>
+                  <div style={{ fontSize: '11px', color: '#4A3B8C', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Responsável / Consultora</div>
+                  <input value={form.responsavel_prevenda} onChange={e => setForm({ ...form, responsavel_prevenda: e.target.value })}
+                    placeholder="Ex: Carolina, Adriana..."
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #D8D0F0', fontSize: '13px', outline: 'none', boxSizing: 'border-box', background: '#fff' }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', color: '#4A3B8C', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Obs. pré-venda</div>
+                  <textarea value={form.obs_prevenda} onChange={e => setForm({ ...form, obs_prevenda: e.target.value })} rows={2}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #D8D0F0', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical', background: '#fff' }} />
+                </div>
+              </div>
+            )}
+
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Número do pedido *</div>
               <input value={form.numero_pedido} onChange={e => setForm({ ...form, numero_pedido: e.target.value })}
@@ -442,11 +513,13 @@ export default function Pedidos() {
               </select>
             </div>
 
-            <div style={{ marginBottom: '12px' }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Data da venda *</div>
-              <input type="date" value={form.data_venda} onChange={e => setForm({ ...form, data_venda: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
-            </div>
+            {modoCriacao !== 'prevenda' && !STATUS_PREVENDA.includes(form.status) && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Data da venda *</div>
+                <input type="date" value={form.data_venda} onChange={e => setForm({ ...form, data_venda: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+            )}
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Prazo prometido ao cliente</div>
@@ -454,7 +527,7 @@ export default function Pedidos() {
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
             </div>
 
-            {editandoId && (
+            {editandoId && !STATUS_PREVENDA.includes(form.status) && (
               <div style={{ marginBottom: '12px' }}>
                 <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Status</div>
                 <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
@@ -483,6 +556,7 @@ export default function Pedidos() {
                 {salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Salvar pedido')}
               </button>
             </div>
+            </>)}
           </div>
         </div>
       )}
