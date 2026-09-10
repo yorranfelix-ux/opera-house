@@ -273,12 +273,12 @@ export default function Pedidos() {
 
         <div style={{ padding: '24px', flex: 1, overflow: 'auto' }}>
           {/* Barra de filtros */}
-          <div style={{ background: '#fff', border: '0.5px solid #e8e7e3', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ background: '#fff', border: '0.5px solid #e8e7e3', borderRadius: '12px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <input
-              placeholder="Buscar por número ou cliente..."
+              placeholder="Buscar..."
               value={busca}
               onChange={e => setBusca(e.target.value)}
-              style={{ width: '220px', padding: '7px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', flexShrink: 0 }}
+              style={{ width: '160px', padding: '7px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', flexShrink: 0 }}
             />
             <div style={{ width: '0.5px', height: '28px', background: '#e8e7e3', flexShrink: 0 }} />
             <div style={{ display: 'flex', gap: '4px', background: '#f7f6f3', border: '0.5px solid #e8e7e3', borderRadius: '8px', padding: '3px', flexShrink: 0 }}>
@@ -304,7 +304,7 @@ export default function Pedidos() {
                 <select
                   value={filtroProfissional}
                   onChange={e => setFiltroProfissional(e.target.value)}
-                  style={{ padding: '7px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '12px', background: filtroProfissional ? '#1a1a2e' : '#fff', color: filtroProfissional ? '#C9A84C' : '#888', outline: 'none', cursor: 'pointer', flexShrink: 0 }}
+                  style={{ padding: '7px 10px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '12px', background: filtroProfissional ? '#1a1a2e' : '#fff', color: filtroProfissional ? '#C9A84C' : '#888', outline: 'none', cursor: 'pointer', flexShrink: 0, maxWidth: '180px' }}
                 >
                   <option value="">Todos os profissionais</option>
                   {profissionais.map(p => (
