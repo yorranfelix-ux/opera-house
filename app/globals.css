@@ -96,6 +96,22 @@ body {
     font-size: 13px !important;
   }
 
+  /* ── Login: tela cheia no mobile ── */
+  .login-root {
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: 100vh !important;
+  }
+  .login-panel {
+    width: 100% !important;
+    padding: 48px 24px 40px !important;
+    min-height: 100vh !important;
+    justify-content: center !important;
+  }
+  .login-cover {
+    display: none !important;
+  }
+
   /* ── Filtros: empilhar no mobile ── */
   .filtros-bar {
     flex-wrap: wrap !important;

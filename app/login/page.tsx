@@ -24,8 +24,8 @@ export default function Login() {
   }
 
   return (
-    <div style={{ height: '100vh', display: 'flex', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
-      <div style={{ width: '420px', background: '#1a1a2e', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px' }}>
+    <div className="login-root" style={{ height: '100vh', display: 'flex', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
+      <div className="login-panel" style={{ width: '420px', background: '#1a1a2e', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px' }}>
         <img src={LOGO_NEG} alt="Opera House" style={{ width: '160px', marginBottom: '12px', objectFit: 'contain' }} />
         <div style={{ fontSize: '13px', color: '#6a6a8a', marginBottom: '48px' }}>Sistema de gestão de pedidos</div>
 
@@ -38,7 +38,7 @@ export default function Login() {
               onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && entrar()}
               placeholder="seu@email.com"
-              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '0.5px solid #2d2d44', background: '#252540', color: '#fff', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '0.5px solid #2d2d44', background: '#252540', color: '#fff', fontSize: '16px', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
 
@@ -50,7 +50,7 @@ export default function Login() {
               onChange={e => setSenha(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && entrar()}
               placeholder="••••••••"
-              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: '0.5px solid #2d2d44', background: '#252540', color: '#fff', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '12px 14px', borderRadius: '8px', border: '0.5px solid #2d2d44', background: '#252540', color: '#fff', fontSize: '16px', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
 
@@ -63,14 +63,14 @@ export default function Login() {
           <button
             onClick={entrar}
             disabled={loading}
-            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: 'none', background: '#C9A84C', color: '#1a1a2e', fontSize: '14px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+            style={{ width: '100%', padding: '14px', borderRadius: '8px', border: 'none', background: '#C9A84C', color: '#1a1a2e', fontSize: '16px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
           >
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </div>
       </div>
 
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
+      <div className="login-cover" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
         <img src={LOGO_DARK} alt="Opera House" style={{ width: '200px', objectFit: 'contain', opacity: 0.15 }} />
         <div style={{ fontSize: '12px', color: '#ccc', marginTop: '16px' }}>Opera House — Gestão interna</div>
       </div>
