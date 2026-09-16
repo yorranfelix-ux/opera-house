@@ -124,6 +124,7 @@ const GROUPS = [
 export default function Sidebar({ ativa }: { ativa: string }) {
   const [collapsed, setCollapsed] = useState(false)
   const [usuario, setUsuario] = useState<{ nome: string; cargo: string } | null>(null)
+  const [alertCount, setAlertCount] = useState(0)
 
   useEffect(() => {
     const saved = localStorage.getItem('sidebar_collapsed')
@@ -138,6 +139,22 @@ export default function Sidebar({ ativa }: { ativa: string }) {
       if (data) setUsuario(data)
     }
     carregar()
+  }, [])
+
+  useEffect(() => {
+    async function contarAlertas() {
+      const hoje = new Date().toISOString().split('T')[0]
+      const tresAtras = new Date(Date.now() - 3 * 86400000).toISOString()
+      const seteAtras = new Date(Date.now() - 7 * 86400000).toISOString()
+      const [atrasados, ocorrencias, ats] = await Promise.all([
+        supabase.from('pedidos').select('id', { count: 'exact', head: true }).lt('prazo_prometido', hoje).not('status', 'in', '(entregue,cancelado)'),
+        supabase.from('ocorrencias').select('id', { count: 'exact', head: true }).eq('status', 'aberta').lt('created_at', tresAtras),
+        supabase.from('assistencias_tecnicas').select('id', { count: 'exact', head: true }).in('status', ['aberta', 'aguardando_retirada', 'em_reparo', 'enviado_fornecedor', 'aguardando_devolucao']).lt('updated_at', seteAtras),
+      ])
+      const total = (atrasados.count ?? 0) + (ocorrencias.count ?? 0) + (ats.count ?? 0)
+      setAlertCount(total)
+    }
+    contarAlertas()
   }, [])
 
   function toggleCollapsed() {
@@ -290,11 +307,13 @@ export default function Sidebar({ ativa }: { ativa: string }) {
 
             {group.items.map(item => {
               const active = item.href === ativa
+              const isDashboard = item.href === '/dashboard'
+              const badge = isDashboard && alertCount > 0 ? alertCount : 0
               return (
                 <a
                   key={item.href}
                   href={item.href}
-                  title={collapsed ? item.label : undefined}
+                  title={collapsed ? (badge ? `${item.label} — ${badge} alertas` : item.label) : undefined}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -307,6 +326,7 @@ export default function Sidebar({ ativa }: { ativa: string }) {
                     background: active ? 'rgba(201,168,76,0.12)' : 'transparent',
                     color: active ? '#C9A84C' : '#6a6a8a',
                     transition: 'background 150ms, color 150ms',
+                    position: 'relative',
                   }}
                   onMouseEnter={e => {
                     if (!active) {
@@ -321,19 +341,44 @@ export default function Sidebar({ ativa }: { ativa: string }) {
                     }
                   }}
                 >
-                  <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                  <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', position: 'relative' }}>
                     {ICON[item.href]}
+                    {badge > 0 && collapsed && (
+                      <span style={{
+                        position: 'absolute', top: '-5px', right: '-6px',
+                        background: '#A32D2D', color: '#fff',
+                        borderRadius: '10px', fontSize: '9px', fontWeight: '700',
+                        minWidth: '14px', height: '14px', lineHeight: '14px',
+                        textAlign: 'center', padding: '0 3px', fontFamily: 'sans-serif',
+                      }}>
+                        {badge > 99 ? '99+' : badge}
+                      </span>
+                    )}
                   </span>
                   {!collapsed && (
-                    <span style={{
-                      fontSize: '13px',
-                      fontWeight: active ? '500' : '400',
-                      fontFamily: 'sans-serif',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                    }}>
-                      {item.label}
-                    </span>
+                    <>
+                      <span style={{
+                        fontSize: '13px',
+                        fontWeight: active ? '500' : '400',
+                        fontFamily: 'sans-serif',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        flex: 1,
+                      }}>
+                        {item.label}
+                      </span>
+                      {badge > 0 && (
+                        <span style={{
+                          background: '#A32D2D', color: '#fff',
+                          borderRadius: '10px', fontSize: '10px', fontWeight: '700',
+                          minWidth: '18px', height: '18px', lineHeight: '18px',
+                          textAlign: 'center', padding: '0 5px', fontFamily: 'sans-serif',
+                          flexShrink: 0,
+                        }}>
+                          {badge > 99 ? '99+' : badge}
+                        </span>
+                      )}
+                    </>
                   )}
                 </a>
               )
