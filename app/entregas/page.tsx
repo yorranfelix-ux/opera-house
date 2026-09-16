@@ -471,12 +471,29 @@ export default function Entregas() {
     janela.document.close()
   }
 
-  function imprimirObservacoes(dia: string, entregasDia: Entrega[]) {
+  async function imprimirObservacoes(dia: string, entregasDia: Entrega[]) {
     const dataFormatada = (() => {
       const d = new Date(dia + 'T12:00:00')
       return d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })
     })()
 
+    // Busca volumes dos itens para cada pedido do dia
+    const pedidoIds = entregasDia.map(e => e.pedido_id).filter(Boolean) as string[]
+    const volumesPorPedido: Record<string, number> = {}
+    if (pedidoIds.length > 0) {
+      const { data: itensData } = await supabase
+        .from('itens_pedido')
+        .select('pedido_id, qtd_volumes')
+        .in('pedido_id', pedidoIds)
+        .not('status', 'in', '(entregue,cancelado)')
+      ;(itensData || []).forEach((item: any) => {
+        if (item.qtd_volumes) {
+          volumesPorPedido[item.pedido_id] = (volumesPorPedido[item.pedido_id] || 0) + item.qtd_volumes
+        }
+      })
+    }
+
+    const totalVolumesGeral = Object.values(volumesPorPedido).reduce((s, v) => s + v, 0)
     const comObs = entregasDia.filter(e => e.requer_icamento || e.observacoes_icamento || e.observacoes)
 
     const rowsHtml = entregasDia.map((e, i) => {
@@ -500,22 +517,29 @@ export default function Entregas() {
       const reagendHtml = e.motivo_reagendamento
         ? `<div style="margin-top:4px;font-size:10px;color:#666;font-style:italic;">â†º Reagendado: ${e.motivo_reagendamento}</div>`
         : ''
+      const volPedido = e.pedido_id && volumesPorPedido[e.pedido_id] ? volumesPorPedido[e.pedido_id] : null
+      const volHtml = volPedido
+        ? `<div style=”display:inline-block;background:#E6F1FB;color:#0C447C;font-size:13px;font-weight:700;padding:3px 10px;border-radius:5px;margin-top:2px;”>${volPedido} vol.</div>`
+        : `<div style=”font-size:11px;color:#bbb;margin-top:2px;”>—</div>`
       return `
         <tr>
-          <td style="padding:10px 12px;width:5%;text-align:center;font-size:14px;font-weight:700;vertical-align:top;">${i + 1}</td>
-          <td style="padding:10px 12px;width:18%;vertical-align:top;">
-            <div style="font-size:12px;font-weight:700;">${numero}</div>
-            <div style="font-size:10px;color:#555;margin-top:2px;">${STATUS_COR[e.status]?.label || e.status}</div>
+          <td style=”padding:10px 12px;width:5%;text-align:center;font-size:14px;font-weight:700;vertical-align:top;”>${i + 1}</td>
+          <td style=”padding:10px 12px;width:18%;vertical-align:top;”>
+            <div style=”font-size:12px;font-weight:700;”>${numero}</div>
+            <div style=”font-size:10px;color:#555;margin-top:2px;”>${STATUS_COR[e.status]?.label || e.status}</div>
           </td>
-          <td style="padding:10px 12px;width:25%;vertical-align:top;">
-            <div style="font-size:11px;font-weight:600;">${c?.nome || 'â€”'}</div>
-            <div style="font-size:10px;color:#555;margin-top:2px;">${endereco}</div>
-            ${c?.telefone ? `<div style="font-size:10px;color:#555;margin-top:2px;">ðŸ“ž ${c.telefone}</div>` : ''}
+          <td style=”padding:10px 12px;width:25%;vertical-align:top;”>
+            <div style=”font-size:11px;font-weight:600;”>${c?.nome || '—'}</div>
+            <div style=”font-size:10px;color:#555;margin-top:2px;”>${endereco}</div>
+            ${c?.telefone ? `<div style=”font-size:10px;color:#555;margin-top:2px;”>📞 ${c.telefone}</div>` : ''}
             ${descricaoAT}
           </td>
-          <td style="padding:10px 12px;vertical-align:top;">
+          <td style=”padding:10px 12px;width:12%;text-align:center;vertical-align:top;”>
+            ${volHtml}
+          </td>
+          <td style=”padding:10px 12px;vertical-align:top;”>
             ${icamentoHtml}${obsHtml}${reagendHtml}
-            ${!icamentoHtml && !obsHtml && !reagendHtml ? '<span style="font-size:10px;color:#bbb;">Sem observaÃ§Ãµes</span>' : ''}
+            ${!icamentoHtml && !obsHtml && !reagendHtml ? '<span style=”font-size:10px;color:#bbb;”>Sem observações</span>' : ''}
           </td>
         </tr>`
     }).join('')
@@ -561,8 +585,9 @@ ${alertaHtml}
     <tr style="background:#1a1a2e;">
       <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:center;width:5%;">#</th>
       <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:left;width:18%;">Pedido</th>
-      <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:left;width:25%;">Cliente / EndereÃ§o</th>
-      <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:left;">ObservaÃ§Ãµes</th>
+      <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:left;width:25%;">Cliente / Endereço</th>
+      <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:center;width:12%;">Volumes</th>
+      <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:left;">Observações</th>
     </tr>
   </thead>
   <tbody>
@@ -570,10 +595,18 @@ ${alertaHtml}
   </tbody>
 </table>
 
-<table style="margin-top:16px;border:none;">
+<table style=”margin-top:10px;border:none;”>
   <tr>
-    <td style="border:none;border-top:1px solid #ccc;padding:8px 0;font-size:9px;color:#888;">
-      Impresso em ${new Date().toLocaleString('pt-BR')} â€” Opera House ERP
+    <td style=”border:none;padding:8px 12px;background:#E6F1FB;border-radius:6px;”>
+      <span style=”font-size:11px;font-weight:700;color:#0C447C;”>TOTAL DE VOLUMES DO DIA: ${totalVolumesGeral > 0 ? totalVolumesGeral : '—'}</span>
+      <span style=”font-size:10px;color:#555;margin-left:16px;”>${entregasDia.length} entrega${entregasDia.length !== 1 ? 's' : ''} agendada${entregasDia.length !== 1 ? 's' : ''}</span>
+    </td>
+  </tr>
+</table>
+<table style=”margin-top:10px;border:none;”>
+  <tr>
+    <td style=”border:none;border-top:1px solid #ccc;padding:8px 0;font-size:9px;color:#888;”>
+      Impresso em ${new Date().toLocaleString('pt-BR')} — Opera House ERP
     </td>
   </tr>
 </table>

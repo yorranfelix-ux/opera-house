@@ -48,6 +48,7 @@ interface Item {
   numero_nf: string
   data_envio_tecido: string
   nf_envio_tecido: string
+  qtd_volumes: number | null
   fornecedores: { nome_fantasia: string; razao_social: string }
 }
 
@@ -94,7 +95,7 @@ const SEMAFORO_LABEL: Record<string, string> = {
 
 const itemFormVazio = {
   descricao: '', quantidade: '1', medida: '', tecido: '', cor: '',
-  acabamento: '', observacoes: '', fornecedor_id: '', requer_icamento: false,
+  acabamento: '', observacoes: '', fornecedor_id: '', qtd_volumes: '', requer_icamento: false,
   requer_tecido_fornecido: false,
   requer_retirada_loja: false,
   requer_higienizacao: false,
@@ -365,6 +366,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       numero_nf: item.numero_nf || '',
       data_envio_tecido: item.data_envio_tecido || '',
       nf_envio_tecido: item.nf_envio_tecido || '',
+      qtd_volumes: item.qtd_volumes != null ? String(item.qtd_volumes) : '',
     })
     setShowItemForm(true)
   }
@@ -395,6 +397,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       numero_nf: itemForm.numero_nf || null,
       data_envio_tecido: itemForm.data_envio_tecido || null,
       nf_envio_tecido: itemForm.nf_envio_tecido || null,
+      qtd_volumes: itemForm.qtd_volumes !== '' ? parseInt(itemForm.qtd_volumes as string) || null : null,
     }
 
     if (editandoItemId) {
@@ -512,6 +515,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     const now = new Date()
     const dataImpressao = now.toLocaleDateString('pt-BR') + ' · ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
     const totalPecas = itens.reduce((sum, i) => sum + (i.quantidade || 1), 0)
+    const totalVolumes = itens.reduce((sum, i) => sum + (i.qtd_volumes || 0), 0)
     const recebidos = itens.filter(i => i.status === 'recebido' || i.status === 'conferido_ok' || i.status === 'apto_entrega' || i.status === 'entregue').length
     const comIcamento = itens.filter(i => i.requer_icamento).length
 
@@ -537,6 +541,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       const forn = item.fornecedores?.nome_fantasia || item.fornecedores?.razao_social || '—'
       const detalhe = [item.medida, item.tecido, item.cor, item.acabamento].filter(Boolean).join(' · ')
       const qtd = String(item.quantidade || 1).padStart(2, '0')
+      const vol = item.qtd_volumes != null ? `<span style="display:inline-block;background:#E6F1FB;color:#0C447C;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;min-width:28px;text-align:center">${item.qtd_volumes}</span>` : '<span style="font-size:11px;color:#ccc">—</span>'
       return `
         <tr>
           <td style="width:48px;text-align:center"><span style="display:inline-block;background:#1a1a2e;color:#C9A84C;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;min-width:28px;text-align:center">${qtd}</span></td>
@@ -544,6 +549,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
             <div style="font-size:12px;font-weight:500;color:#1a1a2e">${item.descricao}</div>
             ${detalhe ? `<div style="font-size:10px;color:#888;margin-top:2px">${detalhe}</div>` : ''}
           </td>
+          <td style="width:60px;text-align:center">${vol}</td>
           <td style="width:80px;font-size:11px;color:#555">${forn}</td>
           <td style="width:80px"><span style="display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;background:${st.bg};color:${st.color}">${st.label}</span></td>
           <td style="width:76px;text-align:center">${item.requer_icamento
@@ -556,7 +562,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
 
     const vaziosHTML = linhasExtras.map(() => `
       <tr style="height:34px">
-        <td></td><td></td><td></td><td></td><td></td>
+        <td></td><td></td><td></td><td></td><td></td><td></td>
         <td style="text-align:center"><div style="width:16px;height:16px;border:1.5px solid #ccc;border-radius:3px;display:inline-block"></div></td>
       </tr>`
     ).join('')
@@ -625,6 +631,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       <colgroup>
         <col style="width:48px">
         <col>
+        <col style="width:60px">
         <col style="width:80px">
         <col style="width:80px">
         <col style="width:76px">
@@ -634,6 +641,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
         <tr>
           <th>Qtd.</th>
           <th>Descrição do item</th>
+          <th style="text-align:center">Vol.</th>
           <th>Fornecedor</th>
           <th>Status</th>
           <th>Içamento</th>
@@ -648,7 +656,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       <div class="obs-box">${pedido.observacoes_gerais || ''}</div>
     </div>
 
-    <div class="resumo">
+    <div class="resumo" style="grid-template-columns: repeat(5, 1fr)">
       <div class="resumo-card" style="background:#f7f6f3">
         <div class="resumo-label">Total de itens</div>
         <div class="resumo-value" style="color:#1a1a2e">${itens.length}</div>
@@ -656,6 +664,10 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       <div class="resumo-card" style="background:#f7f6f3">
         <div class="resumo-label">Total de peças</div>
         <div class="resumo-value" style="color:#1a1a2e">${totalPecas}</div>
+      </div>
+      <div class="resumo-card" style="background:#E6F1FB">
+        <div class="resumo-label" style="color:#0C447C">Total de volumes</div>
+        <div class="resumo-value" style="color:#0C447C">${totalVolumes > 0 ? totalVolumes : '—'}</div>
       </div>
       <div class="resumo-card" style="background:#FCEBEB">
         <div class="resumo-label" style="color:#A32D2D">Requer içamento</div>
@@ -934,8 +946,8 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                     style={{ width: '100%', padding: '7px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', background: '#faf9f7', color: '#1a1a2e' }}
                   />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 45px 120px 120px 85px 40px 80px 72px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
-                  <span>Item</span><span>Qtd</span><span>Fornecedor</span><span>Status</span><span>Previsão</span><span>Apto</span><span>Recebido</span><span></span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 45px 55px 120px 120px 85px 40px 80px 72px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
+                  <span>Item</span><span>Qtd</span><span>Vol.</span><span>Fornecedor</span><span>Status</span><span>Previsão</span><span>Apto</span><span>Recebido</span><span></span>
                 </div>
                 {itens.filter(item => {
                   if (!buscaItem.trim()) return true
@@ -944,7 +956,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                     item.fornecedores?.nome_fantasia?.toLowerCase().includes(q) ||
                     item.fornecedores?.razao_social?.toLowerCase().includes(q)
                 }).map((item, i) => (
-                  <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 45px 120px 120px 85px 40px 80px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: item.tipo === 'tecido' ? '#F5F0FF' : item.tipo === 'outro' ? '#F5F5F5' : i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+                  <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 45px 55px 120px 120px 85px 40px 80px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: item.tipo === 'tecido' ? '#F5F0FF' : item.tipo === 'outro' ? '#F5F5F5' : i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         {item.tipo === 'tecido' && (
@@ -990,6 +1002,9 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                       )}
                     </div>
                     <span style={{ fontSize: '13px', color: '#555' }}>{item.quantidade}</span>
+                    <span style={{ fontSize: '13px', color: item.qtd_volumes ? '#1a1a2e' : '#ccc', fontWeight: item.qtd_volumes ? '500' : '400' }}>
+                      {item.qtd_volumes ?? '—'}
+                    </span>
                     <span style={{ fontSize: '11px', color: '#555' }}>{item.fornecedores?.nome_fantasia || item.fornecedores?.razao_social || '—'}</span>
                     <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '8px', fontWeight: '500', background: STATUS_ITEM[item.status]?.bg || '#f0efe9', color: STATUS_ITEM[item.status]?.color || '#555' }}>
                       {STATUS_ITEM[item.status]?.label || item.status}
@@ -1123,6 +1138,19 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                   <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Previsão de chegada</div>
                   <input type="date" value={itemForm.previsao_chegada} onChange={e => setItemForm({ ...itemForm, previsao_chegada: e.target.value })}
                     style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                </div>
+
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Quantidade de volumes</div>
+                  <input
+                    type="number"
+                    min="1"
+                    value={(itemForm as any).qtd_volumes}
+                    onChange={e => setItemForm({ ...itemForm, qtd_volumes: e.target.value } as any)}
+                    placeholder="Ex: 3"
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                  <div style={{ fontSize: '10px', color: '#aaa', marginTop: '3px' }}>Número de caixas/volumes físicos deste item</div>
                 </div>
 
                 <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
