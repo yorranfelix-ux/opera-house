@@ -24,3 +24,15 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@media (max-width: 768px) {
+  .mobile-nav {
+    display: flex !important;
+  }
+  .sidebar-desktop {
+    display: none !important;
+  }
+  .page-content {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom)) !important;
+  }
+}

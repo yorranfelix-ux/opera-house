@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SessionGuard from "./components/SessionGuard";
 import PWAInstaller from "./components/PWAInstaller";
+import MobileNav from "./components/MobileNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,6 +44,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <SessionGuard />
         <PWAInstaller />
+        <MobileNav />
         {children}
       </body>
     </html>

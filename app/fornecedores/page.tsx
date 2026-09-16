@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
@@ -85,16 +85,16 @@ export default function Fornecedores() {
   async function excluirFornecedor(id: string, nome: string) {
     const { error } = await supabase.from('fornecedores').delete().eq('id', id)
     if (error) {
-      if (error.message.includes('foreign key')) return alert(`Não é possível excluir "${nome}" pois existem itens de pedido ou ATs vinculados a este fornecedor.`)
+      if (error.message.includes('foreign key')) return alert(`NÃ£o Ã© possÃ­vel excluir "${nome}" pois existem itens de pedido ou ATs vinculados a este fornecedor.`)
       return alert('Erro ao excluir: ' + error.message)
     }
-    await registrarHistorico({ tipo: 'fornecedor_excluido', descricao: `Fornecedor ${nome} excluído` })
+    await registrarHistorico({ tipo: 'fornecedor_excluido', descricao: `Fornecedor ${nome} excluÃ­do` })
     setExcluindoId(null)
     buscarFornecedores()
   }
 
   async function salvarFornecedor() {
-    if (!form.razao_social) return alert('Razão social é obrigatória')
+    if (!form.razao_social) return alert('RazÃ£o social Ã© obrigatÃ³ria')
     setSalvando(true)
     try {
       const payload = {
@@ -129,7 +129,7 @@ export default function Fornecedores() {
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
       <Sidebar ativa="/fornecedores" />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={className="page-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
           <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Fornecedores</span>
           <button onClick={abrirNovo} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
@@ -147,7 +147,7 @@ export default function Fornecedores() {
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px 175px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px' }}>
-              <span>Nome fantasia</span><span>Razão social</span><span>Telefone</span><span>Contato</span><span>Prazo</span><span></span>
+              <span>Nome fantasia</span><span>RazÃ£o social</span><span>Telefone</span><span>Contato</span><span>Prazo</span><span></span>
             </div>
 
             {loading && <div style={{ padding: '24px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Carregando...</div>}
@@ -160,9 +160,9 @@ export default function Fornecedores() {
               <div key={f.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 130px 80px 175px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{f.nome_fantasia || f.razao_social}</span>
                 <span style={{ fontSize: '12px', color: '#555' }}>{f.razao_social}</span>
-                <span style={{ fontSize: '12px', color: '#555' }}>{f.telefone || '—'}</span>
-                <span style={{ fontSize: '12px', color: '#555' }}>{f.contato_comercial || '—'}</span>
-                <span style={{ fontSize: '12px', color: '#555', textAlign: 'center' }}>{f.prazo_medio_prometido ? `${f.prazo_medio_prometido}d` : '—'}</span>
+                <span style={{ fontSize: '12px', color: '#555' }}>{f.telefone || 'â€”'}</span>
+                <span style={{ fontSize: '12px', color: '#555' }}>{f.contato_comercial || 'â€”'}</span>
+                <span style={{ fontSize: '12px', color: '#555', textAlign: 'center' }}>{f.prazo_medio_prometido ? `${f.prazo_medio_prometido}d` : 'â€”'}</span>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <button onClick={() => setVisualizandoId(f.id)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>Ver</button>
                   <button onClick={() => abrirEdicao(f)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>Editar</button>
@@ -175,12 +175,12 @@ export default function Fornecedores() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9' }}>
                 <button onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}
                   style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: pagina === 1 ? '#f7f6f3' : '#fff', fontSize: '12px', cursor: pagina === 1 ? 'default' : 'pointer', color: pagina === 1 ? '#ccc' : '#555' }}>
-                  ← Anterior
+                  â† Anterior
                 </button>
-                <span style={{ fontSize: '12px', color: '#888' }}>Página {pagina} de {totalPaginas}</span>
+                <span style={{ fontSize: '12px', color: '#888' }}>PÃ¡gina {pagina} de {totalPaginas}</span>
                 <button onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}
                   style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: pagina === totalPaginas ? '#f7f6f3' : '#fff', fontSize: '12px', cursor: pagina === totalPaginas ? 'default' : 'pointer', color: pagina === totalPaginas ? '#ccc' : '#555' }}>
-                  Próxima →
+                  PrÃ³xima â†’
                 </button>
               </div>
             )}
@@ -204,7 +204,7 @@ export default function Fornecedores() {
                   <div style={{ fontSize: '17px', fontWeight: '600', color: '#1a1a2e' }}>{f.nome_fantasia || f.razao_social}</div>
                   {f.nome_fantasia && <div style={{ fontSize: '13px', color: '#888', marginTop: '2px' }}>{f.razao_social}</div>}
                 </div>
-                <button onClick={() => setVisualizandoId(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+                <button onClick={() => setVisualizandoId(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
               </div>
               <div style={{ borderTop: '0.5px solid #f0efe9', paddingTop: '16px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Contato</div>
@@ -214,9 +214,9 @@ export default function Fornecedores() {
                   {linha('E-mail', f.email)}
                   {linha('Contato comercial', f.contato_comercial)}
                   {linha('CNPJ', (f as any).cnpj)}
-                  {linha('Prazo médio prometido', f.prazo_medio_prometido ? `${f.prazo_medio_prometido} dias` : null)}
+                  {linha('Prazo mÃ©dio prometido', f.prazo_medio_prometido ? `${f.prazo_medio_prometido} dias` : null)}
                 </div>
-                {linha('Observações', (f as any).observacoes)}
+                {linha('ObservaÃ§Ãµes', (f as any).observacoes)}
               </div>
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '20px' }}>
                 <button onClick={() => setVisualizandoId(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Fechar</button>
@@ -234,7 +234,7 @@ export default function Fornecedores() {
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
             <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '380px' }}>
               <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e', marginBottom: '8px' }}>Excluir {nome}?</div>
-              <div style={{ fontSize: '13px', color: '#888', marginBottom: '24px' }}>Esta ação não pode ser desfeita.</div>
+              <div style={{ fontSize: '13px', color: '#888', marginBottom: '24px' }}>Esta aÃ§Ã£o nÃ£o pode ser desfeita.</div>
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                 <button onClick={() => setExcluindoId(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
                 <button onClick={() => excluirFornecedor(excluindoId, nome)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#FCEBEB', color: '#791F1F', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Excluir</button>
@@ -249,18 +249,18 @@ export default function Fornecedores() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '520px', maxHeight: '85vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{editandoId ? 'Editar fornecedor' : 'Novo fornecedor'}</span>
-              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
             </div>
 
             {[
-              { label: 'Razão social *', field: 'razao_social' },
+              { label: 'RazÃ£o social *', field: 'razao_social' },
               { label: 'Nome fantasia', field: 'nome_fantasia' },
               { label: 'CNPJ', field: 'cnpj' },
               { label: 'Telefone', field: 'telefone' },
               { label: 'WhatsApp', field: 'whatsapp' },
               { label: 'E-mail', field: 'email' },
               { label: 'Contato comercial', field: 'contato_comercial' },
-              { label: 'Prazo médio prometido (dias)', field: 'prazo_medio_prometido' },
+              { label: 'Prazo mÃ©dio prometido (dias)', field: 'prazo_medio_prometido' },
             ].map(({ label, field }) => (
               <div key={field} style={{ marginBottom: '12px' }}>
                 <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
@@ -273,7 +273,7 @@ export default function Fornecedores() {
             ))}
 
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações</div>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>ObservaÃ§Ãµes</div>
               <textarea
                 value={form.observacoes}
                 onChange={e => setForm({ ...form, observacoes: e.target.value })}
@@ -285,7 +285,7 @@ export default function Fornecedores() {
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
               <button onClick={salvarFornecedor} disabled={salvando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>
-                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Salvar fornecedor')}
+                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alteraÃ§Ãµes' : 'Salvar fornecedor')}
               </button>
             </div>
           </div>

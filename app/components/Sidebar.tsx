@@ -171,7 +171,7 @@ export default function Sidebar({ ativa }: { ativa: string }) {
   const w = collapsed ? '56px' : '210px'
 
   return (
-    <div style={{
+    <div className="sidebar-desktop" style={{
       width: w,
       minWidth: w,
       background: '#1a1a2e',

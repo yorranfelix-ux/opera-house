@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
@@ -6,12 +6,12 @@ import Sidebar from '../components/Sidebar'
 
 const STATUS_AT_LABEL: Record<string, string> = {
   aberta: 'Aberta', aguardando_retirada: 'Aguard. retirada', em_reparo: 'Em reparo',
-  enviado_fornecedor: 'No fornecedor', aguardando_devolucao: 'Aguard. devolução',
+  enviado_fornecedor: 'No fornecedor', aguardando_devolucao: 'Aguard. devoluÃ§Ã£o',
   resolvida: 'Resolvida', cancelada: 'Cancelada',
 }
 
 const STATUS_PEDIDO_LABEL: Record<string, string> = {
-  criado: 'Criado', aguardando_compra: 'Aguard. compra', em_producao: 'Em produção',
+  criado: 'Criado', aguardando_compra: 'Aguard. compra', em_producao: 'Em produÃ§Ã£o',
   em_transporte: 'Em transporte', recebido: 'Recebido', apto_agendamento: 'Apto p/ agendamento',
   agendado: 'Agendado', entregue: 'Entregue', com_at: 'Com AT', cancelado: 'Cancelado',
 }
@@ -24,7 +24,7 @@ function mesLabel(yyyymm: string) {
 
 function exportarCSV(linhas: string[][], nomeArquivo: string) {
   const csv = linhas.map(l => l.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+  const blob = new Blob(['ï»¿' + csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url; a.download = nomeArquivo; a.click()
@@ -36,7 +36,7 @@ function abrirJanelaPDF(titulo: string, periodoLabel: string, html: string) {
   if (!w) return
   w.document.write(`<!DOCTYPE html><html lang="pt-BR"><head>
     <meta charset="UTF-8">
-    <title>${titulo} — Opera House</title>
+    <title>${titulo} â€” Opera House</title>
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a2e; padding: 32px; }
@@ -58,7 +58,7 @@ function abrirJanelaPDF(titulo: string, periodoLabel: string, html: string) {
     </style>
   </head><body>
     <h1>${titulo}</h1>
-    <p class="sub">Opera House · ${periodoLabel} · Gerado em ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+    <p class="sub">Opera House Â· ${periodoLabel} Â· Gerado em ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
     ${html}
     <script>window.onload = () => { window.print() }<\/script>
   </body></html>`)
@@ -69,11 +69,11 @@ type Aba = 'ats' | 'entregas' | 'ocorrencias' | 'pedidos' | 'prazos' | 'profissi
 type Periodo = '6m' | '12m' | 'ano_atual' | 'ano_anterior' | 'todos'
 
 const PERIODO_LABEL: Record<Periodo, string> = {
-  '6m': 'Últimos 6 meses',
-  '12m': 'Últimos 12 meses',
+  '6m': 'Ãšltimos 6 meses',
+  '12m': 'Ãšltimos 12 meses',
   ano_atual: 'Este ano',
   ano_anterior: 'Ano anterior',
-  todos: 'Todo o período',
+  todos: 'Todo o perÃ­odo',
 }
 
 export default function Relatorios() {
@@ -199,7 +199,7 @@ export default function Relatorios() {
       return { mes, total: doMes.length, realizadas: doMes.filter(e => e.status === 'realizada').length }
     }))
 
-    // Ocorrências
+    // OcorrÃªncias
     const ocorrencias = filterDate(ocorrenciasRaw, 'created_at', range)
     setTotalOcorrencias(ocorrencias.length)
     const ocMap: Record<string, { total: number; abertas: number }> = {}
@@ -225,7 +225,7 @@ export default function Relatorios() {
       entregues: pedidos.filter(p => (p.data_entrega || '').startsWith(mes)).length,
     })))
 
-    // Prazos (sobre pedidos entregues no período)
+    // Prazos (sobre pedidos entregues no perÃ­odo)
     const entreguesComDatas = pedidos.filter(p => p.status === 'entregue' && p.data_venda && p.data_entrega)
     if (entreguesComDatas.length > 0) {
       const totalDias = entreguesComDatas.reduce((acc: number, p: any) =>
@@ -251,14 +251,14 @@ export default function Relatorios() {
     })
     setPorProfissional(Object.entries(profMap).map(([nome, v]) => ({ nome, ...v })).sort((a, b) => b.total - a.total))
 
-    // Tratamentos (sem filtro de período — representa estado atual dos itens)
+    // Tratamentos (sem filtro de perÃ­odo â€” representa estado atual dos itens)
     setTotalItens(itensRaw.length)
     const flags = [
-      { key: 'requer_icamento', label: 'Içamento' },
+      { key: 'requer_icamento', label: 'IÃ§amento' },
       { key: 'requer_tecido_fornecido', label: 'Tecido a enviar' },
       { key: 'requer_retirada_loja', label: 'Retirada na loja' },
-      { key: 'requer_higienizacao', label: 'Higienização' },
-      { key: 'requer_impermeabilizacao', label: 'Impermeabilização' },
+      { key: 'requer_higienizacao', label: 'HigienizaÃ§Ã£o' },
+      { key: 'requer_impermeabilizacao', label: 'ImpermeabilizaÃ§Ã£o' },
     ]
     setTratamentos(flags.map(f => ({
       label: f.label,
@@ -269,26 +269,26 @@ export default function Relatorios() {
 
   function gerarPDF() {
     const pl = PERIODO_LABEL[periodo]
-    const pct = (v: number, total: number) => total > 0 ? Math.round(v / total * 100) + '%' : '—'
+    const pct = (v: number, total: number) => total > 0 ? Math.round(v / total * 100) + '%' : 'â€”'
     const barHtml = (v: number, total: number, cor: string) =>
-      `<span class="bar-bg"><span class="bar-fill" style="width:${pct(v,total).replace('%','') === '—' ? 0 : pct(v,total).replace('%','')}%;background:${cor}"></span></span> ${pct(v, total)}`
+      `<span class="bar-bg"><span class="bar-fill" style="width:${pct(v,total).replace('%','') === 'â€”' ? 0 : pct(v,total).replace('%','')}%;background:${cor}"></span></span> ${pct(v, total)}`
 
     let html = ''
 
     if (aba === 'pedidos') {
-      html += `<table><thead><tr><th>Mês</th><th class="num">Novos</th><th class="num">Entregues</th></tr></thead><tbody>
+      html += `<table><thead><tr><th>MÃªs</th><th class="num">Novos</th><th class="num">Entregues</th></tr></thead><tbody>
         ${pedidosMes.map(p => `<tr><td>${mesLabel(p.mes)}</td><td class="num">${p.novos}</td><td class="num">${p.entregues}</td></tr>`).join('')}
       </tbody></table>
       <table><thead><tr><th>Status</th><th class="num">Total</th><th class="num">%</th></tr></thead><tbody>
         ${pedidosStatus.map(p => `<tr><td>${STATUS_PEDIDO_LABEL[p.status] || p.status}</td><td class="num">${p.total}</td><td class="num">${pct(p.total, totalPedidos)}</td></tr>`).join('')}
       </tbody></table>`
     } else if (aba === 'entregas') {
-      html += `<table><thead><tr><th>Mês</th><th class="num">Agendadas</th><th class="num">Realizadas</th><th class="num">Taxa</th></tr></thead><tbody>
-        ${entregasMes.map(e => `<tr><td>${mesLabel(e.mes)}</td><td class="num">${e.total}</td><td class="num">${e.realizadas}</td><td class="num">${e.total > 0 ? Math.round(e.realizadas / e.total * 100) + '%' : '—'}</td></tr>`).join('')}
+      html += `<table><thead><tr><th>MÃªs</th><th class="num">Agendadas</th><th class="num">Realizadas</th><th class="num">Taxa</th></tr></thead><tbody>
+        ${entregasMes.map(e => `<tr><td>${mesLabel(e.mes)}</td><td class="num">${e.total}</td><td class="num">${e.realizadas}</td><td class="num">${e.total > 0 ? Math.round(e.realizadas / e.total * 100) + '%' : 'â€”'}</td></tr>`).join('')}
       </tbody></table>`
     } else if (aba === 'prazos') {
       html += `<div class="card-row">
-        <div class="card"><div class="card-label">Tempo médio venda → entrega</div><div class="card-value" style="color:#185FA5">${tempoMedioEntrega !== null ? tempoMedioEntrega + ' dias' : '—'}</div></div>
+        <div class="card"><div class="card-label">Tempo mÃ©dio venda â†’ entrega</div><div class="card-value" style="color:#185FA5">${tempoMedioEntrega !== null ? tempoMedioEntrega + ' dias' : 'â€”'}</div></div>
         <div class="card"><div class="card-label">Dentro do prazo</div><div class="card-value" style="color:#27500A">${dentroPrazo}</div><div class="card-sub">${pct(dentroPrazo, dentroPrazo + foraPrazo)}</div></div>
         <div class="card"><div class="card-label">Fora do prazo</div><div class="card-value" style="color:#A32D2D">${foraPrazo}</div><div class="card-sub">${pct(foraPrazo, dentroPrazo + foraPrazo)}</div></div>
       </div>`
@@ -309,16 +309,16 @@ export default function Relatorios() {
         ${ocorrenciasTipo.map(o => `<tr><td>${o.tipo}</td><td class="num">${o.total}</td><td class="num">${o.abertas}</td><td class="num">${pct(o.total, totalOcorrencias)}</td></tr>`).join('')}
       </tbody></table>`
     } else if (aba === 'tratamentos') {
-      html += `<table><thead><tr><th>Tratamento</th><th class="num">Total itens</th><th class="num">Já aptos</th><th class="num">% do total</th></tr></thead><tbody>
+      html += `<table><thead><tr><th>Tratamento</th><th class="num">Total itens</th><th class="num">JÃ¡ aptos</th><th class="num">% do total</th></tr></thead><tbody>
         ${tratamentos.map(t => `<tr><td>${t.label}</td><td class="num">${t.total}</td><td class="num">${t.aptos}</td><td class="num">${pct(t.total, totalItens)}</td></tr>`).join('')}
       </tbody></table><p style="font-size:11px;color:#888">Total de itens cadastrados: ${totalItens}</p>`
     }
 
     const nomeAba = abas.find(a => a.id === aba)?.label || aba
-    abrirJanelaPDF(`Relatório: ${nomeAba}`, pl, html)
+    abrirJanelaPDF(`RelatÃ³rio: ${nomeAba}`, pl, html)
   }
 
-  // Agrupar pendências por fornecedor
+  // Agrupar pendÃªncias por fornecedor
   const pendenciasPorFornecedor = (() => {
     const mapa: Record<string, { nome: string; pedidos: Set<string>; itens: { descricao: string; status: string; previsao: string; numeroPedido: string; cliente: string; pedidoId: string }[] }> = {}
     rawPendencias.forEach((item: any) => {
@@ -328,11 +328,11 @@ export default function Relatorios() {
       if (!mapa[nomeForn]) mapa[nomeForn] = { nome: nomeForn, pedidos: new Set(), itens: [] }
       mapa[nomeForn].pedidos.add(item.pedido_id)
       mapa[nomeForn].itens.push({
-        descricao: item.descricao || '—',
-        status: item.status || '—',
+        descricao: item.descricao || 'â€”',
+        status: item.status || 'â€”',
         previsao: item.previsao_chegada || '',
-        numeroPedido: item.pedidos?.numero_pedido || '—',
-        cliente: item.pedidos?.clientes?.nome || '—',
+        numeroPedido: item.pedidos?.numero_pedido || 'â€”',
+        cliente: item.pedidos?.clientes?.nome || 'â€”',
         pedidoId: item.pedido_id,
       })
     })
@@ -348,7 +348,7 @@ export default function Relatorios() {
     { id: 'ats', label: 'ATs' },
     { id: 'fornecedores', label: 'ATs p/ Fornecedor' },
     { id: 'pendencias', label: 'Pedidos p/ Fornecedor' },
-    { id: 'ocorrencias', label: 'Ocorrências' },
+    { id: 'ocorrencias', label: 'OcorrÃªncias' },
     { id: 'tratamentos', label: 'Tratamentos' },
   ]
 
@@ -369,16 +369,16 @@ export default function Relatorios() {
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
       <Sidebar ativa="/relatorios" />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={className="page-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
-          <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Relatórios</span>
+          <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>RelatÃ³rios</span>
           <div style={{ display: 'flex', gap: '8px' }}>
             <button onClick={buscar} style={{ padding: '6px 14px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>
               Atualizar
             </button>
             {!loading && (
               <button onClick={gerarPDF} style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>
-                🖨️ Exportar PDF
+                ðŸ–¨ï¸ Exportar PDF
               </button>
             )}
           </div>
@@ -392,30 +392,30 @@ export default function Relatorios() {
               {/* Cards de resumo */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '16px' }}>
                 <div style={cardStyle('#27500A')}>
-                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Pedidos no período</div>
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Pedidos no perÃ­odo</div>
                   <div style={{ fontSize: '28px', fontWeight: '500', color: '#27500A' }}>{totalPedidos}</div>
                   <div style={{ fontSize: '10px', color: '#aaa', marginTop: '2px' }}>de {rawPedidos.length} no total</div>
                 </div>
                 <div style={cardStyle('#C9A84C')}>
-                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Entregas no período</div>
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Entregas no perÃ­odo</div>
                   <div style={{ fontSize: '28px', fontWeight: '500', color: '#C9A84C' }}>{totalEntregas}</div>
                   <div style={{ fontSize: '10px', color: '#aaa', marginTop: '2px' }}>de {rawEntregas.length} no total</div>
                 </div>
                 <div style={cardStyle('#185FA5')}>
-                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>ATs no período</div>
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>ATs no perÃ­odo</div>
                   <div style={{ fontSize: '28px', fontWeight: '500', color: '#185FA5' }}>{totalATs}</div>
                   <div style={{ fontSize: '10px', color: '#aaa', marginTop: '2px' }}>de {rawATs.length} no total</div>
                 </div>
                 <div style={cardStyle('#A32D2D')}>
-                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Ocorrências no período</div>
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>OcorrÃªncias no perÃ­odo</div>
                   <div style={{ fontSize: '28px', fontWeight: '500', color: '#A32D2D' }}>{totalOcorrencias}</div>
                   <div style={{ fontSize: '10px', color: '#aaa', marginTop: '2px' }}>de {rawOcorrencias.length} no total</div>
                 </div>
               </div>
 
-              {/* Filtro de período */}
+              {/* Filtro de perÃ­odo */}
               <div style={{ background: '#fff', borderRadius: '10px', border: '0.5px solid #e8e7e3', padding: '10px 14px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '11px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', whiteSpace: 'nowrap' }}>Período:</span>
+                <span style={{ fontSize: '11px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', whiteSpace: 'nowrap' }}>PerÃ­odo:</span>
                 <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                   {periodos.map(p => (
                     <button key={p} onClick={() => setPeriodo(p)} style={{
@@ -449,13 +449,13 @@ export default function Relatorios() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
-                      <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>Pedidos por mês — {PERIODO_LABEL[periodo]}</span>
+                      <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>Pedidos por mÃªs â€” {PERIODO_LABEL[periodo]}</span>
                       <button onClick={() => exportarCSV(
-                        [['Mês', 'Novos pedidos', 'Entregues'], ...pedidosMes.map(p => [mesLabel(p.mes), String(p.novos), String(p.entregues)])],
+                        [['MÃªs', 'Novos pedidos', 'Entregues'], ...pedidosMes.map(p => [mesLabel(p.mes), String(p.novos), String(p.entregues)])],
                         'pedidos_por_mes.csv'
                       )} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', cursor: 'pointer', color: '#555' }}>Exportar CSV</button>
                     </div>
-                    {headerTabela(['Mês', 'Novos', 'Entregues'], '120px 1fr 1fr')}
+                    {headerTabela(['MÃªs', 'Novos', 'Entregues'], '120px 1fr 1fr')}
                     {pedidosMes.map((p, i) => (
                       <div key={p.mes} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                         <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{mesLabel(p.mes)}</span>
@@ -473,7 +473,7 @@ export default function Relatorios() {
                         'pedidos_por_status.csv'
                       )} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', cursor: 'pointer', color: '#555' }}>Exportar CSV</button>
                     </div>
-                    {headerTabela(['Status', 'Total', 'Participação'], '1fr 80px 120px')}
+                    {headerTabela(['Status', 'Total', 'ParticipaÃ§Ã£o'], '1fr 80px 120px')}
                     {pedidosStatus.map((p, i) => (
                       <div key={p.status} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 120px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                         <span style={{ fontSize: '13px', color: '#1a1a2e' }}>{STATUS_PEDIDO_LABEL[p.status] || p.status}</span>
@@ -494,19 +494,19 @@ export default function Relatorios() {
               {aba === 'entregas' && (
                 <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>Entregas — {PERIODO_LABEL[periodo]}</span>
+                    <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>Entregas â€” {PERIODO_LABEL[periodo]}</span>
                     <button onClick={() => exportarCSV(
-                      [['Mês', 'Agendadas', 'Realizadas', 'Taxa'], ...entregasMes.map(e => [mesLabel(e.mes), String(e.total), String(e.realizadas), e.total > 0 ? Math.round(e.realizadas / e.total * 100) + '%' : '—'])],
+                      [['MÃªs', 'Agendadas', 'Realizadas', 'Taxa'], ...entregasMes.map(e => [mesLabel(e.mes), String(e.total), String(e.realizadas), e.total > 0 ? Math.round(e.realizadas / e.total * 100) + '%' : 'â€”'])],
                       'entregas_por_mes.csv'
                     )} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', cursor: 'pointer', color: '#555' }}>Exportar CSV</button>
                   </div>
-                  {headerTabela(['Mês', 'Agendadas', 'Realizadas', 'Taxa'], '120px 1fr 1fr 1fr')}
+                  {headerTabela(['MÃªs', 'Agendadas', 'Realizadas', 'Taxa'], '120px 1fr 1fr 1fr')}
                   {entregasMes.map((e, i) => (
                     <div key={e.mes} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 1fr', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                       <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{mesLabel(e.mes)}</span>
                       <span style={{ fontSize: '13px', color: '#555', textAlign: 'right' }}>{e.total}</span>
                       <span style={{ fontSize: '13px', color: '#27500A', textAlign: 'right', fontWeight: '500' }}>{e.realizadas}</span>
-                      <span style={{ fontSize: '12px', color: '#888', textAlign: 'right' }}>{e.total > 0 ? Math.round(e.realizadas / e.total * 100) + '%' : '—'}</span>
+                      <span style={{ fontSize: '12px', color: '#888', textAlign: 'right' }}>{e.total > 0 ? Math.round(e.realizadas / e.total * 100) + '%' : 'â€”'}</span>
                     </div>
                   ))}
                 </div>
@@ -517,24 +517,24 @@ export default function Relatorios() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                     <div style={cardStyle('#185FA5')}>
-                      <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Tempo médio venda → entrega</div>
-                      <div style={{ fontSize: '28px', fontWeight: '500', color: '#185FA5' }}>{tempoMedioEntrega !== null ? `${tempoMedioEntrega} dias` : '—'}</div>
+                      <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Tempo mÃ©dio venda â†’ entrega</div>
+                      <div style={{ fontSize: '28px', fontWeight: '500', color: '#185FA5' }}>{tempoMedioEntrega !== null ? `${tempoMedioEntrega} dias` : 'â€”'}</div>
                       <div style={{ fontSize: '11px', color: '#aaa', marginTop: '2px' }}>{PERIODO_LABEL[periodo]}</div>
                     </div>
                     <div style={cardStyle('#27500A')}>
                       <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Entregues dentro do prazo</div>
                       <div style={{ fontSize: '28px', fontWeight: '500', color: '#27500A' }}>{dentroPrazo}</div>
-                      <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>{totalPrazo > 0 ? Math.round(dentroPrazo / totalPrazo * 100) + '%' : '—'}</div>
+                      <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>{totalPrazo > 0 ? Math.round(dentroPrazo / totalPrazo * 100) + '%' : 'â€”'}</div>
                     </div>
                     <div style={cardStyle('#A32D2D')}>
                       <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Entregues fora do prazo</div>
                       <div style={{ fontSize: '28px', fontWeight: '500', color: '#A32D2D' }}>{foraPrazo}</div>
-                      <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>{totalPrazo > 0 ? Math.round(foraPrazo / totalPrazo * 100) + '%' : '—'}</div>
+                      <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>{totalPrazo > 0 ? Math.round(foraPrazo / totalPrazo * 100) + '%' : 'â€”'}</div>
                     </div>
                   </div>
                   {totalPrazo === 0 && (
                     <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', padding: '32px', textAlign: 'center', color: '#888', fontSize: '13px' }}>
-                      Nenhum pedido entregue com prazo prometido no período selecionado.
+                      Nenhum pedido entregue com prazo prometido no perÃ­odo selecionado.
                     </div>
                   )}
                 </div>
@@ -544,13 +544,13 @@ export default function Relatorios() {
               {aba === 'profissionais' && (
                 <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>Pedidos por profissional — {PERIODO_LABEL[periodo]}</span>
+                    <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>Pedidos por profissional â€” {PERIODO_LABEL[periodo]}</span>
                     <button onClick={() => exportarCSV(
                       [['Profissional', 'Total pedidos', 'Entregues'], ...porProfissional.map(p => [p.nome, String(p.total), String(p.entregues)])],
                       'pedidos_por_profissional.csv'
                     )} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', cursor: 'pointer', color: '#555' }}>Exportar CSV</button>
                   </div>
-                  {headerTabela(['Profissional', 'Total', 'Entregues', 'Participação'], '1fr 80px 90px 120px')}
+                  {headerTabela(['Profissional', 'Total', 'Entregues', 'ParticipaÃ§Ã£o'], '1fr 80px 90px 120px')}
                   {porProfissional.map((p, i) => (
                     <div key={p.nome} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 120px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                       <span style={{ fontSize: '13px', color: '#1a1a2e' }}>{p.nome}</span>
@@ -571,13 +571,13 @@ export default function Relatorios() {
               {aba === 'ats' && (
                 <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>Assistências por status — {PERIODO_LABEL[periodo]}</span>
+                    <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>AssistÃªncias por status â€” {PERIODO_LABEL[periodo]}</span>
                     <button onClick={() => exportarCSV(
                       [['Status', 'Total'], ...resumoATs.map(r => [STATUS_AT_LABEL[r.status] || r.status, String(r.total)])],
                       'ats_por_status.csv'
                     )} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', cursor: 'pointer', color: '#555' }}>Exportar CSV</button>
                   </div>
-                  {headerTabela(['Status', 'Total', 'Participação'], '1fr 80px 120px')}
+                  {headerTabela(['Status', 'Total', 'ParticipaÃ§Ã£o'], '1fr 80px 120px')}
                   {resumoATs.map((r, i) => (
                     <div key={r.status} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 120px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                       <span style={{ fontSize: '13px', color: '#1a1a2e' }}>{STATUS_AT_LABEL[r.status] || r.status}</span>
@@ -597,15 +597,15 @@ export default function Relatorios() {
               {aba === 'fornecedores' && (
                 <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>ATs por fornecedor — {PERIODO_LABEL[periodo]}</span>
+                    <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>ATs por fornecedor â€” {PERIODO_LABEL[periodo]}</span>
                     <button onClick={() => exportarCSV(
                       [['Fornecedor', 'Total ATs'], ...atsFornecedor.map(f => [f.nome, String(f.total)])],
                       'ats_por_fornecedor.csv'
                     )} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', cursor: 'pointer', color: '#555' }}>Exportar CSV</button>
                   </div>
-                  {headerTabela(['Fornecedor', 'Total', 'Participação'], '1fr 80px 120px')}
+                  {headerTabela(['Fornecedor', 'Total', 'ParticipaÃ§Ã£o'], '1fr 80px 120px')}
                   {atsFornecedor.length === 0 && (
-                    <div style={{ padding: '32px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhuma AT registrada no período.</div>
+                    <div style={{ padding: '32px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhuma AT registrada no perÃ­odo.</div>
                   )}
                   {atsFornecedor.map((f, i) => (
                     <div key={f.nome} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 120px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
@@ -622,19 +622,19 @@ export default function Relatorios() {
                 </div>
               )}
 
-              {/* === OCORRÊNCIAS === */}
+              {/* === OCORRÃŠNCIAS === */}
               {aba === 'ocorrencias' && (
                 <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>Ocorrências por tipo — {PERIODO_LABEL[periodo]}</span>
+                    <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>OcorrÃªncias por tipo â€” {PERIODO_LABEL[periodo]}</span>
                     <button onClick={() => exportarCSV(
                       [['Tipo', 'Total', 'Abertas'], ...ocorrenciasTipo.map(o => [o.tipo, String(o.total), String(o.abertas)])],
                       'ocorrencias_por_tipo.csv'
                     )} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', cursor: 'pointer', color: '#555' }}>Exportar CSV</button>
                   </div>
-                  {headerTabela(['Tipo', 'Total', 'Abertas', 'Participação'], '1fr 80px 80px 120px')}
+                  {headerTabela(['Tipo', 'Total', 'Abertas', 'ParticipaÃ§Ã£o'], '1fr 80px 80px 120px')}
                   {ocorrenciasTipo.length === 0 && (
-                    <div style={{ padding: '32px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhuma ocorrência registrada no período.</div>
+                    <div style={{ padding: '32px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhuma ocorrÃªncia registrada no perÃ­odo.</div>
                   )}
                   {ocorrenciasTipo.map((o, i) => (
                     <div key={o.tipo} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 120px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
@@ -656,8 +656,8 @@ export default function Relatorios() {
               {aba === 'pendencias' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ padding: '10px 16px', background: '#fff', borderRadius: '10px', border: '0.5px solid #e8e7e3', fontSize: '12px', color: '#888', marginBottom: '4px' }}>
-                    Mostra apenas fornecedores com itens pendentes em pedidos ativos — estado atual, independente do período selecionado.
-                    {pendenciasPorFornecedor.length === 0 && <span style={{ color: '#27500A', fontWeight: '500', marginLeft: '8px' }}>✓ Nenhuma pendência encontrada.</span>}
+                    Mostra apenas fornecedores com itens pendentes em pedidos ativos â€” estado atual, independente do perÃ­odo selecionado.
+                    {pendenciasPorFornecedor.length === 0 && <span style={{ color: '#27500A', fontWeight: '500', marginLeft: '8px' }}>âœ“ Nenhuma pendÃªncia encontrada.</span>}
                   </div>
 
                   {pendenciasPorFornecedor.map(forn => {
@@ -672,7 +672,7 @@ export default function Relatorios() {
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '14px', fontWeight: '500', color: '#1a1a2e' }}>{forn.nome}</div>
                             <div style={{ fontSize: '12px', color: '#888', marginTop: '2px' }}>
-                              {pedidosUnicos.length} pedido{pedidosUnicos.length !== 1 ? 's' : ''} em aberto · {forn.itens.length} item{forn.itens.length !== 1 ? 'ns' : ''}
+                              {pedidosUnicos.length} pedido{pedidosUnicos.length !== 1 ? 's' : ''} em aberto Â· {forn.itens.length} item{forn.itens.length !== 1 ? 'ns' : ''}
                             </div>
                           </div>
                           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -689,7 +689,7 @@ export default function Relatorios() {
                         {aberto && (
                           <div style={{ borderTop: '0.5px solid #f0efe9' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 120px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '600', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
-                              <span>Pedido</span><span>Cliente</span><span>Item</span><span style={{ textAlign: 'right' }}>Previsão chegada</span>
+                              <span>Pedido</span><span>Cliente</span><span>Item</span><span style={{ textAlign: 'right' }}>PrevisÃ£o chegada</span>
                             </div>
                             {forn.itens.map((item, i) => (
                               <div key={i} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 1fr 120px', padding: '11px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
@@ -697,13 +697,13 @@ export default function Relatorios() {
                                 <span style={{ fontSize: '13px', color: '#555' }}>{item.cliente}</span>
                                 <span style={{ fontSize: '12px', color: '#888' }}>{item.descricao}</span>
                                 <span style={{ fontSize: '12px', color: item.previsao ? '#555' : '#bbb', textAlign: 'right' }}>
-                                  {item.previsao ? new Date(item.previsao + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
+                                  {item.previsao ? new Date(item.previsao + 'T12:00:00').toLocaleDateString('pt-BR') : 'â€”'}
                                 </span>
                               </div>
                             ))}
                             <div style={{ padding: '10px 16px', borderTop: '0.5px solid #f0efe9', background: '#fffbf0' }}>
                               <button onClick={() => exportarCSV(
-                                [['Pedido', 'Cliente', 'Item', 'Previsão chegada'], ...forn.itens.map(i => [i.numeroPedido, i.cliente, i.descricao, i.previsao ? new Date(i.previsao + 'T12:00:00').toLocaleDateString('pt-BR') : ''])],
+                                [['Pedido', 'Cliente', 'Item', 'PrevisÃ£o chegada'], ...forn.itens.map(i => [i.numeroPedido, i.cliente, i.descricao, i.previsao ? new Date(i.previsao + 'T12:00:00').toLocaleDateString('pt-BR') : ''])],
                                 `pendencias_${forn.nome.replace(/\s+/g, '_')}.csv`
                               )} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', cursor: 'pointer', color: '#555' }}>
                                 Exportar CSV deste fornecedor
@@ -723,11 +723,11 @@ export default function Relatorios() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
                     <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>Itens com tratamentos especiais (estado atual)</span>
                     <button onClick={() => exportarCSV(
-                      [['Tratamento', 'Total itens', 'Já aptos'], ...tratamentos.map(t => [t.label, String(t.total), String(t.aptos)])],
+                      [['Tratamento', 'Total itens', 'JÃ¡ aptos'], ...tratamentos.map(t => [t.label, String(t.total), String(t.aptos)])],
                       'itens_por_tratamento.csv'
                     )} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', cursor: 'pointer', color: '#555' }}>Exportar CSV</button>
                   </div>
-                  {headerTabela(['Tratamento', 'Total itens', 'Já aptos', '% do total de itens'], '1fr 100px 100px 160px')}
+                  {headerTabela(['Tratamento', 'Total itens', 'JÃ¡ aptos', '% do total de itens'], '1fr 100px 100px 160px')}
                   {tratamentos.map((t, i) => (
                     <div key={t.label} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px 160px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                       <span style={{ fontSize: '13px', color: '#1a1a2e' }}>{t.label}</span>

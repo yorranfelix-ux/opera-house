@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
@@ -94,16 +94,16 @@ export default function Profissionais() {
   async function excluir(id: string, nome: string) {
     const { error } = await supabase.from('profissionais').delete().eq('id', id)
     if (error) {
-      if (error.message.includes('foreign key')) return alert(`Não é possível excluir "${nome}" pois existem pedidos vinculados a este profissional.`)
+      if (error.message.includes('foreign key')) return alert(`NÃ£o Ã© possÃ­vel excluir "${nome}" pois existem pedidos vinculados a este profissional.`)
       return alert('Erro ao excluir: ' + error.message)
     }
-    await registrarHistorico({ tipo: 'profissional_excluido', descricao: `Profissional ${nome} excluído` })
+    await registrarHistorico({ tipo: 'profissional_excluido', descricao: `Profissional ${nome} excluÃ­do` })
     setExcluindoId(null)
     buscar()
   }
 
   async function salvar() {
-    if (!form.nome.trim()) return alert('Nome é obrigatório')
+    if (!form.nome.trim()) return alert('Nome Ã© obrigatÃ³rio')
     setSalvando(true)
     try {
       const payload = {
@@ -158,7 +158,7 @@ export default function Profissionais() {
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
       <Sidebar ativa="/profissionais" />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={className="page-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
           <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Profissionais</span>
           <button onClick={abrirNovo} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
@@ -168,7 +168,7 @@ export default function Profissionais() {
 
         {aniversariantes.length > 0 && (
           <div style={{ margin: '16px 24px 0', padding: '12px 16px', background: '#FFF9E6', border: '1px solid #F0D060', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#7A5800' }}>
-            <span style={{ fontSize: '18px' }}>🎂</span>
+            <span style={{ fontSize: '18px' }}>ðŸŽ‚</span>
             <span><strong>Aniversariante{aniversariantes.length > 1 ? 's' : ''} de hoje:</strong> {aniversariantes.join(' e ')}</span>
           </div>
         )}
@@ -212,10 +212,10 @@ export default function Profissionais() {
                 </div>
                 <span style={{ fontSize: '12px', color: '#555' }}>{p.tipo}</span>
                 <div>
-                  <div style={{ fontSize: '12px', color: '#555' }}>{p.telefone || '—'}</div>
+                  <div style={{ fontSize: '12px', color: '#555' }}>{p.telefone || 'â€”'}</div>
                   {p.whatsapp && p.whatsapp !== p.telefone && <div style={{ fontSize: '11px', color: '#888' }}>WA: {p.whatsapp}</div>}
                 </div>
-                <span style={{ fontSize: '12px', color: '#555' }}>{p.email || '—'}</span>
+                <span style={{ fontSize: '12px', color: '#555' }}>{p.email || 'â€”'}</span>
                 <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', fontWeight: '500', background: p.ativo ? '#EAF3DE' : '#f0efe9', color: p.ativo ? '#27500A' : '#888' }}>
                   {p.ativo ? 'Ativo' : 'Inativo'}
                 </span>
@@ -251,7 +251,7 @@ export default function Profissionais() {
                   <span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '8px', fontWeight: '500', background: p.ativo ? '#EAF3DE' : '#f0efe9', color: p.ativo ? '#27500A' : '#888' }}>
                     {p.ativo ? 'Ativo' : 'Inativo'}
                   </span>
-                  <button onClick={() => setVisualizandoId(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+                  <button onClick={() => setVisualizandoId(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
                 </div>
               </div>
 
@@ -263,18 +263,18 @@ export default function Profissionais() {
                   {linha('E-mail', p.email)}
                   {linha('Data de nascimento', p.data_nascimento ? new Date(p.data_nascimento + 'T12:00:00').toLocaleDateString('pt-BR') : null)}
                 </div>
-                {linha('Observações', p.observacoes)}
+                {linha('ObservaÃ§Ãµes', p.observacoes)}
               </div>
 
               {temDadosBancarios && (
                 <div style={{ borderTop: '0.5px solid #f0efe9', paddingTop: '16px', marginTop: '8px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Dados Bancários</div>
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Dados BancÃ¡rios</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 24px' }}>
                     {linha('Nome do titular', p.nome_titular)}
                     {linha('CPF / CNPJ', p.cpf_cnpj_titular)}
                     {linha('Banco', p.banco)}
                     {linha('Tipo de conta', p.tipo_conta ? p.tipo_conta.charAt(0).toUpperCase() + p.tipo_conta.slice(1) : null)}
-                    {linha('Agência', p.agencia)}
+                    {linha('AgÃªncia', p.agencia)}
                     {linha('Conta', p.conta)}
                   </div>
                   {linha('Chave PIX', p.chave_pix)}
@@ -296,7 +296,7 @@ export default function Profissionais() {
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
             <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '380px' }}>
               <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e', marginBottom: '8px' }}>Excluir {p?.nome}?</div>
-              <div style={{ fontSize: '13px', color: '#888', marginBottom: '24px' }}>Esta ação não pode ser desfeita.</div>
+              <div style={{ fontSize: '13px', color: '#888', marginBottom: '24px' }}>Esta aÃ§Ã£o nÃ£o pode ser desfeita.</div>
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                 <button onClick={() => setExcluindoId(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
                 <button onClick={() => excluir(excluindoId, p?.nome)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#FCEBEB', color: '#791F1F', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Excluir</button>
@@ -311,7 +311,7 @@ export default function Profissionais() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '480px', maxHeight: '88vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{editandoId ? 'Editar profissional' : 'Novo profissional'}</span>
-              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
             </div>
 
             <div style={{ marginBottom: '12px' }}>
@@ -348,9 +348,9 @@ export default function Profissionais() {
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <label style={labelStyle}>Observações</label>
+              <label style={labelStyle}>ObservaÃ§Ãµes</label>
               <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={3}
-                style={{ ...inputStyle, resize: 'vertical' }} placeholder="Informações adicionais..." />
+                style={{ ...inputStyle, resize: 'vertical' }} placeholder="InformaÃ§Ãµes adicionais..." />
             </div>
 
             {editandoId && (
@@ -361,7 +361,7 @@ export default function Profissionais() {
             )}
 
             <div style={{ borderTop: '0.5px solid #e8e7e3', margin: '8px 0 16px', paddingTop: '16px' }}>
-              <div style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a2e', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dados Bancários</div>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a2e', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dados BancÃ¡rios</div>
 
               <div style={{ marginBottom: '12px' }}>
                 <label style={labelStyle}>Nome do titular</label>
@@ -375,7 +375,7 @@ export default function Profissionais() {
 
               <div style={{ marginBottom: '12px' }}>
                 <label style={labelStyle}>Banco</label>
-                <input value={form.banco} onChange={e => setForm({ ...form, banco: e.target.value })} style={inputStyle} placeholder="Ex: Itaú, Bradesco, Nubank..." />
+                <input value={form.banco} onChange={e => setForm({ ...form, banco: e.target.value })} style={inputStyle} placeholder="Ex: ItaÃº, Bradesco, Nubank..." />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
@@ -383,11 +383,11 @@ export default function Profissionais() {
                   <label style={labelStyle}>Tipo de conta</label>
                   <select value={form.tipo_conta} onChange={e => setForm({ ...form, tipo_conta: e.target.value })} style={inputStyle}>
                     <option value="corrente">Corrente</option>
-                    <option value="poupança">Poupança</option>
+                    <option value="poupanÃ§a">PoupanÃ§a</option>
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Agência</label>
+                  <label style={labelStyle}>AgÃªncia</label>
                   <input value={form.agencia} onChange={e => setForm({ ...form, agencia: e.target.value })} style={inputStyle} placeholder="0000" />
                 </div>
                 <div>
@@ -398,14 +398,14 @@ export default function Profissionais() {
 
               <div style={{ marginBottom: '12px' }}>
                 <label style={labelStyle}>Chave PIX</label>
-                <input value={form.chave_pix} onChange={e => setForm({ ...form, chave_pix: e.target.value })} style={inputStyle} placeholder="CPF, e-mail, telefone ou chave aleatória" />
+                <input value={form.chave_pix} onChange={e => setForm({ ...form, chave_pix: e.target.value })} style={inputStyle} placeholder="CPF, e-mail, telefone ou chave aleatÃ³ria" />
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
               <button onClick={salvar} disabled={salvando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>
-                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Cadastrar')}
+                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alteraÃ§Ãµes' : 'Cadastrar')}
               </button>
             </div>
           </div>

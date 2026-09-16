@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
@@ -20,22 +20,22 @@ const TIPO_COR: Record<string, { bg: string; color: string; label: string }> = {
   item_editado:          { bg: '#E6F1FB', color: '#0C447C', label: 'Item editado' },
   pedido_criado:         { bg: '#EEEDFE', color: '#3C3489', label: 'Pedido criado' },
   pedido_editado:        { bg: '#FAEEDA', color: '#633806', label: 'Pedido editado' },
-  pedido_excluido:       { bg: '#FCEBEB', color: '#791F1F', label: 'Pedido excluído' },
+  pedido_excluido:       { bg: '#FCEBEB', color: '#791F1F', label: 'Pedido excluÃ­do' },
   at_criada:             { bg: '#EAF3DE', color: '#27500A', label: 'AT criada' },
   at_atualizada:         { bg: '#E6F1FB', color: '#0C447C', label: 'AT atualizada' },
-  at_excluida:           { bg: '#FCEBEB', color: '#791F1F', label: 'AT excluída' },
-  ocorrencia_criada:     { bg: '#FAEEDA', color: '#633806', label: 'Ocorrência aberta' },
-  ocorrencia_editada:    { bg: '#E6F1FB', color: '#0C447C', label: 'Ocorrência editada' },
-  ocorrencia_excluida:   { bg: '#FCEBEB', color: '#791F1F', label: 'Ocorrência excluída' },
+  at_excluida:           { bg: '#FCEBEB', color: '#791F1F', label: 'AT excluÃ­da' },
+  ocorrencia_criada:     { bg: '#FAEEDA', color: '#633806', label: 'OcorrÃªncia aberta' },
+  ocorrencia_editada:    { bg: '#E6F1FB', color: '#0C447C', label: 'OcorrÃªncia editada' },
+  ocorrencia_excluida:   { bg: '#FCEBEB', color: '#791F1F', label: 'OcorrÃªncia excluÃ­da' },
   cliente_criado:        { bg: '#EAF3DE', color: '#27500A', label: 'Cliente cadastrado' },
   cliente_editado:       { bg: '#E6F1FB', color: '#0C447C', label: 'Cliente editado' },
   fornecedor_criado:     { bg: '#EAF3DE', color: '#27500A', label: 'Fornecedor cadastrado' },
   fornecedor_editado:    { bg: '#E6F1FB', color: '#0C447C', label: 'Fornecedor editado' },
   profissional_criado:   { bg: '#EAF3DE', color: '#27500A', label: 'Profissional cadastrado' },
   profissional_editado:  { bg: '#E6F1FB', color: '#0C447C', label: 'Profissional editado' },
-  cliente_excluido:      { bg: '#FCEBEB', color: '#791F1F', label: 'Cliente excluído' },
-  fornecedor_excluido:   { bg: '#FCEBEB', color: '#791F1F', label: 'Fornecedor excluído' },
-  profissional_excluido: { bg: '#FCEBEB', color: '#791F1F', label: 'Profissional excluído' },
+  cliente_excluido:      { bg: '#FCEBEB', color: '#791F1F', label: 'Cliente excluÃ­do' },
+  fornecedor_excluido:   { bg: '#FCEBEB', color: '#791F1F', label: 'Fornecedor excluÃ­do' },
+  profissional_excluido: { bg: '#FCEBEB', color: '#791F1F', label: 'Profissional excluÃ­do' },
   entrega_agendada:      { bg: '#EAF3DE', color: '#27500A', label: 'Entrega agendada' },
   entrega_atualizada:    { bg: '#E6F1FB', color: '#0C447C', label: 'Entrega atualizada' },
   entrega_excluida:      { bg: '#FCEBEB', color: '#791F1F', label: 'Entrega removida' },
@@ -60,14 +60,14 @@ export default function Historico() {
       .select('*, pedidos(numero_pedido, clientes(nome))')
       .order('created_at', { ascending: false })
       .limit(200)
-    if (error) console.error('Erro ao buscar histórico:', error)
+    if (error) console.error('Erro ao buscar histÃ³rico:', error)
     setRegistros((data as unknown as Registro[]) || [])
     setLoading(false)
   }
 
   async function buscarPedidos() {
     const { data, error } = await supabase.from('pedidos').select('id, numero_pedido').order('numero_pedido', { ascending: false }).range(0, 9999)
-    if (error) console.error('Erro ao buscar pedidos (histórico):', error)
+    if (error) console.error('Erro ao buscar pedidos (histÃ³rico):', error)
     setPedidos(data || [])
   }
 
@@ -96,15 +96,15 @@ export default function Historico() {
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
       <Sidebar ativa="/historico" />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={className="page-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', padding: '0 22px', fontSize: '15px', fontWeight: '500', color: '#1a1a2e', flexShrink: 0 }}>
-          Histórico de alterações
+          HistÃ³rico de alteraÃ§Ãµes
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
             <input
-              placeholder="Buscar por pedido, usuário ou descrição..."
+              placeholder="Buscar por pedido, usuÃ¡rio ou descriÃ§Ã£o..."
               value={busca}
               onChange={e => setBusca(e.target.value)}
               style={{ width: '300px', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none' }}
@@ -161,7 +161,7 @@ export default function Historico() {
                           </a>
                         ) : null}
                         {r.pedidos?.clientes?.nome && (
-                          <span style={{ fontSize: '11px', color: '#888' }}>· {r.pedidos.clientes.nome}</span>
+                          <span style={{ fontSize: '11px', color: '#888' }}>Â· {r.pedidos.clientes.nome}</span>
                         )}
                         {r.tipo && (
                           <span style={{ fontSize: '10px', padding: '1px 7px', borderRadius: '6px', fontWeight: '500', background: TIPO_COR[r.tipo]?.bg || '#f0efe9', color: TIPO_COR[r.tipo]?.color || '#555' }}>
@@ -171,7 +171,7 @@ export default function Historico() {
                       </div>
                       <div style={{ fontSize: '13px', color: '#1a1a2e', marginBottom: '2px' }}>{r.descricao}</div>
                       <div style={{ fontSize: '11px', color: '#aaa' }}>
-                        {r.usuario_nome} · {new Date(r.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        {r.usuario_nome} Â· {new Date(r.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </div>
                   </div>

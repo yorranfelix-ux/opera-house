@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
@@ -84,10 +84,10 @@ async function abrirRotaMaps(entregas: Entrega[]) {
       return c ? montarEnderecoCliente(c as ClienteEntrega) : ''
     })
     .filter(Boolean)
-  if (enderecos.length === 0) return alert('Nenhum endereço cadastrado para os clientes deste dia.')
+  if (enderecos.length === 0) return alert('Nenhum endereÃ§o cadastrado para os clientes deste dia.')
 
   const { data, error: errConf } = await supabase.from('configuracoes').select('valor').eq('chave', 'endereco_saida').single()
-  if (errConf && errConf.code !== 'PGRST116') console.error('Erro ao buscar endereço de saída:', errConf)
+  if (errConf && errConf.code !== 'PGRST116') console.error('Erro ao buscar endereÃ§o de saÃ­da:', errConf)
   const saida = data?.valor?.trim()
 
   const pontos = saida ? [saida, ...enderecos] : enderecos
@@ -171,7 +171,7 @@ export default function Entregas() {
       .order('numero_pedido', { ascending: false })
     if (error) console.error('Erro ao buscar pedidos (entregas):', error)
     let lista = (data as unknown as Pedido[]) || []
-    // Ao editar, inclui o pedido atual mesmo se já entregue (para aparecer no select)
+    // Ao editar, inclui o pedido atual mesmo se jÃ¡ entregue (para aparecer no select)
     if (incluirId && !lista.some(p => p.id === incluirId)) {
       const { data: extra } = await supabase
         .from('pedidos')
@@ -214,8 +214,8 @@ export default function Entregas() {
 
   async function salvar() {
     if (form.tipo === 'pedido' && !form.pedido_id) return alert('Selecione o pedido')
-    if (form.tipo === 'at' && !form.assistencia_tecnica_id) return alert('Selecione a assistência técnica')
-    if (!form.data_agendada) return alert('Data agendada é obrigatória')
+    if (form.tipo === 'at' && !form.assistencia_tecnica_id) return alert('Selecione a assistÃªncia tÃ©cnica')
+    if (!form.data_agendada) return alert('Data agendada Ã© obrigatÃ³ria')
 
     if (editandoId && !pendingSaveRef.current) {
       const entregaAtual = entregas.find(e => e.id === editandoId)
@@ -250,9 +250,9 @@ export default function Entregas() {
         }
         const { error } = await supabase.from('entregas').update(payload).eq('id', editandoId)
         if (error) return alert('Erro: ' + error.message)
-        await registrarHistorico({ tipo: 'entrega_atualizada', descricao: `Entrega do Pedido ${numPedido} atualizada para ${form.data_agendada ? new Date(form.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}`, pedidoId: form.pedido_id })
+        await registrarHistorico({ tipo: 'entrega_atualizada', descricao: `Entrega do Pedido ${numPedido} atualizada para ${form.data_agendada ? new Date(form.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : 'â€”'}`, pedidoId: form.pedido_id })
         if (payload.status === 'realizada') {
-          // Só marca como entregue se não houver outras entregas pendentes
+          // SÃ³ marca como entregue se nÃ£o houver outras entregas pendentes
           const { data: pendentes } = await supabase
             .from('entregas')
             .select('id')
@@ -261,13 +261,13 @@ export default function Entregas() {
             .neq('id', editandoId)
           if (!pendentes || pendentes.length === 0) {
             await supabase.from('pedidos').update({ status: 'entregue', data_entrega: new Date().toISOString().split('T')[0] }).eq('id', form.pedido_id)
-            await registrarHistorico({ tipo: 'pedido_editado', descricao: `Pedido marcado como entregue automaticamente após entrega realizada`, pedidoId: form.pedido_id })
+            await registrarHistorico({ tipo: 'pedido_editado', descricao: `Pedido marcado como entregue automaticamente apÃ³s entrega realizada`, pedidoId: form.pedido_id })
           }
         }
       } else {
         const { error } = await supabase.from('entregas').insert([{ ...payload, status: 'agendada' }])
         if (error) return alert('Erro: ' + error.message)
-        await registrarHistorico({ tipo: 'entrega_agendada', descricao: `Entrega do Pedido ${numPedido} agendada para ${form.data_agendada ? new Date(form.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}`, pedidoId: form.pedido_id })
+        await registrarHistorico({ tipo: 'entrega_agendada', descricao: `Entrega do Pedido ${numPedido} agendada para ${form.data_agendada ? new Date(form.data_agendada + 'T12:00:00').toLocaleDateString('pt-BR') : 'â€”'}`, pedidoId: form.pedido_id })
       }
       setShowMotivoModal(false)
       setMotivoReagendamento('')
@@ -311,7 +311,7 @@ export default function Entregas() {
     const TOTAL_LINHAS = 13
     const linhasVazias = Math.max(0, TOTAL_LINHAS - info.entregas.length)
 
-    const equipeList = [...new Set(info.entregas.map(e => e.responsavel_campo).filter(Boolean))].join(' · ')
+    const equipeList = [...new Set(info.entregas.map(e => e.responsavel_campo).filter(Boolean))].join(' Â· ')
 
     const rowsHtml = info.entregas.map(e => {
       const isAT = !!e.assistencia_tecnica_id
@@ -321,12 +321,12 @@ export default function Entregas() {
         const at = e.assistencias_tecnicas
         const c = at?.pedidos?.clientes
         const nomeAbrev = (c?.nome || '').substring(0, 20).toUpperCase()
-        label = `🔧 AT.${at?.numero_at} — ${nomeAbrev}`
+        label = `ðŸ”§ AT.${at?.numero_at} â€” ${nomeAbrev}`
         regiao = (c?.cidade || '').toUpperCase()
       } else {
         const c = e.pedidos?.clientes
         const nomeAbrev = (c?.nome || '').substring(0, 20).toUpperCase()
-        label = `P.${e.pedidos?.numero_pedido} — ${nomeAbrev}`
+        label = `P.${e.pedidos?.numero_pedido} â€” ${nomeAbrev}`
         regiao = (c?.cidade || '').toUpperCase()
       }
       return `
@@ -352,7 +352,7 @@ export default function Entregas() {
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>Sequência de Entregas — ${dataFormatada}</title>
+  <title>SequÃªncia de Entregas â€” ${dataFormatada}</title>
   <style>
     @page { size: A4 landscape; margin: 8mm 12mm; }
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -373,7 +373,7 @@ export default function Entregas() {
   </tr>
 </table>
 
-<!-- LINHA 1: Motorista | Rodízio | Data -->
+<!-- LINHA 1: Motorista | RodÃ­zio | Data -->
 <table style="margin-bottom:-1px;">
   <tr>
     <td style="padding:7px 12px;width:30%;">
@@ -381,7 +381,7 @@ export default function Entregas() {
       <span style="font-size:13px;font-weight:bold;margin-left:6px;">${motorista.motorista}</span>
     </td>
     <td style="padding:7px 12px;width:46%;text-align:center;background:#f5f5f5;">
-      <span style="font-size:10px;font-weight:bold;">RODÍZIO:</span>
+      <span style="font-size:10px;font-weight:bold;">RODÃZIO:</span>
       <span style="font-size:10px;font-weight:bold;margin-left:6px;">${motorista.rodizio || 'PLACA FINAL ___ ___-FEIRA'}</span>
     </td>
     <td style="padding:7px 12px;width:24%;text-align:right;">
@@ -391,11 +391,11 @@ export default function Entregas() {
   </tr>
 </table>
 
-<!-- LINHA 2: Veículo | Placa | Combustível | Litros | KM -->
+<!-- LINHA 2: VeÃ­culo | Placa | CombustÃ­vel | Litros | KM -->
 <table style="margin-bottom:-1px;">
   <tr>
     <td style="padding:7px 12px;width:18%;">
-      <span style="font-size:10px;font-weight:bold;">Veículo:</span>
+      <span style="font-size:10px;font-weight:bold;">VeÃ­culo:</span>
       <span style="font-size:11px;margin-left:6px;">${motorista.veiculo}</span>
     </td>
     <td style="padding:7px 12px;width:22%;">
@@ -403,7 +403,7 @@ export default function Entregas() {
       <span style="font-size:11px;margin-left:6px;">${motorista.placa}</span>
     </td>
     <td style="padding:7px 12px;width:22%;">
-      <span style="font-size:10px;font-weight:bold;">Combustível R$:</span>
+      <span style="font-size:10px;font-weight:bold;">CombustÃ­vel R$:</span>
     </td>
     <td style="padding:7px 12px;width:18%;">
       <span style="font-size:10px;font-weight:bold;">Litros:</span>
@@ -419,10 +419,10 @@ export default function Entregas() {
   <thead>
     <tr style="background:#1a1a2e;">
       <th style="padding:7px 10px;font-size:11px;width:24%;text-align:center;color:#C9A84C;font-weight:bold;">Cliente / Fornecedor</th>
-      <th style="padding:7px 10px;font-size:11px;width:22%;text-align:center;color:#C9A84C;font-weight:bold;">Nome legível</th>
-      <th style="padding:7px 10px;font-size:11px;width:16%;text-align:center;color:#C9A84C;font-weight:bold;">Horário de Chegada</th>
-      <th style="padding:7px 10px;font-size:11px;width:16%;text-align:center;color:#C9A84C;font-weight:bold;">Horário de Saída</th>
-      <th style="padding:7px 10px;font-size:11px;width:22%;text-align:center;color:#C9A84C;font-weight:bold;">Região</th>
+      <th style="padding:7px 10px;font-size:11px;width:22%;text-align:center;color:#C9A84C;font-weight:bold;">Nome legÃ­vel</th>
+      <th style="padding:7px 10px;font-size:11px;width:16%;text-align:center;color:#C9A84C;font-weight:bold;">HorÃ¡rio de Chegada</th>
+      <th style="padding:7px 10px;font-size:11px;width:16%;text-align:center;color:#C9A84C;font-weight:bold;">HorÃ¡rio de SaÃ­da</th>
+      <th style="padding:7px 10px;font-size:11px;width:22%;text-align:center;color:#C9A84C;font-weight:bold;">RegiÃ£o</th>
     </tr>
   </thead>
   <tbody>
@@ -441,14 +441,14 @@ export default function Entregas() {
   </tr>
 </table>
 
-<!-- KM / HORÁRIOS -->
+<!-- KM / HORÃRIOS -->
 <table style="margin-top:-1px;">
   <tr>
     <td style="padding:9px 12px;width:50%;">
-      <span style="font-size:10px;font-weight:bold;">KM DE SAÍDA:</span>
+      <span style="font-size:10px;font-weight:bold;">KM DE SAÃDA:</span>
     </td>
     <td style="padding:9px 12px;width:50%;">
-      <span style="font-size:10px;font-weight:bold;">HORÁRIO DE SAÍDA:</span>
+      <span style="font-size:10px;font-weight:bold;">HORÃRIO DE SAÃDA:</span>
     </td>
   </tr>
   <tr>
@@ -456,7 +456,7 @@ export default function Entregas() {
       <span style="font-size:10px;font-weight:bold;">KM DE CHEGADA:</span>
     </td>
     <td style="padding:9px 12px;">
-      <span style="font-size:10px;font-weight:bold;">HORÁRIO DE CHEGADA:</span>
+      <span style="font-size:10px;font-weight:bold;">HORÃRIO DE CHEGADA:</span>
     </td>
   </tr>
 </table>
@@ -482,14 +482,14 @@ export default function Entregas() {
     const rowsHtml = entregasDia.map((e, i) => {
       const isAT = !!e.assistencia_tecnica_id
       const c = isAT ? e.assistencias_tecnicas?.pedidos?.clientes : e.pedidos?.clientes
-      const numero = isAT ? `🔧 AT. ${e.assistencias_tecnicas?.numero_at || '—'}` : `P. ${e.pedidos?.numero_pedido || '—'}`
+      const numero = isAT ? `ðŸ”§ AT. ${e.assistencias_tecnicas?.numero_at || 'â€”'}` : `P. ${e.pedidos?.numero_pedido || 'â€”'}`
       const descricaoAT = isAT && e.assistencias_tecnicas?.descricao_problema
         ? `<div style="margin-top:4px;font-size:10px;color:#555;font-style:italic;">Problema: ${e.assistencias_tecnicas.descricao_problema}</div>`
         : ''
-      const endereco = c ? montarEnderecoCliente(c) : '—'
+      const endereco = c ? montarEnderecoCliente(c) : 'â€”'
       const icamentoHtml = e.requer_icamento
         ? `<div style="margin-top:4px;padding:4px 8px;background:#FFF3E0;border-left:3px solid #E65100;font-size:10px;">
-            <strong>🏗️ REQUER IÇAMENTO</strong>${e.observacoes_icamento ? ': ' + e.observacoes_icamento : ''}
+            <strong>ðŸ—ï¸ REQUER IÃ‡AMENTO</strong>${e.observacoes_icamento ? ': ' + e.observacoes_icamento : ''}
            </div>`
         : ''
       const obsHtml = e.observacoes
@@ -498,7 +498,7 @@ export default function Entregas() {
            </div>`
         : ''
       const reagendHtml = e.motivo_reagendamento
-        ? `<div style="margin-top:4px;font-size:10px;color:#666;font-style:italic;">↺ Reagendado: ${e.motivo_reagendamento}</div>`
+        ? `<div style="margin-top:4px;font-size:10px;color:#666;font-style:italic;">â†º Reagendado: ${e.motivo_reagendamento}</div>`
         : ''
       return `
         <tr>
@@ -508,21 +508,21 @@ export default function Entregas() {
             <div style="font-size:10px;color:#555;margin-top:2px;">${STATUS_COR[e.status]?.label || e.status}</div>
           </td>
           <td style="padding:10px 12px;width:25%;vertical-align:top;">
-            <div style="font-size:11px;font-weight:600;">${c?.nome || '—'}</div>
+            <div style="font-size:11px;font-weight:600;">${c?.nome || 'â€”'}</div>
             <div style="font-size:10px;color:#555;margin-top:2px;">${endereco}</div>
-            ${c?.telefone ? `<div style="font-size:10px;color:#555;margin-top:2px;">📞 ${c.telefone}</div>` : ''}
+            ${c?.telefone ? `<div style="font-size:10px;color:#555;margin-top:2px;">ðŸ“ž ${c.telefone}</div>` : ''}
             ${descricaoAT}
           </td>
           <td style="padding:10px 12px;vertical-align:top;">
             ${icamentoHtml}${obsHtml}${reagendHtml}
-            ${!icamentoHtml && !obsHtml && !reagendHtml ? '<span style="font-size:10px;color:#bbb;">Sem observações</span>' : ''}
+            ${!icamentoHtml && !obsHtml && !reagendHtml ? '<span style="font-size:10px;color:#bbb;">Sem observaÃ§Ãµes</span>' : ''}
           </td>
         </tr>`
     }).join('')
 
     const alertaHtml = comObs.length > 0
       ? `<div style="margin-bottom:12px;padding:8px 12px;background:#FFF3E0;border:1px solid #E65100;border-radius:6px;font-size:11px;">
-          <strong>⚠️ Atenção:</strong> ${comObs.length} entrega${comObs.length !== 1 ? 's' : ''} com observação especial neste dia.
+          <strong>âš ï¸ AtenÃ§Ã£o:</strong> ${comObs.length} entrega${comObs.length !== 1 ? 's' : ''} com observaÃ§Ã£o especial neste dia.
          </div>`
       : ''
 
@@ -530,7 +530,7 @@ export default function Entregas() {
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>Observações de Entrega — ${dataFormatada}</title>
+  <title>ObservaÃ§Ãµes de Entrega â€” ${dataFormatada}</title>
   <style>
     @page { size: A4 portrait; margin: 10mm 12mm; }
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -548,7 +548,7 @@ export default function Entregas() {
       <img src="${LOGO_DARK}" alt="Opera House" style="height:38px;object-fit:contain;">
     </td>
     <td style="border:none;text-align:right;padding:0 0 6px;">
-      <div style="font-size:10px;color:#666;">FOLHA DE OBSERVAÇÕES — EQUIPE DE ENTREGA</div>
+      <div style="font-size:10px;color:#666;">FOLHA DE OBSERVAÃ‡Ã•ES â€” EQUIPE DE ENTREGA</div>
       <div style="font-size:13px;font-weight:700;text-transform:capitalize;">${dataFormatada}</div>
     </td>
   </tr>
@@ -561,8 +561,8 @@ ${alertaHtml}
     <tr style="background:#1a1a2e;">
       <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:center;width:5%;">#</th>
       <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:left;width:18%;">Pedido</th>
-      <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:left;width:25%;">Cliente / Endereço</th>
-      <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:left;">Observações</th>
+      <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:left;width:25%;">Cliente / EndereÃ§o</th>
+      <th style="padding:7px 10px;font-size:10px;color:#C9A84C;font-weight:bold;text-align:left;">ObservaÃ§Ãµes</th>
     </tr>
   </thead>
   <tbody>
@@ -573,7 +573,7 @@ ${alertaHtml}
 <table style="margin-top:16px;border:none;">
   <tr>
     <td style="border:none;border-top:1px solid #ccc;padding:8px 0;font-size:9px;color:#888;">
-      Impresso em ${new Date().toLocaleString('pt-BR')} — Opera House ERP
+      Impresso em ${new Date().toLocaleString('pt-BR')} â€” Opera House ERP
     </td>
   </tr>
 </table>
@@ -589,7 +589,7 @@ ${alertaHtml}
   }
 
   async function deletarEntrega(id: string, numeroPedido: string) {
-    if (!confirm(`Remover o agendamento do Pedido ${numeroPedido}? O pedido não será excluído, apenas o agendamento de entrega.`)) return
+    if (!confirm(`Remover o agendamento do Pedido ${numeroPedido}? O pedido nÃ£o serÃ¡ excluÃ­do, apenas o agendamento de entrega.`)) return
     const entrega = entregas.find(e => e.id === id)
     const { error } = await supabase.from('entregas').delete().eq('id', id)
     if (error) return alert('Erro: ' + error.message)
@@ -618,9 +618,9 @@ ${alertaHtml}
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
       <Sidebar ativa="/entregas" />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={className="page-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
-          <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Programação de Entregas</span>
+          <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>ProgramaÃ§Ã£o de Entregas</span>
           <button onClick={abrirNovo} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '7px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
             + Agendar entrega
           </button>
@@ -671,20 +671,20 @@ ${alertaHtml}
                       onClick={() => abrirImpressao(dia, entregasDia)}
                       style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: '0.5px solid #e8e7e3', background: '#fff', color: '#555', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}
                     >
-                      🖨️ Sequência
+                      ðŸ–¨ï¸ SequÃªncia
                     </button>
                     <button
                       onClick={() => imprimirObservacoes(dia, entregasDia)}
                       style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: '0.5px solid #e8e7e3', background: '#fff', color: '#555', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}
                     >
-                      📋 Observações
+                      ðŸ“‹ ObservaÃ§Ãµes
                     </button>
                     <button
                       onClick={() => abrirRotaMaps(entregasDia)}
-                      title={temEndereco ? 'Abrir rota no Google Maps' : 'Cadastre os endereços dos clientes para usar esta função'}
+                      title={temEndereco ? 'Abrir rota no Google Maps' : 'Cadastre os endereÃ§os dos clientes para usar esta funÃ§Ã£o'}
                       style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: '0.5px solid #C9A84C', background: '#fff', color: '#C9A84C', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}
                     >
-                      📍 Abrir rota no Maps
+                      ðŸ“ Abrir rota no Maps
                     </button>
                   </div>
                 </div>
@@ -696,7 +696,7 @@ ${alertaHtml}
                     const nomeCliente = c?.nome
                     const enderecoCompleto = c ? montarEnderecoCliente(c as ClienteEntrega) : ''
                     const titulo = isAT
-                      ? `AT ${e.assistencias_tecnicas?.numero_at} — Pedido ${e.assistencias_tecnicas?.pedidos?.numero_pedido}`
+                      ? `AT ${e.assistencias_tecnicas?.numero_at} â€” Pedido ${e.assistencias_tecnicas?.pedidos?.numero_pedido}`
                       : `Pedido ${e.pedidos?.numero_pedido}`
                     return (
                       <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', borderTop: i > 0 ? '0.5px solid #f0efe9' : 'none', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
@@ -705,38 +705,38 @@ ${alertaHtml}
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                            {isAT && <span style={{ fontSize: '10px', background: '#EEEDFE', color: '#3C3489', padding: '1px 6px', borderRadius: '6px', fontWeight: '600' }}>🔧 AT</span>}
+                            {isAT && <span style={{ fontSize: '10px', background: '#EEEDFE', color: '#3C3489', padding: '1px 6px', borderRadius: '6px', fontWeight: '600' }}>ðŸ”§ AT</span>}
                             <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{titulo}</span>
                             <span style={{ fontSize: '11px', padding: '1px 7px', borderRadius: '6px', fontWeight: '500', background: STATUS_COR[e.status]?.bg || '#f0efe9', color: STATUS_COR[e.status]?.color || '#555' }}>
                               {STATUS_COR[e.status]?.label || e.status}
                             </span>
                             {e.requer_icamento && (
-                              <span style={{ fontSize: '10px', background: '#FAEEDA', color: '#633806', padding: '1px 6px', borderRadius: '6px', fontWeight: '500' }}>🏗️ Içamento</span>
+                              <span style={{ fontSize: '10px', background: '#FAEEDA', color: '#633806', padding: '1px 6px', borderRadius: '6px', fontWeight: '500' }}>ðŸ—ï¸ IÃ§amento</span>
                             )}
                           </div>
                           {isAT && e.assistencias_tecnicas?.descricao_problema && (
-                            <div style={{ fontSize: '11px', color: '#3C3489', marginBottom: '2px', fontStyle: 'italic' }}>📋 {e.assistencias_tecnicas.descricao_problema}</div>
+                            <div style={{ fontSize: '11px', color: '#3C3489', marginBottom: '2px', fontStyle: 'italic' }}>ðŸ“‹ {e.assistencias_tecnicas.descricao_problema}</div>
                           )}
                           <div style={{ fontSize: '12px', color: '#555' }}>{nomeCliente}</div>
                           {enderecoCompleto ? (
                             <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>{enderecoCompleto}</div>
                           ) : (
-                            <div style={{ fontSize: '11px', color: '#bbb', marginTop: '2px' }}>{c?.cidade} {c?.estado} — endereço completo não cadastrado</div>
+                            <div style={{ fontSize: '11px', color: '#bbb', marginTop: '2px' }}>{c?.cidade} {c?.estado} â€” endereÃ§o completo nÃ£o cadastrado</div>
                           )}
                           {e.requer_icamento && e.observacoes_icamento && (
                             <div style={{ fontSize: '11px', color: '#633806', marginTop: '3px', background: '#FAEEDA', padding: '3px 8px', borderRadius: '5px', display: 'inline-block' }}>
-                              🏗️ {e.observacoes_icamento}
+                              ðŸ—ï¸ {e.observacoes_icamento}
                             </div>
                           )}
                           {e.observacoes && (
-                            <div style={{ fontSize: '11px', color: '#555', marginTop: '3px', fontStyle: 'italic' }}>📝 {e.observacoes}</div>
+                            <div style={{ fontSize: '11px', color: '#555', marginTop: '3px', fontStyle: 'italic' }}>ðŸ“ {e.observacoes}</div>
                           )}
                           {e.responsavel_campo && (
-                            <div style={{ fontSize: '11px', color: '#555', marginTop: '2px' }}>👷 {e.responsavel_campo}</div>
+                            <div style={{ fontSize: '11px', color: '#555', marginTop: '2px' }}>ðŸ‘· {e.responsavel_campo}</div>
                           )}
                           {e.motivo_reagendamento && (
                             <div style={{ fontSize: '10px', color: '#888', marginTop: '2px', fontStyle: 'italic' }}>
-                              ↺ {e.motivo_reagendamento}
+                              â†º {e.motivo_reagendamento}
                             </div>
                           )}
                         </div>
@@ -748,10 +748,10 @@ ${alertaHtml}
                             Editar
                           </button>
                           <button
-                            onClick={() => deletarEntrega(e.id, isAT ? `AT ${e.assistencias_tecnicas?.numero_at}` : e.pedidos?.numero_pedido || '—')}
+                            onClick={() => deletarEntrega(e.id, isAT ? `AT ${e.assistencias_tecnicas?.numero_at}` : e.pedidos?.numero_pedido || 'â€”')}
                             style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #FCEBEB', background: '#FCEBEB', fontSize: '12px', cursor: 'pointer', color: '#A32D2D', whiteSpace: 'nowrap' }}
                           >
-                            ✕
+                            âœ•
                           </button>
                         </div>
                       </div>
@@ -773,23 +773,23 @@ ${alertaHtml}
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '20px' }}>
             <div style={{ background: '#fff', borderRadius: '16px', width: '620px', display: 'flex', flexDirection: 'column' }}>
 
-              {/* Cabeçalho do modal */}
+              {/* CabeÃ§alho do modal */}
               <div style={{ padding: '16px 24px', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Imprimir Sequência — {dataFormatada}</span>
-                <button onClick={() => setImpressao(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+                <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Imprimir SequÃªncia â€” {dataFormatada}</span>
+                <button onClick={() => setImpressao(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
               </div>
 
               {/* Campos de preenchimento */}
               <div style={{ padding: '20px 24px' }}>
                 <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>
-                  Preencha os campos abaixo antes de imprimir. Os dados ficam salvos automaticamente para o próximo itinerário.
+                  Preencha os campos abaixo antes de imprimir. Os dados ficam salvos automaticamente para o prÃ³ximo itinerÃ¡rio.
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   {[
                     { label: 'Motorista', key: 'motorista', placeholder: 'Ex: JONES' },
-                    { label: 'Veículo', key: 'veiculo', placeholder: 'Ex: VW' },
+                    { label: 'VeÃ­culo', key: 'veiculo', placeholder: 'Ex: VW' },
                     { label: 'Placa', key: 'placa', placeholder: 'Ex: EYY5F33' },
-                    { label: 'Rodízio', key: 'rodizio', placeholder: 'Ex: PLACA FINAL 3 TERÇA-FEIRA' },
+                    { label: 'RodÃ­zio', key: 'rodizio', placeholder: 'Ex: PLACA FINAL 3 TERÃ‡A-FEIRA' },
                   ].map(({ label, key, placeholder }) => (
                     <div key={key}>
                       <div style={{ fontSize: '10px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
@@ -807,18 +807,18 @@ ${alertaHtml}
                   ))}
                 </div>
 
-                {/* Resumo do que será impresso */}
+                {/* Resumo do que serÃ¡ impresso */}
                 <div style={{ marginTop: '16px', padding: '12px', background: '#f7f6f3', borderRadius: '8px', border: '0.5px solid #e8e7e3' }}>
                   <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', marginBottom: '8px' }}>Entregas que aparecem na folha:</div>
                   {impressao.entregas.map((e, i) => {
                     const isAT = !!e.assistencia_tecnica_id
                     const c = isAT ? e.assistencias_tecnicas?.pedidos?.clientes : e.pedidos?.clientes
-                    const numero = isAT ? `🔧 AT.${e.assistencias_tecnicas?.numero_at}` : `P.${e.pedidos?.numero_pedido}`
+                    const numero = isAT ? `ðŸ”§ AT.${e.assistencias_tecnicas?.numero_at}` : `P.${e.pedidos?.numero_pedido}`
                     return (
                       <div key={e.id} style={{ display: 'flex', gap: '8px', fontSize: '12px', color: '#555', padding: '3px 0', borderTop: i > 0 ? '0.5px solid #e8e7e3' : 'none' }}>
                         <span style={{ color: '#C9A84C', fontWeight: '600', minWidth: '16px' }}>{i + 1}.</span>
                         <span style={{ fontWeight: '500' }}>{numero}</span>
-                        <span>—</span>
+                        <span>â€”</span>
                         <span>{c?.nome}</span>
                         <span style={{ marginLeft: 'auto', color: '#888' }}>{c?.cidade}</span>
                       </div>
@@ -827,10 +827,10 @@ ${alertaHtml}
                 </div>
               </div>
 
-              {/* Botões */}
+              {/* BotÃµes */}
               <div style={{ padding: '16px 24px', borderTop: '0.5px solid #e8e7e3', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                 <button onClick={() => setImpressao(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-                <button onClick={() => imprimir(impressao, infoMotorista)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>🖨️ Abrir folha para imprimir</button>
+                <button onClick={() => imprimir(impressao, infoMotorista)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>ðŸ–¨ï¸ Abrir folha para imprimir</button>
               </div>
             </div>
           </div>
@@ -843,7 +843,7 @@ ${alertaHtml}
             <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a1a2e', marginBottom: '6px' }}>Reagendamento</div>
             <div style={{ fontSize: '13px', color: '#888', marginBottom: '16px' }}>A data de entrega foi alterada. Informe o motivo (opcional).</div>
             <textarea
-              placeholder="Ex: cliente solicitou nova data, equipe indisponível..."
+              placeholder="Ex: cliente solicitou nova data, equipe indisponÃ­vel..."
               value={motivoReagendamento}
               onChange={e => setMotivoReagendamento(e.target.value)}
               rows={3}
@@ -868,7 +868,7 @@ ${alertaHtml}
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '480px', maxHeight: '85vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{editandoId ? 'Editar entrega' : 'Agendar entrega'}</span>
-              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
             </div>
 
             <div style={{ marginBottom: '12px' }}>
@@ -876,11 +876,11 @@ ${alertaHtml}
               <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
                 <button onClick={() => setForm({ ...form, tipo: 'pedido', assistencia_tecnica_id: '' })}
                   style={{ flex: 1, padding: '8px', borderRadius: '8px', border: `0.5px solid ${form.tipo === 'pedido' ? '#1a1a2e' : '#e8e7e3'}`, background: form.tipo === 'pedido' ? '#1a1a2e' : '#fff', color: form.tipo === 'pedido' ? '#C9A84C' : '#888', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-                  🚚 Entrega
+                  ðŸšš Entrega
                 </button>
                 <button onClick={() => setForm({ ...form, tipo: 'at', pedido_id: '' })}
                   style={{ flex: 1, padding: '8px', borderRadius: '8px', border: `0.5px solid ${form.tipo === 'at' ? '#3C3489' : '#e8e7e3'}`, background: form.tipo === 'at' ? '#3C3489' : '#fff', color: form.tipo === 'at' ? '#fff' : '#888', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-                  🔧 Assistência
+                  ðŸ”§ AssistÃªncia
                 </button>
               </div>
             </div>
@@ -889,40 +889,40 @@ ${alertaHtml}
               <div style={{ marginBottom: '12px' }}>
                 <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Pedido *</div>
                 <input
-                  placeholder="Buscar por número ou cliente..."
+                  placeholder="Buscar por nÃºmero ou cliente..."
                   value={buscaPedidoForm}
                   onChange={e => setBuscaPedidoForm(e.target.value)}
                   style={{ width: '100%', padding: '7px 12px', borderRadius: '8px 8px 0 0', border: '0.5px solid #e8e7e3', borderBottom: 'none', fontSize: '12px', outline: 'none', boxSizing: 'border-box', background: '#f7f6f3', color: '#555' }}
                 />
                 <select value={form.pedido_id} onChange={e => setForm({ ...form, pedido_id: e.target.value })} size={5}
                   style={{ width: '100%', padding: '4px 0', borderRadius: '0 0 8px 8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
-                  <option value="">— Selecione —</option>
+                  <option value="">â€” Selecione â€”</option>
                   {pedidos.filter(p => {
                     if (!buscaPedidoForm) return true
                     const q = buscaPedidoForm.toLowerCase()
                     return (p.numero_pedido as any)?.toLowerCase().includes(q) || (p.clientes as any)?.nome?.toLowerCase().includes(q)
-                  }).map(p => <option key={p.id} value={p.id}>{p.numero_pedido} — {(p.clientes as any)?.nome}</option>)}
+                  }).map(p => <option key={p.id} value={p.id}>{p.numero_pedido} â€” {(p.clientes as any)?.nome}</option>)}
                 </select>
               </div>
             )}
 
             {form.tipo === 'at' && (
               <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Assistência Técnica *</div>
+                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>AssistÃªncia TÃ©cnica *</div>
                 <input
-                  placeholder="Buscar por número AT ou cliente..."
+                  placeholder="Buscar por nÃºmero AT ou cliente..."
                   value={buscaATForm}
                   onChange={e => setBuscaATForm(e.target.value)}
                   style={{ width: '100%', padding: '7px 12px', borderRadius: '8px 8px 0 0', border: '0.5px solid #e8e7e3', borderBottom: 'none', fontSize: '12px', outline: 'none', boxSizing: 'border-box', background: '#f7f6f3', color: '#555' }}
                 />
                 <select value={form.assistencia_tecnica_id} onChange={e => setForm({ ...form, assistencia_tecnica_id: e.target.value })} size={5}
                   style={{ width: '100%', padding: '4px 0', borderRadius: '0 0 8px 8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
-                  <option value="">— Selecione —</option>
+                  <option value="">â€” Selecione â€”</option>
                   {ats.filter(a => {
                     if (!buscaATForm) return true
                     const q = buscaATForm.toLowerCase()
                     return a.numero_at?.toLowerCase().includes(q) || (a.pedidos as any)?.clientes?.nome?.toLowerCase().includes(q)
-                  }).map(a => <option key={a.id} value={a.id}>AT {a.numero_at} — {(a.pedidos as any)?.clientes?.nome} — {a.descricao_problema?.substring(0, 40)}</option>)}
+                  }).map(a => <option key={a.id} value={a.id}>AT {a.numero_at} â€” {(a.pedidos as any)?.clientes?.nome} â€” {a.descricao_problema?.substring(0, 40)}</option>)}
                 </select>
               </div>
             )}
@@ -952,27 +952,27 @@ ${alertaHtml}
 
             <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <input type="checkbox" id="icamento" checked={form.requer_icamento} onChange={e => setForm({ ...form, requer_icamento: e.target.checked })} />
-              <label htmlFor="icamento" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Requer içamento</label>
+              <label htmlFor="icamento" style={{ fontSize: '13px', color: '#555', cursor: 'pointer' }}>Requer iÃ§amento</label>
             </div>
 
             {form.requer_icamento && (
               <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações de içamento</div>
+                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>ObservaÃ§Ãµes de iÃ§amento</div>
                 <textarea value={form.observacoes_icamento} onChange={e => setForm({ ...form, observacoes_icamento: e.target.value })} rows={2}
-                  placeholder="Ex: 3º andar, sem elevador..."
+                  placeholder="Ex: 3Âº andar, sem elevador..."
                   style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
               </div>
             )}
 
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Responsável / montador</div>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>ResponsÃ¡vel / montador</div>
               <input type="text" value={form.responsavel_campo || ''} onChange={e => setForm({ ...form, responsavel_campo: e.target.value })}
                 placeholder="Nome de quem realizou a entrega"
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações</div>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>ObservaÃ§Ãµes</div>
               <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={2}
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
             </div>
@@ -980,7 +980,7 @@ ${alertaHtml}
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
               <button onClick={salvar} disabled={salvando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>
-                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Agendar')}
+                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alteraÃ§Ãµes' : 'Agendar')}
               </button>
             </div>
           </div>

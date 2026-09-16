@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import Sidebar from '../components/Sidebar'
@@ -38,9 +38,9 @@ export default function Usuarios() {
   }
 
   async function criarUsuario() {
-    if (!form.nome || !form.email || !form.senha) return alert('Nome, e-mail e senha são obrigatórios')
-    if (form.senha !== form.confirmarSenha) return alert('As senhas não coincidem')
-    if (form.senha.length < 6) return alert('A senha deve ter no mínimo 6 caracteres')
+    if (!form.nome || !form.email || !form.senha) return alert('Nome, e-mail e senha sÃ£o obrigatÃ³rios')
+    if (form.senha !== form.confirmarSenha) return alert('As senhas nÃ£o coincidem')
+    if (form.senha.length < 6) return alert('A senha deve ter no mÃ­nimo 6 caracteres')
 
     setSalvando(true)
     const res = await fetch('/api/usuarios/criar', {
@@ -59,7 +59,7 @@ export default function Usuarios() {
   }
 
   async function editarUsuario() {
-    if (!editForm.nome) return alert('Nome é obrigatório')
+    if (!editForm.nome) return alert('Nome Ã© obrigatÃ³rio')
     setSalvando(true)
     const { error } = await supabase.from('profiles').update({ nome: editForm.nome, cargo: editForm.cargo }).eq('id', showEditModal)
     setSalvando(false)
@@ -84,8 +84,8 @@ export default function Usuarios() {
   }
 
   async function redefinirSenha() {
-    if (!novaSenha || novaSenha.length < 6) return alert('A senha deve ter no mínimo 6 caracteres')
-    if (novaSenha !== confirmarNovaSenha) return alert('As senhas não coincidem')
+    if (!novaSenha || novaSenha.length < 6) return alert('A senha deve ter no mÃ­nimo 6 caracteres')
+    if (novaSenha !== confirmarNovaSenha) return alert('As senhas nÃ£o coincidem')
     setSalvando(true)
     const res = await fetch('/api/usuarios/senha', {
       method: 'POST',
@@ -104,12 +104,12 @@ export default function Usuarios() {
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
       <Sidebar ativa="/usuarios" />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={className="page-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
-          <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Usuários</span>
+          <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>UsuÃ¡rios</span>
           <button onClick={() => setShowForm(true)}
             style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '7px 16px', borderRadius: '8px', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}>
-            + Novo usuário
+            + Novo usuÃ¡rio
           </button>
         </div>
 
@@ -122,7 +122,7 @@ export default function Usuarios() {
                 <span>Nome</span><span>Cargo</span><span>E-mail</span><span></span>
               </div>
               {usuarios.length === 0 && (
-                <div style={{ padding: '32px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhum usuário encontrado.</div>
+                <div style={{ padding: '32px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhum usuÃ¡rio encontrado.</div>
               )}
               {usuarios.map((u, i) => (
                 <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '1fr 140px 200px 220px', padding: '14px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '12px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
@@ -132,7 +132,7 @@ export default function Usuarios() {
                     </div>
                     <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{u.nome}</span>
                   </div>
-                  <span style={{ fontSize: '12px', color: '#555' }}>{u.cargo || '—'}</span>
+                  <span style={{ fontSize: '12px', color: '#555' }}>{u.cargo || 'â€”'}</span>
                   <span style={{ fontSize: '12px', color: '#555' }}>{u.email}</span>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button onClick={() => { setShowEditModal(u.id); setEditForm({ nome: u.nome, cargo: u.cargo || '' }) }}
@@ -159,8 +159,8 @@ export default function Usuarios() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '420px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Novo usuário</span>
-              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Novo usuÃ¡rio</span>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
             </div>
 
             {[
@@ -185,7 +185,7 @@ export default function Usuarios() {
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
               <button onClick={criarUsuario} disabled={salvando}
                 style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>
-                {salvando ? 'Criando...' : 'Criar usuário'}
+                {salvando ? 'Criando...' : 'Criar usuÃ¡rio'}
               </button>
             </div>
           </div>
@@ -196,8 +196,8 @@ export default function Usuarios() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '360px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Editar usuário</span>
-              <button onClick={() => setShowEditModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Editar usuÃ¡rio</span>
+              <button onClick={() => setShowEditModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
             </div>
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Nome completo</div>
@@ -232,20 +232,20 @@ export default function Usuarios() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '380px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <span style={{ fontSize: '16px', fontWeight: '500', color: '#A32D2D' }}>Excluir usuário</span>
-              <button onClick={() => setShowDesativarModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#A32D2D' }}>Excluir usuÃ¡rio</span>
+              <button onClick={() => setShowDesativarModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
             </div>
             <p style={{ fontSize: '13px', color: '#555', marginBottom: '8px', lineHeight: '1.6' }}>
-              Esta ação é <strong>permanente e irreversível</strong>. O usuário perderá acesso imediatamente e não poderá mais entrar no sistema.
+              Esta aÃ§Ã£o Ã© <strong>permanente e irreversÃ­vel</strong>. O usuÃ¡rio perderÃ¡ acesso imediatamente e nÃ£o poderÃ¡ mais entrar no sistema.
             </p>
             <p style={{ fontSize: '13px', color: '#888', marginBottom: '20px', lineHeight: '1.6' }}>
-              O histórico de alterações feitas por este usuário será mantido.
+              O histÃ³rico de alteraÃ§Ãµes feitas por este usuÃ¡rio serÃ¡ mantido.
             </p>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowDesativarModal(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
               <button onClick={desativarUsuario} disabled={desativando}
                 style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#A32D2D', color: '#fff', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: desativando ? 0.7 : 1 }}>
-                {desativando ? 'Excluindo...' : 'Excluir usuário'}
+                {desativando ? 'Excluindo...' : 'Excluir usuÃ¡rio'}
               </button>
             </div>
           </div>
@@ -257,7 +257,7 @@ export default function Usuarios() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '360px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Redefinir senha</span>
-              <button onClick={() => setShowSenhaModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+              <button onClick={() => setShowSenhaModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
             </div>
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Nova senha</div>
@@ -265,7 +265,7 @@ export default function Usuarios() {
                 type="password"
                 value={novaSenha}
                 onChange={e => setNovaSenha(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
+                placeholder="MÃ­nimo 6 caracteres"
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
@@ -279,7 +279,7 @@ export default function Usuarios() {
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: `0.5px solid ${confirmarNovaSenha && confirmarNovaSenha !== novaSenha ? '#f0c0c0' : '#e8e7e3'}`, fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
               />
               {confirmarNovaSenha && confirmarNovaSenha !== novaSenha && (
-                <div style={{ fontSize: '11px', color: '#A32D2D', marginTop: '4px' }}>As senhas não coincidem</div>
+                <div style={{ fontSize: '11px', color: '#A32D2D', marginTop: '4px' }}>As senhas nÃ£o coincidem</div>
               )}
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>

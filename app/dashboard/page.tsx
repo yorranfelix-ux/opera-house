@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
@@ -33,7 +33,7 @@ const TIPO_STYLE = {
   info:    { border: '#185FA5', dot: '#185FA5' },
 }
 
-const DIAS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const DIAS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'SÃ¡b']
 
 const CHAVE_LEMBRETES = 'operare_lembretes'
 
@@ -141,13 +141,13 @@ export default function Dashboard() {
     const itensTecidoData = (itensTecido || []) as any[]
     const itensSemPrevisaoData = (itensSemPrevisao || []) as any[]
 
-    // Agrupar itens por pedido, ignorando os já finalizados
+    // Agrupar itens por pedido, ignorando os jÃ¡ finalizados
     const itensPorPedido: Record<string, any[]> = {}
     itensData.forEach(i => {
       if (!itensPorPedido[i.pedido_id]) itensPorPedido[i.pedido_id] = []
       if (!['entregue', 'cancelado'].includes(i.status)) itensPorPedido[i.pedido_id].push(i)
     })
-    // "Apto p/ agendar" só quando TODOS os itens ativos do pedido estão prontos
+    // "Apto p/ agendar" sÃ³ quando TODOS os itens ativos do pedido estÃ£o prontos
     const aptoIds = new Set(
       Object.entries(itensPorPedido)
         .filter(([, itens]) => itens.length > 0 && itens.every(i => i.apto_entrega))
@@ -162,8 +162,8 @@ export default function Dashboard() {
       const diasAtraso = Math.floor((new Date(hojeStr).getTime() - new Date(p.prazo_prometido).getTime()) / 86400000)
       lista.push({
         id: p.id, href: `/pedidos/${p.id}`, tipo: 'urgente',
-        titulo: `Pedido ${p.numero_pedido} · ${(p.clientes as any)?.nome || ''}`,
-        detalhe: `Prazo vencido há ${diasAtraso} dia${diasAtraso !== 1 ? 's' : ''} · ${(p.clientes as any)?.cidade || ''}`,
+        titulo: `Pedido ${p.numero_pedido} Â· ${(p.clientes as any)?.nome || ''}`,
+        detalhe: `Prazo vencido hÃ¡ ${diasAtraso} dia${diasAtraso !== 1 ? 's' : ''} Â· ${(p.clientes as any)?.cidade || ''}`,
         tag: 'Atrasado', tagColor: '#791F1F', tagBg: '#FCEBEB',
       })
     })
@@ -172,17 +172,17 @@ export default function Dashboard() {
       const diasSemUpdate = Math.floor((hoje.getTime() - new Date(a.updated_at || a.created_at || hojeStr).getTime()) / 86400000)
       lista.push({
         id: a.id, href: '/assistencia', tipo: 'atencao',
-        titulo: `AT do pedido ${(a.pedidos as any)?.numero_pedido || '—'}`,
-        detalhe: `Sem atualização há ${diasSemUpdate} dia${diasSemUpdate !== 1 ? 's' : ''}`,
-        tag: 'Sem atualização', tagColor: '#633806', tagBg: '#FAEEDA',
+        titulo: `AT do pedido ${(a.pedidos as any)?.numero_pedido || 'â€”'}`,
+        detalhe: `Sem atualizaÃ§Ã£o hÃ¡ ${diasSemUpdate} dia${diasSemUpdate !== 1 ? 's' : ''}`,
+        tag: 'Sem atualizaÃ§Ã£o', tagColor: '#633806', tagBg: '#FAEEDA',
       })
     })
 
     pedidosAtivos.filter((p: any) => aptoIds.has(p.id) && !atrasados.find((a: any) => a.id === p.id)).forEach((p: any) => {
       lista.push({
         id: p.id, href: `/pedidos/${p.id}`, tipo: 'atencao',
-        titulo: `Pedido ${p.numero_pedido} · ${(p.clientes as any)?.nome || ''}`,
-        detalhe: 'Itens prontos — aguardando agendamento de entrega',
+        titulo: `Pedido ${p.numero_pedido} Â· ${(p.clientes as any)?.nome || ''}`,
+        detalhe: 'Itens prontos â€” aguardando agendamento de entrega',
         tag: 'Apto p/ agendar', tagColor: '#27500A', tagBg: '#EAF3DE',
       })
     })
@@ -190,9 +190,9 @@ export default function Dashboard() {
     entregasData.forEach((e: any) => {
       lista.push({
         id: e.id, href: '/entregas', tipo: 'info',
-        titulo: `Entrega amanhã · Pedido ${(e.pedidos as any)?.numero_pedido || '—'}`,
-        detalhe: `Cliente: ${(e.pedidos as any)?.clientes?.nome || '—'}`,
-        tag: 'Amanhã', tagColor: '#0C447C', tagBg: '#E6F1FB',
+        titulo: `Entrega amanhÃ£ Â· Pedido ${(e.pedidos as any)?.numero_pedido || 'â€”'}`,
+        detalhe: `Cliente: ${(e.pedidos as any)?.clientes?.nome || 'â€”'}`,
+        tag: 'AmanhÃ£', tagColor: '#0C447C', tagBg: '#E6F1FB',
       })
     })
 
@@ -200,13 +200,13 @@ export default function Dashboard() {
       const diasAberta = Math.floor((hoje.getTime() - new Date(o.created_at).getTime()) / 86400000)
       lista.push({
         id: o.id, href: '/ocorrencias', tipo: 'atencao',
-        titulo: `Ocorrência · Pedido ${(o.pedidos as any)?.numero_pedido || '—'}`,
-        detalhe: `Aberta há ${diasAberta} dia${diasAberta !== 1 ? 's' : ''} sem resolução · ${(o.pedidos as any)?.clientes?.nome || ''}`,
-        tag: 'Ocorrência aberta', tagColor: '#633806', tagBg: '#FAEEDA',
+        titulo: `OcorrÃªncia Â· Pedido ${(o.pedidos as any)?.numero_pedido || 'â€”'}`,
+        detalhe: `Aberta hÃ¡ ${diasAberta} dia${diasAberta !== 1 ? 's' : ''} sem resoluÃ§Ã£o Â· ${(o.pedidos as any)?.clientes?.nome || ''}`,
+        tag: 'OcorrÃªncia aberta', tagColor: '#633806', tagBg: '#FAEEDA',
       })
     })
 
-    // Aniversários nos próximos 3 dias
+    // AniversÃ¡rios nos prÃ³ximos 3 dias
     ;(profissionaisData || []).forEach((p: any) => {
       if (!p.data_nascimento) return
       const nasc = new Date(p.data_nascimento + 'T12:00:00')
@@ -214,11 +214,11 @@ export default function Dashboard() {
         const dia = new Date(hoje)
         dia.setDate(dia.getDate() + d)
         if (nasc.getDate() === dia.getDate() && nasc.getMonth() === dia.getMonth()) {
-          const label = d === 0 ? 'Hoje' : d === 1 ? 'Amanhã' : `Em ${d} dias`
+          const label = d === 0 ? 'Hoje' : d === 1 ? 'AmanhÃ£' : `Em ${d} dias`
           lista.push({
             id: p.id, href: '/profissionais', tipo: d === 0 ? 'atencao' : 'info',
-            titulo: `🎂 Aniversário de ${p.nome}`,
-            detalhe: `${label} — não esqueça de parabenizar!`,
+            titulo: `ðŸŽ‚ AniversÃ¡rio de ${p.nome}`,
+            detalhe: `${label} â€” nÃ£o esqueÃ§a de parabenizar!`,
             tag: label, tagColor: d === 0 ? '#633806' : '#0C447C', tagBg: d === 0 ? '#FAEEDA' : '#E6F1FB',
           })
         }
@@ -231,7 +231,7 @@ export default function Dashboard() {
       pedidosTecidoVistos.add(i.pedido_id)
       lista.push({
         id: i.id, href: `/pedidos/${i.pedido_id}`, tipo: 'atencao',
-        titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || '—'} · ${(i.pedidos as any)?.clientes?.nome || ''}`,
+        titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || 'â€”'} Â· ${(i.pedidos as any)?.clientes?.nome || ''}`,
         detalhe: `Item "${i.descricao}" aguarda envio de tecido fornecido ao fornecedor`,
         tag: 'Tecido pendente', tagColor: '#3C3489', tagBg: '#EEEDFE',
       })
@@ -243,9 +243,9 @@ export default function Dashboard() {
       pedidosSemPrevisaoVistos.add(i.pedido_id)
       lista.push({
         id: i.id, href: `/pedidos/${i.pedido_id}`, tipo: 'info',
-        titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || '—'} · ${(i.pedidos as any)?.clientes?.nome || ''}`,
-        detalhe: `Item "${i.descricao}" sem previsão de chegada definida`,
-        tag: 'Sem previsão', tagColor: '#0C447C', tagBg: '#E6F1FB',
+        titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || 'â€”'} Â· ${(i.pedidos as any)?.clientes?.nome || ''}`,
+        detalhe: `Item "${i.descricao}" sem previsÃ£o de chegada definida`,
+        tag: 'Sem previsÃ£o', tagColor: '#0C447C', tagBg: '#E6F1FB',
       })
     })
 
@@ -255,9 +255,9 @@ export default function Dashboard() {
       pedidosHigienizacaoVistos.add(i.pedido_id)
       lista.push({
         id: i.id, href: `/pedidos/${i.pedido_id}`, tipo: 'atencao',
-        titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || '—'} · ${(i.pedidos as any)?.clientes?.nome || ''}`,
-        detalhe: `Item "${i.descricao}" requer higienização antes da entrega`,
-        tag: 'Higienização', tagColor: '#155E8A', tagBg: '#E8F4FD',
+        titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || 'â€”'} Â· ${(i.pedidos as any)?.clientes?.nome || ''}`,
+        detalhe: `Item "${i.descricao}" requer higienizaÃ§Ã£o antes da entrega`,
+        tag: 'HigienizaÃ§Ã£o', tagColor: '#155E8A', tagBg: '#E8F4FD',
       })
     })
 
@@ -267,28 +267,28 @@ export default function Dashboard() {
       pedidosImpermVistos.add(i.pedido_id)
       lista.push({
         id: i.id, href: `/pedidos/${i.pedido_id}`, tipo: 'atencao',
-        titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || '—'} · ${(i.pedidos as any)?.clientes?.nome || ''}`,
-        detalhe: `Item "${i.descricao}" requer impermeabilização antes da entrega`,
-        tag: 'Impermeabilização', tagColor: '#155E8A', tagBg: '#E8F4FD',
+        titulo: `Pedido ${(i.pedidos as any)?.numero_pedido || 'â€”'} Â· ${(i.pedidos as any)?.clientes?.nome || ''}`,
+        detalhe: `Item "${i.descricao}" requer impermeabilizaÃ§Ã£o antes da entrega`,
+        tag: 'ImpermeabilizaÃ§Ã£o', tagColor: '#155E8A', tagBg: '#E8F4FD',
       })
     })
 
-    // Montar calendário 7 dias
+    // Montar calendÃ¡rio 7 dias
     const epd: Record<string, EventoDia[]> = {}
     ;(entregasCalendario || []).forEach((e: any) => {
       const d = e.data_agendada
       if (!epd[d]) epd[d] = []
-      epd[d].push({ tipo: 'entrega', label: `Ped. ${(e.pedidos as any)?.numero_pedido || '—'}` })
+      epd[d].push({ tipo: 'entrega', label: `Ped. ${(e.pedidos as any)?.numero_pedido || 'â€”'}` })
     })
     ;(atsCalendario || []).forEach((a: any) => {
       const d = a.data_retirada_agendada
       if (!d) return
       if (!epd[d]) epd[d] = []
-      epd[d].push({ tipo: 'at', label: `AT ${(a.pedidos as any)?.numero_pedido || '—'}` })
+      epd[d].push({ tipo: 'at', label: `AT ${(a.pedidos as any)?.numero_pedido || 'â€”'}` })
     })
     setEventosPorDia(epd)
 
-    // Gráfico de sparkline: pedidos por mês (últimos 6), ATs ativas por mês, entregas por mês
+    // GrÃ¡fico de sparkline: pedidos por mÃªs (Ãºltimos 6), ATs ativas por mÃªs, entregas por mÃªs
     const hoje2 = new Date()
     const spark = { pedidos: [] as number[], ats: [] as number[], entregas: [] as number[] }
     for (let i = 5; i >= 0; i--) {
@@ -342,7 +342,7 @@ export default function Dashboard() {
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
       <Sidebar ativa="/dashboard" />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={className="page-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}}>
 
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0, position: 'relative', zIndex: 50 }}>
           <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Dashboard operacional</span>
@@ -406,10 +406,10 @@ export default function Dashboard() {
                   <div style={{ position: 'absolute', top: '40px', right: 0, width: '220px', background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', zIndex: 50, overflow: 'hidden' }}>
                     <div style={{ padding: '14px 16px', borderBottom: '0.5px solid #f0efe9' }}>
                       <div style={{ fontSize: '13px', fontWeight: '600', color: '#1a1a2e' }}>{usuario?.nome}</div>
-                      <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>{usuario?.cargo || 'Usuário'}</div>
+                      <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>{usuario?.cargo || 'UsuÃ¡rio'}</div>
                     </div>
-                    <a href="/usuarios" onClick={() => setShowAvatar(false)} style={{ display: 'block', padding: '11px 16px', fontSize: '13px', color: '#555', textDecoration: 'none', borderBottom: '0.5px solid #f0efe9' }}>Gerenciar usuários</a>
-                    <a href="/configuracoes" onClick={() => setShowAvatar(false)} style={{ display: 'block', padding: '11px 16px', fontSize: '13px', color: '#555', textDecoration: 'none', borderBottom: '0.5px solid #f0efe9' }}>Configurações</a>
+                    <a href="/usuarios" onClick={() => setShowAvatar(false)} style={{ display: 'block', padding: '11px 16px', fontSize: '13px', color: '#555', textDecoration: 'none', borderBottom: '0.5px solid #f0efe9' }}>Gerenciar usuÃ¡rios</a>
+                    <a href="/configuracoes" onClick={() => setShowAvatar(false)} style={{ display: 'block', padding: '11px 16px', fontSize: '13px', color: '#555', textDecoration: 'none', borderBottom: '0.5px solid #f0efe9' }}>ConfiguraÃ§Ãµes</a>
                     <button onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }}
                       style={{ display: 'block', width: '100%', padding: '11px 16px', fontSize: '13px', color: '#A32D2D', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer' }}>
                       Sair
@@ -458,11 +458,11 @@ export default function Dashboard() {
             })}
           </div>
 
-          {/* Calendário full-width */}
+          {/* CalendÃ¡rio full-width */}
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden', marginBottom: '16px' }}>
             <div style={{ padding: '12px 16px', borderBottom: '0.5px solid #f0efe9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Calendário</span>
+                <span style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>CalendÃ¡rio</span>
                 <div style={{ display: 'flex', gap: '4px' }}>
                   {[7, 14, 21].map(p => (
                     <button key={p} onClick={() => setPeriodoCalendario(p)} style={{
@@ -500,7 +500,7 @@ export default function Dashboard() {
                     <div style={{ fontSize: periodoCalendario === 21 ? '8px' : '9px', color: dia.hoje ? '#C9A84C' : '#aaa', textAlign: 'center', marginBottom: '1px', fontWeight: dia.hoje ? '600' : '400' }}>{dia.diaSemana}</div>
                     <div style={{ fontSize: periodoCalendario === 21 ? '11px' : '13px', fontWeight: '600', color: dia.hoje ? '#C9A84C' : '#1a1a2e', textAlign: 'center', marginBottom: '4px' }}>{dia.diaNum}</div>
                     {eventos.length === 0 ? (
-                      <div style={{ textAlign: 'center', color: '#e0deda', fontSize: '10px' }}>—</div>
+                      <div style={{ textAlign: 'center', color: '#e0deda', fontSize: '10px' }}>â€”</div>
                     ) : (
                       eventos.map((ev, ei) => (
                         <div key={ei} style={{
@@ -520,13 +520,13 @@ export default function Dashboard() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 380px', gap: '16px' }}>
 
-            {/* Inbox ações */}
+            {/* Inbox aÃ§Ãµes */}
             <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden', alignSelf: 'start' }}>
               <div style={{ padding: '14px 20px', borderBottom: '0.5px solid #f0efe9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <span style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a2e' }}>Olá, {primeiroNome}</span>
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a2e' }}>OlÃ¡, {primeiroNome}</span>
                   <span style={{ fontSize: '13px', color: '#888', marginLeft: '8px' }}>
-                    {acoes.length === 0 ? '— tudo em ordem.' : `— ${acoes.length} item${acoes.length !== 1 ? 'ns' : ''} precisando de atenção.`}
+                    {acoes.length === 0 ? 'â€” tudo em ordem.' : `â€” ${acoes.length} item${acoes.length !== 1 ? 'ns' : ''} precisando de atenÃ§Ã£o.`}
                   </span>
                 </div>
                 {acoes.length > 0 && (
@@ -538,7 +538,7 @@ export default function Dashboard() {
               {acoes.length === 0 ? (
                 <div style={{ padding: '40px 20px', textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', fontWeight: '500', color: '#1a1a2e', marginBottom: '4px' }}>Nada pendente</div>
-                  <div style={{ fontSize: '13px', color: '#888' }}>Todos os pedidos estão dentro do prazo.</div>
+                  <div style={{ fontSize: '13px', color: '#888' }}>Todos os pedidos estÃ£o dentro do prazo.</div>
                 </div>
               ) : (
                 acoes.map((acao, i) => (
@@ -552,7 +552,7 @@ export default function Dashboard() {
                     <span style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '6px', fontWeight: '500', background: acao.tagBg, color: acao.tagColor, whiteSpace: 'nowrap', flexShrink: 0 }}>
                       {acao.tag}
                     </span>
-                    <span style={{ fontSize: '14px', color: '#ccc', flexShrink: 0 }}>→</span>
+                    <span style={{ fontSize: '14px', color: '#ccc', flexShrink: 0 }}>â†’</span>
                   </a>
                 ))
               )}
@@ -592,7 +592,7 @@ export default function Dashboard() {
                         )}
                         <button onClick={() => excluirLembrete(l.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ddd', fontSize: '14px', padding: '0 2px', lineHeight: 1, flexShrink: 0 }}
                           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#A32D2D' }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#ddd' }}>×</button>
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#ddd' }}>Ã—</button>
                       </div>
                     ))}
                   </div>

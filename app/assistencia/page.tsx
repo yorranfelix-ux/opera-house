@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
@@ -117,7 +117,7 @@ export default function AssistenciaTecnica() {
     buscarATs()
     buscarPedidos()
     buscarFornecedores()
-    // Pre-fill form from URL params (when coming from "Abrir AT" on ocorrências)
+    // Pre-fill form from URL params (when coming from "Abrir AT" on ocorrÃªncias)
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search)
       const pedidoId = params.get('pedido_id')
@@ -210,9 +210,9 @@ export default function AssistenciaTecnica() {
         status,
       }])
       if (error) return alert('Erro: ' + error.message)
-      await registrarHistorico({ tipo: 'at_criada', descricao: `AT ${numeroAt} aberta — ${form.descricao_problema}`, pedidoId: form.pedido_id })
+      await registrarHistorico({ tipo: 'at_criada', descricao: `AT ${numeroAt} aberta â€” ${form.descricao_problema}`, pedidoId: form.pedido_id })
 
-      // Se veio de uma ocorrência, fecha ela automaticamente
+      // Se veio de uma ocorrÃªncia, fecha ela automaticamente
       if (ocorrenciaOrigem) {
         await supabase.from('ocorrencias').update({
           status: 'resolvida',
@@ -254,7 +254,7 @@ export default function AssistenciaTecnica() {
       if (error) return alert('Erro: ' + error.message)
       const forn = fornecedores.find(f => f.id === fornecedorForm.fornecedor_id)
       const nomeForn = forn?.nome_fantasia || forn?.razao_social || 'fornecedor'
-      await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Enviado ao fornecedor ${nomeForn}`, pedidoId: (atSelecionada as any).pedido_id })
+      await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} â†’ Enviado ao fornecedor ${nomeForn}`, pedidoId: (atSelecionada as any).pedido_id })
       setShowFornecedorForm(false)
       setAtSelecionada(null)
       setFornecedorForm({ fornecedor_id: '', data_envio_fornecedor: '', previsao_retorno_fornecedor: '', observacoes_fornecedor: '', numero_nf_envio: '' })
@@ -272,7 +272,7 @@ export default function AssistenciaTecnica() {
       const novaObs = processoObs ? (obsAtual ? obsAtual + '\n' + processoObs : processoObs) : obsAtual
       const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'em_reparo', observacoes: novaObs }).eq('id', atSelecionada.id)
       if (error) return alert('Erro: ' + error.message)
-      await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Em reparo${processoObs ? ': ' + processoObs : ''}`, pedidoId: (atSelecionada as any).pedido_id })
+      await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} â†’ Em reparo${processoObs ? ': ' + processoObs : ''}`, pedidoId: (atSelecionada as any).pedido_id })
       setShowProcessoModal(false); setAtSelecionada(null); setProcessoObs(''); buscarATs()
     } finally {
       setProcessando(false)
@@ -285,7 +285,7 @@ export default function AssistenciaTecnica() {
     try {
       const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'aguardando_devolucao', observacoes_fornecedor: retornoObs }).eq('id', atSelecionada.id)
       if (error) return alert('Erro: ' + error.message)
-      await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Retornou do fornecedor${retornoObs ? ': ' + retornoObs : ''}`, pedidoId: (atSelecionada as any).pedido_id })
+      await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} â†’ Retornou do fornecedor${retornoObs ? ': ' + retornoObs : ''}`, pedidoId: (atSelecionada as any).pedido_id })
       setShowRetornoModal(false); setAtSelecionada(null); setRetornoObs(''); buscarATs()
     } finally {
       setProcessando(false)
@@ -300,7 +300,7 @@ export default function AssistenciaTecnica() {
       const novaObs = resolvidaObs ? (obsAtual ? obsAtual + '\n' + resolvidaObs : resolvidaObs) : obsAtual
       const { error } = await supabase.from('assistencias_tecnicas').update({ status: 'resolvida', observacoes: novaObs }).eq('id', atSelecionada.id)
       if (error) return alert('Erro: ' + error.message)
-      await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} → Resolvida${resolvidaObs ? ': ' + resolvidaObs : ''}`, pedidoId: (atSelecionada as any).pedido_id })
+      await registrarHistorico({ tipo: 'at_atualizada', descricao: `${atSelecionada.numero_at} â†’ Resolvida${resolvidaObs ? ': ' + resolvidaObs : ''}`, pedidoId: (atSelecionada as any).pedido_id })
       setShowResolvidaModal(false); setAtSelecionada(null); setResolvidaObs(''); buscarATs()
     } finally {
       setProcessando(false)
@@ -323,7 +323,7 @@ export default function AssistenciaTecnica() {
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
       <Sidebar ativa="/assistencia" />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={className="page-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
           <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Assistencia Tecnica</span>
           <button onClick={() => {
@@ -340,7 +340,7 @@ export default function AssistenciaTecnica() {
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
             <input
-              placeholder="Buscar por pedido, cliente ou descrição..."
+              placeholder="Buscar por pedido, cliente ou descriÃ§Ã£o..."
               value={busca}
               onChange={e => setBusca(e.target.value)}
               style={{ width: '280px', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none' }}
@@ -443,12 +443,12 @@ export default function AssistenciaTecnica() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9' }}>
                 <button onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}
                   style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: pagina === 1 ? '#f7f6f3' : '#fff', fontSize: '12px', cursor: pagina === 1 ? 'default' : 'pointer', color: pagina === 1 ? '#ccc' : '#555' }}>
-                  ← Anterior
+                  â† Anterior
                 </button>
-                <span style={{ fontSize: '12px', color: '#888' }}>Página {pagina} de {totalPaginas}</span>
+                <span style={{ fontSize: '12px', color: '#888' }}>PÃ¡gina {pagina} de {totalPaginas}</span>
                 <button onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}
                   style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: pagina === totalPaginas ? '#f7f6f3' : '#fff', fontSize: '12px', cursor: pagina === totalPaginas ? 'default' : 'pointer', color: pagina === totalPaginas ? '#ccc' : '#555' }}>
-                  Próxima →
+                  PrÃ³xima â†’
                 </button>
               </div>
             )}
@@ -460,31 +460,31 @@ export default function AssistenciaTecnica() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '500px', maxHeight: '85vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Nova Assistência Técnica</span>
-              <button onClick={() => { setShowForm(false); setOcorrenciaOrigem(null) }} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Nova AssistÃªncia TÃ©cnica</span>
+              <button onClick={() => { setShowForm(false); setOcorrenciaOrigem(null) }} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
             </div>
 
             {ocorrenciaOrigem && (
               <div style={{ background: '#EEEDFE', border: '0.5px solid #3C3489', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '12px', color: '#3C3489' }}>
-                Originada de uma ocorrência — ao salvar, a ocorrência será fechada automaticamente.
+                Originada de uma ocorrÃªncia â€” ao salvar, a ocorrÃªncia serÃ¡ fechada automaticamente.
               </div>
             )}
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Pedido *</div>
               <input
-                placeholder="Buscar por número ou cliente..."
+                placeholder="Buscar por nÃºmero ou cliente..."
                 value={buscaPedidoForm}
                 onChange={e => setBuscaPedidoForm(e.target.value)}
                 style={{ width: '100%', padding: '7px 12px', borderRadius: '8px 8px 0 0', border: '0.5px solid #e8e7e3', borderBottom: 'none', fontSize: '12px', outline: 'none', boxSizing: 'border-box', background: '#f7f6f3', color: '#555' }}
               />
               <select value={form.pedido_id} onChange={e => setForm({ ...form, pedido_id: e.target.value, item_id: '' } as any)} size={5} style={{ width: '100%', padding: '4px 0', borderRadius: '0 0 8px 8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
-                <option value="">— Selecione —</option>
+                <option value="">â€” Selecione â€”</option>
                 {pedidos.filter(p => {
                   if (!buscaPedidoForm) return true
                   const q = buscaPedidoForm.toLowerCase()
                   return p.numero_pedido?.toLowerCase().includes(q) || (p.clientes as any)?.nome?.toLowerCase().includes(q)
-                }).map(p => <option key={p.id} value={p.id}>{p.numero_pedido} — {(p.clientes as any)?.nome}</option>)}
+                }).map(p => <option key={p.id} value={p.id}>{p.numero_pedido} â€” {(p.clientes as any)?.nome}</option>)}
               </select>
             </div>
 
@@ -580,12 +580,12 @@ export default function AssistenciaTecnica() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '420px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Em processo de reparo</span>
-              <button onClick={() => setShowProcessoModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+              <button onClick={() => setShowProcessoModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
             </div>
-            <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>AT {atSelecionada.numero_at} — {atSelecionada.descricao_problema}</div>
+            <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>AT {atSelecionada.numero_at} â€” {atSelecionada.descricao_problema}</div>
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações do processo</div>
-              <textarea value={processoObs} onChange={e => setProcessoObs(e.target.value)} rows={3} placeholder="Descreva o que está sendo feito no reparo..." style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>ObservaÃ§Ãµes do processo</div>
+              <textarea value={processoObs} onChange={e => setProcessoObs(e.target.value)} rows={3} placeholder="Descreva o que estÃ¡ sendo feito no reparo..." style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowProcessoModal(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
@@ -600,11 +600,11 @@ export default function AssistenciaTecnica() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '420px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Registrar retorno do fornecedor</span>
-              <button onClick={() => setShowRetornoModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+              <button onClick={() => setShowRetornoModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
             </div>
-            <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>AT {atSelecionada.numero_at} — {atSelecionada.descricao_problema}</div>
+            <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>AT {atSelecionada.numero_at} â€” {atSelecionada.descricao_problema}</div>
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações do retorno</div>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>ObservaÃ§Ãµes do retorno</div>
               <textarea value={retornoObs} onChange={e => setRetornoObs(e.target.value)} rows={3} placeholder="Como o item voltou do fornecedor..." style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
@@ -620,11 +620,11 @@ export default function AssistenciaTecnica() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '420px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Marcar como resolvida</span>
-              <button onClick={() => setShowResolvidaModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>✕</button>
+              <button onClick={() => setShowResolvidaModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
             </div>
-            <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>AT {atSelecionada.numero_at} — {atSelecionada.descricao_problema}</div>
+            <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>AT {atSelecionada.numero_at} â€” {atSelecionada.descricao_problema}</div>
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações da resolução</div>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>ObservaÃ§Ãµes da resoluÃ§Ã£o</div>
               <textarea value={resolvidaObs} onChange={e => setResolvidaObs(e.target.value)} rows={3} placeholder="Como o problema foi resolvido..." style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
             </div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
@@ -643,7 +643,7 @@ export default function AssistenciaTecnica() {
               <button onClick={() => setShowFornecedorForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>x</button>
             </div>
             <div style={{ fontSize: '12px', color: '#888', marginBottom: '20px' }}>
-              AT do pedido {atSelecionada.pedidos?.numero_pedido} — {atSelecionada.descricao_problema}
+              AT do pedido {atSelecionada.pedidos?.numero_pedido} â€” {atSelecionada.descricao_problema}
             </div>
 
             <div style={{ marginBottom: '12px' }}>
@@ -666,7 +666,7 @@ export default function AssistenciaTecnica() {
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>NF de envio</div>
-              <input value={fornecedorForm.numero_nf_envio} onChange={e => setFornecedorForm({ ...fornecedorForm, numero_nf_envio: e.target.value })} placeholder="Número da NF emitida para envio"
+              <input value={fornecedorForm.numero_nf_envio} onChange={e => setFornecedorForm({ ...fornecedorForm, numero_nf_envio: e.target.value })} placeholder="NÃºmero da NF emitida para envio"
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
             </div>
 
