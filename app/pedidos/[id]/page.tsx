@@ -533,7 +533,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       entregue:          { label: 'Entregue',        bg: '#EAF3DE', color: '#27500A' },
     }
 
-    const linhasVazias = Math.max(0, 14 - itens.length)
+    const linhasVazias = Math.max(0, 8 - itens.length)
     const linhasExtras = Array.from({ length: linhasVazias })
 
     const linhasHTML = itens.map(item => {
@@ -591,7 +591,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       .resumo-card { border-radius: 7px; padding: 9px 12px; text-align: center; }
       .resumo-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: #aaa; margin-bottom: 3px; font-weight: 500; }
       .resumo-value { font-size: 18px; font-weight: 500; }
-      .footer { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 0.5px solid #e8e7e3; }
+      .footer { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 0.5px solid #e8e7e3; page-break-inside: avoid; break-inside: avoid; }
       .assinatura { border-top: 1px solid #bbb; padding-top: 5px; font-size: 9px; color: #aaa; text-align: center; margin-top: 28px; }
     </style></head><body>
 
@@ -656,6 +656,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
       <div class="obs-box">${pedido.observacoes_gerais || ''}</div>
     </div>
 
+    <div style="page-break-inside: avoid; break-inside: avoid">
     <div class="resumo" style="grid-template-columns: repeat(5, 1fr)">
       <div class="resumo-card" style="background:#f7f6f3">
         <div class="resumo-label">Total de itens</div>
@@ -680,9 +681,11 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
     </div>
 
     <div class="footer">
+
       <div><div class="assinatura">Conferido por</div></div>
       <div><div class="assinatura">Responsável expedição</div></div>
       <div><div class="assinatura">Motorista / entregador</div></div>
+    </div>
     </div>
 
     <script>window.onload = function() { window.print() }</script>
