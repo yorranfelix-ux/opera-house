@@ -740,7 +740,7 @@ ${alertaHtml}
                             </div>
                           )}
                         </div>
-                        <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                        <div className=”entrega-row-actions” style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                           <button
                             onClick={() => abrirEdicao(e)}
                             style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555', whiteSpace: 'nowrap' }}

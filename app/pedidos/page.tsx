@@ -333,7 +333,7 @@ export default function Pedidos() {
           </div>
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 160px 100px 110px 70px 130px 72px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px', alignItems: 'center' }}>
+            <div className="pedidos-header" style={{ display: 'grid', gridTemplateColumns: '110px 1fr 160px 100px 110px 70px 130px 72px', padding: '10px 16px', background: '#f7f6f3', fontSize: '11px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px', gap: '8px', alignItems: 'center' }}>
               <button onClick={() => toggleOrdenacao('numero_pedido')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '500', color: ordenacao.campo === 'numero_pedido' ? '#1a1a2e' : '#888', textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}>
                 Pedido {ordenacao.campo === 'numero_pedido' ? (ordenacao.dir === 'asc' ? '↑' : '↓') : '↕'}
               </button>
@@ -357,7 +357,7 @@ export default function Pedidos() {
             )}
 
             {paginados.map((p, i) => (
-              <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 160px 100px 110px 70px 130px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+              <div key={p.id} className="pedido-row" style={{ display: 'grid', gridTemplateColumns: '110px 1fr 160px 100px 110px 70px 130px 72px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <a href={`/pedidos/${p.id}`} style={{ fontSize: '12px', fontWeight: '500', color: '#C9A84C', textDecoration: 'none' }}>{p.numero_pedido}</a>
                 <a href={`/pedidos/${p.id}`} style={{ textDecoration: 'none' }}>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{p.clientes?.nome}</div>

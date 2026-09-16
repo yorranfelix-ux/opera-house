@@ -364,7 +364,7 @@ export default function AssistenciaTecnica() {
           </div>
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '90px 110px 1fr 150px 120px 110px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
+            <div className="at-header" style={{ display: 'grid', gridTemplateColumns: '90px 110px 1fr 150px 120px 110px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
               <span>Pedido</span>
               <span>Tipo</span>
               <span>Problema</span>
@@ -383,7 +383,7 @@ export default function AssistenciaTecnica() {
             )}
 
             {paginadas.map((a, i) => (
-              <div key={a.id} style={{ display: 'grid', gridTemplateColumns: '90px 110px 1fr 150px 120px 110px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
+              <div key={a.id} className="at-row" style={{ display: 'grid', gridTemplateColumns: '90px 110px 1fr 150px 120px 110px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{a.pedidos?.numero_pedido}</div>
                   <div style={{ fontSize: '11px', color: '#888' }}>{a.pedidos?.clientes?.nome}</div>
