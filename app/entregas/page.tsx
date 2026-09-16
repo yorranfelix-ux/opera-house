@@ -651,7 +651,7 @@ ${alertaHtml}
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', background: '#f7f6f3' }}>
       <Sidebar ativa="/entregas" />
 
-      <div style={className="page-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}}>
+      <div className="page-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
           <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>ProgramaÃ§Ã£o de Entregas</span>
           <button onClick={abrirNovo} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '7px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
@@ -773,7 +773,7 @@ ${alertaHtml}
                             </div>
                           )}
                         </div>
-                        <div className=”entrega-row-actions” style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                        <div className={'entrega-row-actions'} style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                           <button
                             onClick={() => abrirEdicao(e)}
                             style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555', whiteSpace: 'nowrap' }}
