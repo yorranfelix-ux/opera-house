@@ -30,6 +30,7 @@ const STATUS_LABEL: Record<string, string> = {
   aguardando_compra: 'Aguard. compra',
   em_producao: 'Em produção',
   em_transporte: 'Em transporte',
+  aguardando_chegada: 'Aguard. chegada',
   recebido: 'Recebido',
   apto_agendamento: 'Apto agendar',
   agendado: 'Agendado',
@@ -44,6 +45,7 @@ const STATUS_COLOR: Record<string, { bg: string; color: string }> = {
   aguardando_compra: { bg: '#FAECE7', color: '#712B13' },
   em_producao: { bg: '#E6F1FB', color: '#0C447C' },
   em_transporte: { bg: '#FAEEDA', color: '#633806' },
+  aguardando_chegada: { bg: '#FFF3CD', color: '#7A5800' },
   recebido: { bg: '#EAF3DE', color: '#27500A' },
   apto_agendamento: { bg: '#EAF3DE', color: '#27500A' },
   agendado: { bg: '#EEEDFE', color: '#3C3489' },
@@ -215,7 +217,7 @@ export default function Pedidos() {
     }
   }
 
-  const STATUS_ABERTOS = ['pendente', 'criado', 'aguardando_compra', 'em_producao', 'em_transporte', 'recebido', 'apto_agendamento', 'agendado', 'com_at']
+  const STATUS_ABERTOS = ['pendente', 'criado', 'aguardando_compra', 'em_producao', 'em_transporte', 'aguardando_chegada', 'recebido', 'apto_agendamento', 'agendado', 'com_at']
 
   const filtrados = pedidos.filter(p => {
     const buscaOk = !busca || p.numero_pedido?.toLowerCase().includes(busca.toLowerCase()) || p.clientes?.nome?.toLowerCase().includes(busca.toLowerCase())
@@ -233,7 +235,7 @@ export default function Pedidos() {
     if (ordenacao.campo === 'numero_pedido') return dir * (parseInt(a.numero_pedido) - parseInt(b.numero_pedido))
     if (ordenacao.campo === 'prazo_prometido') return dir * ((a.prazo_prometido || '').localeCompare(b.prazo_prometido || ''))
     if (ordenacao.campo === 'status') {
-      const ordem = ['pendente','criado','aguardando_compra','em_producao','em_transporte','recebido','conferido_ok','apto_agendamento','agendado','entregue','com_at','cancelado']
+      const ordem = ['pendente','criado','aguardando_compra','em_producao','em_transporte','aguardando_chegada','recebido','conferido_ok','apto_agendamento','agendado','entregue','com_at','cancelado']
       return dir * (ordem.indexOf(a.status) - ordem.indexOf(b.status))
     }
     return dir * ((a as any).created_at || '').localeCompare((b as any).created_at || '')

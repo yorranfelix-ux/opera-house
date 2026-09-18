@@ -12,7 +12,7 @@ const STATUS_AT_LABEL: Record<string, string> = {
 
 const STATUS_PEDIDO_LABEL: Record<string, string> = {
   criado: 'Criado', aguardando_compra: 'Aguard. compra', em_producao: 'Em produÃ§Ã£o',
-  em_transporte: 'Em transporte', recebido: 'Recebido', apto_agendamento: 'Apto p/ agendamento',
+  em_transporte: 'Em transporte', aguardando_chegada: 'Aguard. chegada', recebido: 'Recebido', apto_agendamento: 'Apto p/ agendamento',
   agendado: 'Agendado', entregue: 'Entregue', com_at: 'Com AT', cancelado: 'Cancelado',
 }
 
