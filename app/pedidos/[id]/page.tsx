@@ -548,6 +548,7 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
           <td>
             <div style="font-size:12px;font-weight:500;color:#1a1a2e">${item.descricao}</div>
             ${detalhe ? `<div style="font-size:10px;color:#888;margin-top:2px">${detalhe}</div>` : ''}
+            ${item.observacoes ? `<div style="font-size:10px;color:#aaa;margin-top:2px;font-style:italic">${item.observacoes}</div>` : ''}
           </td>
           <td style="width:60px;text-align:center">${vol}</td>
           <td style="width:80px;font-size:11px;color:#555">${forn}</td>
@@ -1001,6 +1002,11 @@ export default function CentralPedido({ params }: { params: Promise<{ id: string
                           {item.numero_nf && <span>NF {item.numero_nf}</span>}
                           {item.numero_nf && item.data_recebimento && <span> · </span>}
                           {item.data_recebimento && <span>Recebido: {new Date(item.data_recebimento + 'T12:00:00').toLocaleDateString('pt-BR')}</span>}
+                        </div>
+                      )}
+                      {item.observacoes && (
+                        <div style={{ fontSize: '11px', color: '#888', marginTop: '3px', fontStyle: 'italic' }}>
+                          {item.observacoes}
                         </div>
                       )}
                     </div>
