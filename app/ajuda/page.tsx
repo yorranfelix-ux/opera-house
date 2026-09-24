@@ -45,7 +45,7 @@ const SECOES: Secao[] = [
       { titulo: 'Cancelar pedido', texto: 'Ao editar um pedido e selecionar o status "Cancelado", aparece um campo obrigatório para informar o motivo do cancelamento. O número do pedido cancelado não pode ser reutilizado em novos pedidos — o sistema avisa caso haja conflito.' },
       { titulo: 'Consultora responsável', texto: 'No formulário do pedido há um campo "Consultora responsável" disponível em todos os pedidos — informe o nome da consultora vinculada ao projeto (ex: Carolina, Adriana). Esse campo é independente do status e pode ser preenchido tanto em pedidos normais quanto em pedidos com status Pendente.' },
       { titulo: 'Editar um pedido', texto: 'Clique em "Editar" na linha do pedido para alterar dados como status, prazo prometido, profissional vinculado, consultora responsável e observações gerais.' },
-      { titulo: 'Exportar CSV', texto: 'Clique em "â†“ Exportar CSV" para baixar a lista de pedidos em formato compatível com Excel.' },
+      { titulo: 'Exportar CSV', texto: 'Clique em "→ Exportar CSV" para baixar a lista de pedidos em formato compatível com Excel.' },
     ],
     dicas: [
       'Todos os filtros (busca, status, profissional) são salvos automaticamente — ao voltar para a página eles estarão como você deixou.',
@@ -201,7 +201,7 @@ const SECOES: Secao[] = [
     titulo: 'Relatórios',
     descricao: 'Análises do negócio organizadas em 8 abas — com exportação para CSV em todas.',
     passos: [
-      { titulo: 'Filtro de período', texto: 'No topo da página há botões para filtrar o período de análise: Ášltimos 6 meses, Ášltimos 12 meses, Este ano, Ano anterior ou Todo o período. Ao trocar o período os dados são recalculados instantaneamente — sem nova consulta ao banco. Os cards mostram o total do período selecionado e o total geral do sistema abaixo.' },
+      { titulo: 'Filtro de período', texto: 'No topo da página há botões para filtrar o período de análise: Últimos 6 meses, Últimos 12 meses, Este ano, Ano anterior ou Todo o período. Ao trocar o período os dados são recalculados instantaneamente — sem nova consulta ao banco. Os cards mostram o total do período selecionado e o total geral do sistema abaixo.' },
       { titulo: 'Cards de totais', texto: 'Exibem os totais do período selecionado: pedidos, entregas, ATs e ocorrências. Abaixo de cada número aparece o total geral do sistema para comparação.' },
       { titulo: 'Pedidos', texto: 'Duas tabelas: (1) Pedidos por mês — quantos pedidos foram criados e quantos foram entregues em cada mês do período; (2) Pedidos por status — distribuição percentual de todos os pedidos do período.' },
       { titulo: 'Entregas', texto: 'Tabela do período selecionado com o número de entregas agendadas, realizadas e a taxa de conclusão de cada mês.' },
@@ -311,7 +311,7 @@ export default function Ajuda() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               {[
                 { tecla: 'Ctrl + K', acao: 'Abrir busca global — localiza pedidos, clientes, fornecedores e ATs (inclusive pela descrição do problema)' },
-                { tecla: '← â†“', acao: 'Navegar pelos resultados da busca global' },
+                { tecla: '← →', acao: 'Navegar pelos resultados da busca global' },
                 { tecla: 'Enter', acao: 'Abrir o resultado selecionado na busca global / confirmar lembrete no Dashboard' },
                 { tecla: 'Esc', acao: 'Fechar modal ou busca global' },
                 { tecla: 'Clique no número', acao: 'Abrir detalhes do pedido ou AT' },

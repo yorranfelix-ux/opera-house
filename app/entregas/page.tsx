@@ -515,7 +515,7 @@ export default function Entregas() {
            </div>`
         : ''
       const reagendHtml = e.motivo_reagendamento
-        ? `<div style="margin-top:4px;font-size:10px;color:#666;font-style:italic;">â†º Reagendado: ${e.motivo_reagendamento}</div>`
+        ? `<div style="margin-top:4px;font-size:10px;color:#666;font-style:italic;">↺ Reagendado: ${e.motivo_reagendamento}</div>`
         : ''
       const volPedido = e.pedido_id && volumesPorPedido[e.pedido_id] ? volumesPorPedido[e.pedido_id] : null
       const volHtml = volPedido
@@ -769,7 +769,7 @@ ${alertaHtml}
                           )}
                           {e.motivo_reagendamento && (
                             <div style={{ fontSize: '10px', color: '#888', marginTop: '2px', fontStyle: 'italic' }}>
-                              â†º {e.motivo_reagendamento}
+                              ↺ {e.motivo_reagendamento}
                             </div>
                           )}
                         </div>

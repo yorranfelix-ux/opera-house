@@ -176,7 +176,7 @@ export default function Clientes() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9' }}>
                 <button onClick={() => setPagina(p => Math.max(1, p - 1))} disabled={pagina === 1}
                   style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: pagina === 1 ? '#f7f6f3' : '#fff', fontSize: '12px', cursor: pagina === 1 ? 'default' : 'pointer', color: pagina === 1 ? '#ccc' : '#555' }}>
-                  â† Anterior
+                  ← Anterior
                 </button>
                 <span style={{ fontSize: '12px', color: '#888' }}>Página {pagina} de {totalPaginas}</span>
                 <button onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}

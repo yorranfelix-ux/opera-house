@@ -69,8 +69,8 @@ type Aba = 'ats' | 'entregas' | 'ocorrencias' | 'pedidos' | 'prazos' | 'profissi
 type Periodo = '6m' | '12m' | 'ano_atual' | 'ano_anterior' | 'todos'
 
 const PERIODO_LABEL: Record<Periodo, string> = {
-  '6m': 'Ášltimos 6 meses',
-  '12m': 'Ášltimos 12 meses',
+  '6m': 'Últimos 6 meses',
+  '12m': 'Últimos 12 meses',
   ano_atual: 'Este ano',
   ano_anterior: 'Ano anterior',
   todos: 'Todo o período',
