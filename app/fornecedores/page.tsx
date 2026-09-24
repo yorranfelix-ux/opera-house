@@ -204,7 +204,7 @@ export default function Fornecedores() {
                   <div style={{ fontSize: '17px', fontWeight: '600', color: '#1a1a2e' }}>{f.nome_fantasia || f.razao_social}</div>
                   {f.nome_fantasia && <div style={{ fontSize: '13px', color: '#888', marginTop: '2px' }}>{f.razao_social}</div>}
                 </div>
-                <button onClick={() => setVisualizandoId(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+                <button onClick={() => setVisualizandoId(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
               </div>
               <div style={{ borderTop: '0.5px solid #f0efe9', paddingTop: '16px' }}>
                 <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Contato</div>
@@ -249,7 +249,7 @@ export default function Fornecedores() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '520px', maxHeight: '85vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{editandoId ? 'Editar fornecedor' : 'Novo fornecedor'}</span>
-              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
             </div>
 
             {[

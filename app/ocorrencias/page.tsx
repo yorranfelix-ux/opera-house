@@ -357,7 +357,7 @@ export default function Ocorrencias() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '500px', maxHeight: '88vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{editandoId ? 'Editar ocorrÃªncia' : 'Nova ocorrÃªncia'}</span>
-              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
             </div>
 
             <div style={{ marginBottom: '12px' }}>

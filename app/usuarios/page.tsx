@@ -160,7 +160,7 @@ export default function Usuarios() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '420px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Novo usuÃ¡rio</span>
-              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
             </div>
 
             {[
@@ -197,7 +197,7 @@ export default function Usuarios() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '360px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Editar usuÃ¡rio</span>
-              <button onClick={() => setShowEditModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+              <button onClick={() => setShowEditModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
             </div>
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Nome completo</div>
@@ -233,7 +233,7 @@ export default function Usuarios() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '380px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#A32D2D' }}>Excluir usuÃ¡rio</span>
-              <button onClick={() => setShowDesativarModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+              <button onClick={() => setShowDesativarModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
             </div>
             <p style={{ fontSize: '13px', color: '#555', marginBottom: '8px', lineHeight: '1.6' }}>
               Esta aÃ§Ã£o Ã© <strong>permanente e irreversÃ­vel</strong>. O usuÃ¡rio perderÃ¡ acesso imediatamente e nÃ£o poderÃ¡ mais entrar no sistema.
@@ -257,7 +257,7 @@ export default function Usuarios() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '360px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Redefinir senha</span>
-              <button onClick={() => setShowSenhaModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+              <button onClick={() => setShowSenhaModal(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
             </div>
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Nova senha</div>

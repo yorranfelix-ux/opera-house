@@ -22,7 +22,7 @@ const SECOES: Secao[] = [
       { titulo: 'Cards de mÃ©tricas', texto: 'No topo aparecem os totais: pedidos ativos, ATs abertas, ocorrÃªncias pendentes e entregas do mÃªs. Clique em qualquer card para ir direto ao mÃ³dulo correspondente.' },
       { titulo: 'Painel de alertas', texto: 'Lista automÃ¡tica de situaÃ§Ãµes que precisam de atenÃ§Ã£o: pedidos com prazo vencido, ATs sem movimentaÃ§Ã£o hÃ¡ mais de 7 dias, ocorrÃªncias abertas hÃ¡ mais de 3 dias, itens aguardando tecido fornecido, itens sem previsÃ£o de chegada cadastrada, e itens que requerem higienizaÃ§Ã£o ou impermeabilizaÃ§Ã£o ainda nÃ£o marcados como aptos para entrega.' },
       { titulo: 'CalendÃ¡rio de compromissos', texto: 'Mostra as entregas agendadas e retiradas de AT nos prÃ³ximos 21 dias. Dias com compromisso ficam destacados â€” clique no dia para ver o detalhe de cada compromisso.' },
-      { titulo: 'Lembretes', texto: 'Bloco de anotaÃ§Ãµes rÃ¡pidas no lado direito da tela. Digite o lembrete e pressione Enter ou clique em "+". Os lembretes ficam salvos permanentemente no navegador (nÃ£o somem Ã  meia-noite) e sÃ³ sÃ£o removidos quando vocÃª clica no "âœ•" de cada um.' },
+      { titulo: 'Lembretes', texto: 'Bloco de anotaÃ§Ãµes rÃ¡pidas no lado direito da tela. Digite o lembrete e pressione Enter ou clique em "+". Os lembretes ficam salvos permanentemente no navegador (nÃ£o somem Ã  meia-noite) e sÃ³ sÃ£o removidos quando vocÃª clica no "&#x2715;" de cada um.' },
     ],
     dicas: [
       'Atualize a pÃ¡gina para carregar os dados mais recentes â€” o dashboard nÃ£o atualiza automaticamente.',

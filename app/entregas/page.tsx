@@ -784,7 +784,7 @@ ${alertaHtml}
                             onClick={() => deletarEntrega(e.id, isAT ? `AT ${e.assistencias_tecnicas?.numero_at}` : e.pedidos?.numero_pedido || 'â€”')}
                             style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #FCEBEB', background: '#FCEBEB', fontSize: '12px', cursor: 'pointer', color: '#A32D2D', whiteSpace: 'nowrap' }}
                           >
-                            âœ•
+                            &#x2715;
                           </button>
                         </div>
                       </div>
@@ -809,7 +809,7 @@ ${alertaHtml}
               {/* CabeÃ§alho do modal */}
               <div style={{ padding: '16px 24px', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Imprimir SequÃªncia â€” {dataFormatada}</span>
-                <button onClick={() => setImpressao(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+                <button onClick={() => setImpressao(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
               </div>
 
               {/* Campos de preenchimento */}
@@ -901,7 +901,7 @@ ${alertaHtml}
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '480px', maxHeight: '85vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{editandoId ? 'Editar entrega' : 'Agendar entrega'}</span>
-              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
             </div>
 
             <div style={{ marginBottom: '12px' }}>

@@ -461,7 +461,7 @@ export default function AssistenciaTecnica() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '500px', maxHeight: '85vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Nova AssistÃªncia TÃ©cnica</span>
-              <button onClick={() => { setShowForm(false); setOcorrenciaOrigem(null) }} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+              <button onClick={() => { setShowForm(false); setOcorrenciaOrigem(null) }} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
             </div>
 
             {ocorrenciaOrigem && (
@@ -580,7 +580,7 @@ export default function AssistenciaTecnica() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '420px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Em processo de reparo</span>
-              <button onClick={() => setShowProcessoModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+              <button onClick={() => setShowProcessoModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
             </div>
             <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>AT {atSelecionada.numero_at} â€” {atSelecionada.descricao_problema}</div>
             <div style={{ marginBottom: '20px' }}>
@@ -600,7 +600,7 @@ export default function AssistenciaTecnica() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '420px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Registrar retorno do fornecedor</span>
-              <button onClick={() => setShowRetornoModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+              <button onClick={() => setShowRetornoModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
             </div>
             <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>AT {atSelecionada.numero_at} â€” {atSelecionada.descricao_problema}</div>
             <div style={{ marginBottom: '20px' }}>
@@ -620,7 +620,7 @@ export default function AssistenciaTecnica() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '420px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>Marcar como resolvida</span>
-              <button onClick={() => setShowResolvidaModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+              <button onClick={() => setShowResolvidaModal(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
             </div>
             <div style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>AT {atSelecionada.numero_at} â€” {atSelecionada.descricao_problema}</div>
             <div style={{ marginBottom: '20px' }}>

@@ -251,7 +251,7 @@ export default function Profissionais() {
                   <span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '8px', fontWeight: '500', background: p.ativo ? '#EAF3DE' : '#f0efe9', color: p.ativo ? '#27500A' : '#888' }}>
                     {p.ativo ? 'Ativo' : 'Inativo'}
                   </span>
-                  <button onClick={() => setVisualizandoId(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+                  <button onClick={() => setVisualizandoId(null)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
                 </div>
               </div>
 
@@ -311,7 +311,7 @@ export default function Profissionais() {
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '480px', maxHeight: '88vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{editandoId ? 'Editar profissional' : 'Novo profissional'}</span>
-              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>âœ•</button>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
             </div>
 
             <div style={{ marginBottom: '12px' }}>
