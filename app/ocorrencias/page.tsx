@@ -35,8 +35,8 @@ const TIPOS: Record<string, string> = {
   avaria: 'Avaria',
   medida_errada: 'Medida errada',
   cor_errada: 'Cor errada',
-  faltando_peca: 'Faltando peÃ§a',
-  defeito_fabricacao: 'Defeito de fabricaÃ§Ã£o',
+  faltando_peca: 'Faltando peça',
+  defeito_fabricacao: 'Defeito de fabricação',
   outro: 'Outro',
 }
 
@@ -81,7 +81,7 @@ export default function Ocorrencias() {
       .select('*, pedidos(numero_pedido, clientes(nome))')
       .order('created_at', { ascending: false })
       .range(0, 9999)
-    if (error) console.error('Erro ao buscar ocorrÃªncias:', error)
+    if (error) console.error('Erro ao buscar ocorrências:', error)
     const ocorrenciasData = (data as unknown as Ocorrencia[]) || []
 
     // Busca itens separadamente para evitar falha silenciosa no join
@@ -91,7 +91,7 @@ export default function Ocorrencias() {
         .from('itens_pedido')
         .select('id, descricao')
         .in('id', itemIds)
-      if (errItens) console.error('Erro ao buscar itens (ocorrÃªncias):', errItens)
+      if (errItens) console.error('Erro ao buscar itens (ocorrências):', errItens)
       const itensMap = Object.fromEntries((itens || []).map(it => [it.id, it]))
       ocorrenciasData.forEach(o => {
         if (o.item_id && itensMap[o.item_id]) {
@@ -109,7 +109,7 @@ export default function Ocorrencias() {
       .select('id, numero_pedido, clientes(nome)')
       .order('numero_pedido', { ascending: false })
       .range(0, 9999)
-    if (error) console.error('Erro ao buscar pedidos (ocorrÃªncias):', error)
+    if (error) console.error('Erro ao buscar pedidos (ocorrências):', error)
     setPedidos((data as unknown as Pedido[]) || [])
   }
 
@@ -143,7 +143,7 @@ export default function Ocorrencias() {
       observacoes: o.observacoes || '',
       status: o.status || 'aberta',
     })
-    // Carrega os itens do pedido imediatamente para o select nÃ£o ficar vazio
+    // Carrega os itens do pedido imediatamente para o select não ficar vazio
     if (o.pedido_id) buscarItensPedido(o.pedido_id)
     setShowForm(true)
   }
@@ -152,14 +152,14 @@ export default function Ocorrencias() {
     const oc = ocorrencias.find(o => o.id === id)
     const { error } = await supabase.from('ocorrencias').delete().eq('id', id)
     if (error) return alert('Erro ao excluir: ' + error.message)
-    await registrarHistorico({ tipo: 'ocorrencia_excluida', descricao: `OcorrÃªncia excluÃ­da â€” Pedido ${oc?.pedidos?.numero_pedido}: ${oc?.descricao}`, pedidoId: oc?.pedido_id })
+    await registrarHistorico({ tipo: 'ocorrencia_excluida', descricao: `Ocorrência excluída — Pedido ${oc?.pedidos?.numero_pedido}: ${oc?.descricao}`, pedidoId: oc?.pedido_id })
     setExcluindoId(null)
     buscarOcorrencias()
   }
 
   async function salvar() {
     if (!form.pedido_id) return alert('Selecione o pedido')
-    if (!form.descricao) return alert('DescriÃ§Ã£o Ã© obrigatÃ³ria')
+    if (!form.descricao) return alert('Descrição é obrigatória')
     setSalvando(true)
     try {
       const payload = {
@@ -174,11 +174,11 @@ export default function Ocorrencias() {
       if (editandoId) {
         const { error } = await supabase.from('ocorrencias').update(payload).eq('id', editandoId)
         if (error) return alert('Erro: ' + error.message)
-        await registrarHistorico({ tipo: 'ocorrencia_editada', descricao: `OcorrÃªncia editada â€” Pedido ${pedidos.find(p => p.id === form.pedido_id)?.numero_pedido}: ${form.descricao}`, pedidoId: form.pedido_id })
+        await registrarHistorico({ tipo: 'ocorrencia_editada', descricao: `Ocorrência editada — Pedido ${pedidos.find(p => p.id === form.pedido_id)?.numero_pedido}: ${form.descricao}`, pedidoId: form.pedido_id })
       } else {
         const { error } = await supabase.from('ocorrencias').insert([{ ...payload, status: 'aberta' }])
         if (error) return alert('Erro: ' + error.message)
-        await registrarHistorico({ tipo: 'ocorrencia_criada', descricao: `OcorrÃªncia aberta â€” Pedido ${pedidos.find(p => p.id === form.pedido_id)?.numero_pedido}: ${form.descricao}`, pedidoId: form.pedido_id })
+        await registrarHistorico({ tipo: 'ocorrencia_criada', descricao: `Ocorrência aberta — Pedido ${pedidos.find(p => p.id === form.pedido_id)?.numero_pedido}: ${form.descricao}`, pedidoId: form.pedido_id })
       }
       setShowForm(false)
       setForm(formVazio)
@@ -206,16 +206,16 @@ export default function Ocorrencias() {
 
       <div className="page-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', flexShrink: 0 }}>
-          <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>OcorrÃªncias</span>
+          <span style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Ocorrências</span>
           <button onClick={abrirNovo} style={{ background: '#1a1a2e', color: '#C9A84C', border: 'none', padding: '7px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-            + Nova ocorrÃªncia
+            + Nova ocorrência
           </button>
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
             <input
-              placeholder="Buscar por pedido, cliente ou descriÃ§Ã£o..."
+              placeholder="Buscar por pedido, cliente ou descrição..."
               value={busca}
               onChange={e => setBusca(e.target.value)}
               style={{ width: '300px', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none' }}
@@ -232,16 +232,16 @@ export default function Ocorrencias() {
                 </button>
               ))}
             </div>
-            <span style={{ fontSize: '12px', color: '#aaa' }}>{filtradas.length} ocorrÃªncia{filtradas.length !== 1 ? 's' : ''}</span>
+            <span style={{ fontSize: '12px', color: '#aaa' }}>{filtradas.length} ocorrência{filtradas.length !== 1 ? 's' : ''}</span>
           </div>
 
           <div style={{ background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 160px 130px 110px 100px 120px', padding: '8px 16px', background: '#f7f6f3', fontSize: '10px', fontWeight: '500', color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', gap: '8px' }}>
-              <span>Pedido</span><span>Item / DescriÃ§Ã£o</span><span>Tipo</span><span>Status</span><span>Qtd afetada</span><span>Data</span><span></span>
+              <span>Pedido</span><span>Item / Descrição</span><span>Tipo</span><span>Status</span><span>Qtd afetada</span><span>Data</span><span></span>
             </div>
 
             {filtradas.length === 0 && (
-              <div style={{ padding: '32px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhuma ocorrÃªncia encontrada.</div>
+              <div style={{ padding: '32px', textAlign: 'center', color: '#888', fontSize: '13px' }}>Nenhuma ocorrência encontrada.</div>
             )}
 
             {filtradas.map((o, i) => {
@@ -258,14 +258,14 @@ export default function Ocorrencias() {
                       <div style={{ fontSize: '11px', color: '#888' }}>{o.pedidos?.clientes?.nome}</div>
                     </div>
                     <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>
-                      {o.itens_pedido?.descricao || 'â€”'}
+                      {o.itens_pedido?.descricao || '—'}
                     </div>
                     <span style={{ fontSize: '12px', color: '#555' }}>{TIPOS[o.tipo] || o.tipo}</span>
                     <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '8px', fontWeight: '500', background: STATUS_COR[o.status]?.bg || '#f0efe9', color: STATUS_COR[o.status]?.color || '#555', display: 'inline-block' }}>
                       {STATUS_COR[o.status]?.label || o.status}
                     </span>
                     <span style={{ fontSize: '12px', color: '#555', textAlign: 'center' }}>
-                      {o.quantidade_afetada ? `${o.quantidade_afetada} pÃ§${o.quantidade_afetada !== 1 ? 's' : ''}` : 'â€”'}
+                      {o.quantidade_afetada ? `${o.quantidade_afetada} pç${o.quantidade_afetada !== 1 ? 's' : ''}` : '—'}
                     </span>
                     <span style={{ fontSize: '11px', color: '#888' }}>
                       {new Date(o.created_at).toLocaleDateString('pt-BR')}
@@ -314,19 +314,19 @@ export default function Ocorrencias() {
                       </div>
                       <div>
                         <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>Qtd afetada</div>
-                        <div style={{ fontSize: '13px', color: '#1a1a2e' }}>{o.quantidade_afetada ? `${o.quantidade_afetada} peÃ§a${o.quantidade_afetada !== 1 ? 's' : ''}` : 'â€”'}</div>
+                        <div style={{ fontSize: '13px', color: '#1a1a2e' }}>{o.quantidade_afetada ? `${o.quantidade_afetada} peça${o.quantidade_afetada !== 1 ? 's' : ''}` : '—'}</div>
                       </div>
                       <div>
                         <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>Data de abertura</div>
                         <div style={{ fontSize: '13px', color: '#1a1a2e' }}>{new Date(o.created_at).toLocaleDateString('pt-BR')}</div>
                       </div>
                       <div style={{ gridColumn: '1 / -1' }}>
-                        <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>DescriÃ§Ã£o do problema</div>
-                        <div style={{ fontSize: '13px', color: '#333', lineHeight: '1.5' }}>{o.descricao || 'â€”'}</div>
+                        <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>Descrição do problema</div>
+                        <div style={{ fontSize: '13px', color: '#333', lineHeight: '1.5' }}>{o.descricao || '—'}</div>
                       </div>
                       {o.observacoes && (
                         <div style={{ gridColumn: '1 / -1' }}>
-                          <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>ObservaÃ§Ãµes</div>
+                          <div style={{ fontSize: '10px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>Observações</div>
                           <div style={{ fontSize: '13px', color: '#555', lineHeight: '1.5' }}>{o.observacoes}</div>
                         </div>
                       )}
@@ -342,8 +342,8 @@ export default function Ocorrencias() {
       {excluindoId && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '380px' }}>
-            <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e', marginBottom: '8px' }}>Excluir ocorrÃªncia?</div>
-            <div style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>Esta aÃ§Ã£o nÃ£o pode ser desfeita.</div>
+            <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e', marginBottom: '8px' }}>Excluir ocorrência?</div>
+            <div style={{ fontSize: '13px', color: '#888', marginBottom: '20px' }}>Esta ação não pode ser desfeita.</div>
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setExcluindoId(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
               <button onClick={() => excluir(excluindoId)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#FCEBEB', color: '#791F1F', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Excluir</button>
@@ -356,32 +356,32 @@ export default function Ocorrencias() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '500px', maxHeight: '88vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{editandoId ? 'Editar ocorrÃªncia' : 'Nova ocorrÃªncia'}</span>
+              <span style={{ fontSize: '16px', fontWeight: '500', color: '#1a1a2e' }}>{editandoId ? 'Editar ocorrência' : 'Nova ocorrência'}</span>
               <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#888' }}>&#x2715;</button>
             </div>
 
             <div style={{ marginBottom: '12px' }}>
               <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Pedido *</div>
               <input
-                placeholder="Buscar por nÃºmero ou cliente..."
+                placeholder="Buscar por número ou cliente..."
                 value={buscaPedidoForm}
                 onChange={e => setBuscaPedidoForm(e.target.value)}
                 style={{ width: '100%', padding: '7px 12px', borderRadius: '8px 8px 0 0', border: '0.5px solid #e8e7e3', borderBottom: 'none', fontSize: '12px', outline: 'none', boxSizing: 'border-box', background: '#f7f6f3', color: '#555' }}
               />
               <select value={form.pedido_id} onChange={e => setForm({ ...form, pedido_id: e.target.value, item_id: '' })} size={5}
                 style={{ width: '100%', padding: '4px 0', borderRadius: '0 0 8px 8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
-                <option value="">â€” Selecione â€”</option>
+                <option value="">— Selecione —</option>
                 {pedidos.filter(p => {
                   if (!buscaPedidoForm) return true
                   const q = buscaPedidoForm.toLowerCase()
                   return p.numero_pedido?.toLowerCase().includes(q) || (p.clientes as any)?.nome?.toLowerCase().includes(q)
-                }).map(p => <option key={p.id} value={p.id}>{p.numero_pedido} â€” {(p.clientes as any)?.nome}</option>)}
+                }).map(p => <option key={p.id} value={p.id}>{p.numero_pedido} — {(p.clientes as any)?.nome}</option>)}
               </select>
             </div>
 
             {itensPedido.length > 0 && (
               <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Item com ocorrÃªncia</div>
+                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Item com ocorrência</div>
                 <select value={form.item_id} onChange={e => setForm({ ...form, item_id: e.target.value })}
                   style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}>
                   <option value="">Selecione o item (opcional)</option>
@@ -392,12 +392,12 @@ export default function Ocorrencias() {
 
             {form.pedido_id && itensPedido.length === 0 && (
               <div style={{ marginBottom: '12px', padding: '10px 12px', borderRadius: '8px', background: '#f7f6f3', fontSize: '12px', color: '#888' }}>
-                Este pedido nÃ£o tem itens cadastrados ainda.
+                Este pedido não tem itens cadastrados ainda.
               </div>
             )}
 
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Quantidade de peÃ§as afetadas</div>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Quantidade de peças afetadas</div>
               <input
                 type="number" min="1" value={form.quantidade_afetada}
                 onChange={e => setForm({ ...form, quantidade_afetada: e.target.value })}
@@ -425,13 +425,13 @@ export default function Ocorrencias() {
             )}
 
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>DescriÃ§Ã£o da ocorrÃªncia *</div>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Descrição da ocorrência *</div>
               <textarea value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} rows={3}
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>ObservaÃ§Ãµes</div>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações</div>
               <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={2}
                 style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box', resize: 'vertical' }} />
             </div>
@@ -439,7 +439,7 @@ export default function Ocorrencias() {
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
               <button onClick={salvar} disabled={salvando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>
-                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alteraÃ§Ãµes' : 'Salvar')}
+                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Salvar')}
               </button>
             </div>
           </div>

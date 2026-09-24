@@ -30,8 +30,8 @@ const TABELAS: { key: TabelaKey; label: string; icon: string }[] = [
   { key: 'clientes',     label: 'Clientes',       icon: 'ðŸ‘¤' },
   { key: 'fornecedores', label: 'Fornecedores',   icon: 'ðŸ­' },
   { key: 'profissionais',label: 'Profissionais',  icon: 'ðŸ› ï¸' },
-  { key: 'ats',          label: 'AssistÃªncias',   icon: 'ðŸ”§' },
-  { key: 'ocorrencias',  label: 'OcorrÃªncias',    icon: 'âš ï¸' },
+  { key: 'ats',          label: 'Assistências',   icon: 'ðŸ”§' },
+  { key: 'ocorrencias',  label: 'Ocorrências',    icon: 'âš ï¸' },
   { key: 'entregas',     label: 'Entregas',       icon: 'ðŸšš' },
 ]
 
@@ -39,23 +39,23 @@ const STATUS_COLORS: Record<string, string> = {
   entregue: '#3B6D11', resolvida: '#3B6D11', realizada: '#3B6D11',
   'em reparo': '#BA7517', 'aguard. retirada': '#BA7517', pendente: '#BA7517', aberta: '#BA7517',
   cancelado: '#A32D2D', cancelada: '#A32D2D',
-  'em produÃ§Ã£o': '#1a4fa0', 'em transporte': '#1a4fa0',
+  'em produção': '#1a4fa0', 'em transporte': '#1a4fa0',
   'apto entrega': '#3B6D11', criado: '#666', criada: '#666',
 }
 const STATUS_BG: Record<string, string> = {
   entregue: '#e8f5e2', resolvida: '#e8f5e2', realizada: '#e8f5e2',
   'em reparo': '#fff3cd', 'aguard. retirada': '#fff3cd', pendente: '#fff3cd', aberta: '#fff3cd',
   cancelado: '#fce8e8', cancelada: '#fce8e8',
-  'em produÃ§Ã£o': '#e5eeff', 'em transporte': '#e5eeff',
+  'em produção': '#e5eeff', 'em transporte': '#e5eeff',
   'apto entrega': '#e8f5e2', criado: '#f0efe9', criada: '#f0efe9',
 }
 
 function formatarCelula(val: any, col: string): string {
-  if (val === null || val === undefined) return '<span style="color:#bbb">â€”</span>'
+  if (val === null || val === undefined) return '<span style="color:#bbb">—</span>'
   if (typeof val === 'boolean') {
     return val
       ? '<span style="background:#e8f5e2;color:#2d6a0e;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500">Sim</span>'
-      : '<span style="background:#f0efe9;color:#888;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500">NÃ£o</span>'
+      : '<span style="background:#f0efe9;color:#888;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500">Não</span>'
   }
   const s = String(val)
   if (col === 'status') {
@@ -67,7 +67,7 @@ function formatarCelula(val: any, col: string): string {
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
     try { return new Date(s).toLocaleDateString('pt-BR') } catch { return s }
   }
-  return s.length > 45 ? s.slice(0, 45) + 'â€¦' : s
+  return s.length > 45 ? s.slice(0, 45) + '…' : s
 }
 
 // â”€â”€ Componente do visualizador â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -89,7 +89,7 @@ function VisualizadorBackup({ onFechar }: { onFechar: () => void }) {
         setBusca('')
         setTabelaAtiva('pedidos')
       } catch {
-        alert('Arquivo invÃ¡lido. Use o arquivo gerado pelo sistema em ConfiguraÃ§Ãµes â†’ Backup de dados.')
+        alert('Arquivo inválido. Use o arquivo gerado pelo sistema em Configurações → Backup de dados.')
       }
     }
     reader.readAsText(file)
@@ -161,7 +161,7 @@ function VisualizadorBackup({ onFechar }: { onFechar: () => void }) {
             â¬† {backup ? 'Trocar arquivo' : 'Carregar backup'}
             <input ref={fileRef} type="file" accept=".json" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) carregarArquivo(f) }} />
           </label>
-          <button onClick={onFechar} style={{ width: '32px', height: '32px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#f7f6f3', color: '#888', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>Ã—</button>
+          <button onClick={onFechar} style={{ width: '32px', height: '32px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#f7f6f3', color: '#888', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>Á—</button>
         </div>
 
         {!backup ? (
@@ -179,7 +179,7 @@ function VisualizadorBackup({ onFechar }: { onFechar: () => void }) {
               <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Carregar arquivo de backup</div>
               <div style={{ fontSize: '12px', color: '#888', lineHeight: 1.7 }}>
                 Selecione o arquivo <strong>backup-operahouse-YYYY-MM-DD.json</strong><br />
-                baixado em ConfiguraÃ§Ãµes â†’ Backup de dados<br />
+                baixado em Configurações → Backup de dados<br />
                 ou arraste o arquivo aqui
               </div>
               <div style={{ marginTop: '6px', padding: '7px 20px', borderRadius: '8px', background: '#1a1a2e', color: '#C9A84C', fontSize: '12px', fontWeight: '500' }}>
@@ -209,7 +209,7 @@ function VisualizadorBackup({ onFechar }: { onFechar: () => void }) {
               })}
             </div>
 
-            {/* Ãrea da tabela */}
+            {/* Área da tabela */}
             <div className="page-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <div style={{ padding: '12px 20px', borderBottom: '0.5px solid #e8e7e3', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
                 <span style={{ fontSize: '14px', fontWeight: '500', color: '#1a1a2e' }}>
@@ -313,7 +313,7 @@ function LimpezaCard() {
     setExcluindo(true)
     try {
       const ids = resumo.pedidosIds
-      // Ordem: histÃ³rico â†’ filhos â†’ pedidos
+      // Ordem: histórico → filhos → pedidos
       await supabase.from('historico_itens').delete().in('pedido_id', ids)
       await supabase.from('historico_alteracoes').delete().in('pedido_id', ids)
       await supabase.from('itens_pedido').delete().in('pedido_id', ids)
@@ -337,13 +337,13 @@ function LimpezaCard() {
     <div style={{ background: '#fff', borderRadius: '14px', border: '0.5px solid #e8e7e3', overflow: 'hidden', marginTop: '20px' }}>
       <div style={{ padding: '16px 20px', borderBottom: '0.5px solid #f0efe9', background: '#f7f6f3' }}>
         <div style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Limpeza de dados</div>
-        <div style={{ fontSize: '12px', color: '#888', marginTop: '3px' }}>Remove pedidos entregues/cancelados de um ano para liberar espaÃ§o</div>
+        <div style={{ fontSize: '12px', color: '#888', marginTop: '3px' }}>Remove pedidos entregues/cancelados de um ano para liberar espaço</div>
       </div>
       <div style={{ padding: '20px' }}>
 
         {concluido && (
           <div style={{ padding: '12px 16px', borderRadius: '10px', background: '#e8f5e2', color: '#2d6a0e', fontSize: '13px', fontWeight: '500', marginBottom: '16px' }}>
-            âœ“ Limpeza concluÃ­da com sucesso. O espaÃ§o foi liberado no banco de dados.
+            âœ“ Limpeza concluída com sucesso. O espaço foi liberado no banco de dados.
           </div>
         )}
 
@@ -361,7 +361,7 @@ function LimpezaCard() {
             disabled={buscando}
             style={{ padding: '7px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#f7f6f3', color: '#555', fontSize: '13px', fontWeight: '500', cursor: buscando ? 'not-allowed' : 'pointer', opacity: buscando ? 0.7 : 1 }}
           >
-            {buscando ? 'Buscando...' : 'Ver o que serÃ¡ excluÃ­do'}
+            {buscando ? 'Buscando...' : 'Ver o que será excluído'}
           </button>
         </div>
 
@@ -374,16 +374,16 @@ function LimpezaCard() {
         {resumo && resumo.totalPedidos > 0 && (
           <div style={{ border: '0.5px solid #e8e7e3', borderRadius: '10px', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px', background: '#fff8e1', borderBottom: '0.5px solid #f0d88a', fontSize: '12px', fontWeight: '600', color: '#7a5800' }}>
-              âš ï¸ Resumo do que serÃ¡ excluÃ­do permanentemente â€” ano {anoSelecionado}
+              âš ï¸ Resumo do que será excluído permanentemente — ano {anoSelecionado}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
               {[
                 { label: 'Pedidos', valor: resumo.totalPedidos },
                 { label: 'Itens', valor: resumo.totalItens },
-                { label: 'AssistÃªncias tÃ©cnicas', valor: resumo.totalATs },
-                { label: 'OcorrÃªncias', valor: resumo.totalOcorrencias },
+                { label: 'Assistências técnicas', valor: resumo.totalATs },
+                { label: 'Ocorrências', valor: resumo.totalOcorrencias },
                 { label: 'Entregas', valor: resumo.totalEntregas },
-                { label: 'Registros de histÃ³rico', valor: resumo.totalHistorico },
+                { label: 'Registros de histórico', valor: resumo.totalHistorico },
               ].map((item, i) => (
                 <div key={i} style={{ padding: '10px 16px', borderBottom: i < 4 ? '0.5px solid #f0efe9' : 'none', borderRight: i % 2 === 0 ? '0.5px solid #f0efe9' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '12px', color: '#555' }}>{item.label}</span>
@@ -400,7 +400,7 @@ function LimpezaCard() {
                 type="text"
                 value={confirmacao}
                 onChange={e => setConfirmacao(e.target.value)}
-                placeholder="Digite CONFIRMAR para liberar o botÃ£o"
+                placeholder="Digite CONFIRMAR para liberar o botão"
                 style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: `0.5px solid ${podeExcluir ? '#A32D2D' : '#e8e7e3'}`, fontSize: '13px', outline: 'none', boxSizing: 'border-box', marginBottom: '12px', transition: 'border-color 0.2s' }}
               />
               <button
@@ -415,14 +415,14 @@ function LimpezaCard() {
         )}
 
         <div style={{ marginTop: '14px', fontSize: '12px', color: '#aaa', lineHeight: '1.6' }}>
-          Recomendado: exporte o backup antes de executar a limpeza. Apenas pedidos com status <strong>entregue</strong> ou <strong>cancelado</strong> sÃ£o removidos.
+          Recomendado: exporte o backup antes de executar a limpeza. Apenas pedidos com status <strong>entregue</strong> ou <strong>cancelado</strong> são removidos.
         </div>
       </div>
     </div>
   )
 }
 
-// â”€â”€ PÃ¡gina principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â”€â”€ Página principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function Configuracoes() {
   const [enderecoSaida, setEnderecoSaida] = useState('')
   const [nomeSaida, setNomeSaida] = useState('')
@@ -528,16 +528,16 @@ export default function Configuracoes() {
       <Sidebar ativa="/configuracoes" />
       <div className="page-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', padding: '0 22px', fontSize: '15px', fontWeight: '500', color: '#1a1a2e', flexShrink: 0 }}>
-          ConfiguraÃ§Ãµes
+          Configurações
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: '28px 24px' }}>
           <div style={{ maxWidth: '560px' }}>
 
-            {/* EndereÃ§o de saÃ­da */}
+            {/* Endereço de saída */}
             <div style={{ background: '#fff', borderRadius: '14px', border: '0.5px solid #e8e7e3', overflow: 'hidden' }}>
               <div style={{ padding: '16px 20px', borderBottom: '0.5px solid #f0efe9', background: '#f7f6f3' }}>
-                <div style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>EndereÃ§o de saÃ­da padrÃ£o</div>
+                <div style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Endereço de saída padrão</div>
                 <div style={{ fontSize: '12px', color: '#888', marginTop: '3px' }}>Ponto de partida inserido automaticamente na rota do Google Maps</div>
               </div>
               <div style={{ padding: '20px' }}>
@@ -546,12 +546,12 @@ export default function Configuracoes() {
                   <input value={nomeSaida} onChange={e => setNomeSaida(e.target.value)} placeholder="Ex: Showroom Opera House" style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
                 <div style={{ marginBottom: '6px' }}>
-                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>EndereÃ§o completo</div>
-                  <input value={enderecoSaida} onChange={e => setEnderecoSaida(e.target.value)} placeholder="Ex: Rua das Flores, 123, Vila Nova, SÃ£o Paulo, SP" style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
+                  <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Endereço completo</div>
+                  <input value={enderecoSaida} onChange={e => setEnderecoSaida(e.target.value)} placeholder="Ex: Rua das Flores, 123, Vila Nova, São Paulo, SP" style={{ width: '100%', padding: '9px 12px', borderRadius: '8px', border: '0.5px solid #e8e7e3', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }} />
                 </div>
-                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '18px' }}>Cole o endereÃ§o completo com rua, nÃºmero, bairro, cidade e estado.</div>
+                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '18px' }}>Cole o endereço completo com rua, número, bairro, cidade e estado.</div>
                 <button onClick={salvar} disabled={salvando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: salvo ? '#3B6D11' : '#1a1a2e', color: salvo ? '#fff' : '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', transition: 'background 0.2s' }}>
-                  {salvo ? 'âœ“ Salvo' : salvando ? 'Salvando...' : 'Salvar configuraÃ§Ãµes'}
+                  {salvo ? 'âœ“ Salvo' : salvando ? 'Salvando...' : 'Salvar configurações'}
                 </button>
               </div>
             </div>
@@ -574,7 +574,7 @@ export default function Configuracoes() {
                     <div style={{ fontSize: '12px', color: '#888' }}>{dbSize.mb.toFixed(1)} MB utilizados de 500 MB</div>
                     {dbSize.pct >= 70 && (
                       <div style={{ marginTop: '10px', padding: '8px 12px', borderRadius: '8px', background: dbSize.pct >= 90 ? '#FCEBEB' : '#FFF3CD', fontSize: '12px', color: dbSize.pct >= 90 ? '#791F1F' : '#7A5800' }}>
-                        {dbSize.pct >= 90 ? 'âš ï¸ Banco prÃ³ximo do limite. Considere limpar dados ou migrar para o plano pago.' : 'âš ï¸ Uso elevado. Fique atento ao limite.'}
+                        {dbSize.pct >= 90 ? 'âš ï¸ Banco próximo do limite. Considere limpar dados ou migrar para o plano pago.' : 'âš ï¸ Uso elevado. Fique atento ao limite.'}
                       </div>
                     )}
                   </>
@@ -595,7 +595,7 @@ export default function Configuracoes() {
               </div>
               <div style={{ padding: '20px' }}>
                 <div style={{ fontSize: '13px', color: '#555', marginBottom: '16px' }}>
-                  O arquivo inclui pedidos, itens, clientes, fornecedores, profissionais, assistÃªncias tÃ©cnicas, ocorrÃªncias e entregas.
+                  O arquivo inclui pedidos, itens, clientes, fornecedores, profissionais, assistências técnicas, ocorrências e entregas.
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button onClick={exportarBackup} disabled={exportando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: exportando ? 'not-allowed' : 'pointer', opacity: exportando ? 0.7 : 1 }}>

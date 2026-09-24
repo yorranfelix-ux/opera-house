@@ -86,7 +86,7 @@ export default function Clientes() {
   }
 
   async function salvarCliente() {
-    if (!form.nome) return alert('Nome Ã© obrigatÃ³rio')
+    if (!form.nome) return alert('Nome é obrigatório')
     setSalvando(true)
     try {
       if (editandoId) {
@@ -110,10 +110,10 @@ export default function Clientes() {
   async function excluirCliente(id: string, nome: string) {
     const { error } = await supabase.from('clientes').delete().eq('id', id)
     if (error) {
-      if (error.message.includes('foreign key')) return alert(`NÃ£o Ã© possÃ­vel excluir "${nome}" pois existem pedidos vinculados a este cliente.`)
+      if (error.message.includes('foreign key')) return alert(`Não é possível excluir "${nome}" pois existem pedidos vinculados a este cliente.`)
       return alert('Erro ao excluir: ' + error.message)
     }
-    await registrarHistorico({ tipo: 'cliente_excluido', descricao: `Cliente ${nome} excluÃ­do` })
+    await registrarHistorico({ tipo: 'cliente_excluido', descricao: `Cliente ${nome} excluído` })
     setExcluindoId(null)
     buscarClientes()
   }
@@ -160,10 +160,10 @@ export default function Clientes() {
             {clientesPaginados.map((cliente, i) => (
               <div key={cliente.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 130px 180px 120px 60px 175px', padding: '12px 16px', borderTop: '0.5px solid #f0efe9', alignItems: 'center', gap: '8px', background: i % 2 === 0 ? '#fff' : '#faf9f7' }}>
                 <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{cliente.nome}</span>
-                <span style={{ fontSize: '12px', color: '#555' }}>{cliente.telefone || 'â€”'}</span>
-                <span style={{ fontSize: '12px', color: '#555', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cliente.email || 'â€”'}</span>
-                <span style={{ fontSize: '12px', color: '#555' }}>{cliente.cidade || 'â€”'}</span>
-                <span style={{ fontSize: '12px', color: '#555' }}>{cliente.estado || 'â€”'}</span>
+                <span style={{ fontSize: '12px', color: '#555' }}>{cliente.telefone || '—'}</span>
+                <span style={{ fontSize: '12px', color: '#555', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cliente.email || '—'}</span>
+                <span style={{ fontSize: '12px', color: '#555' }}>{cliente.cidade || '—'}</span>
+                <span style={{ fontSize: '12px', color: '#555' }}>{cliente.estado || '—'}</span>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   <button onClick={() => setVisualizandoId(cliente.id)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>Ver</button>
                   <button onClick={() => abrirEdicao(cliente)} style={{ padding: '5px 10px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '12px', cursor: 'pointer', color: '#555' }}>Editar</button>
@@ -178,10 +178,10 @@ export default function Clientes() {
                   style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: pagina === 1 ? '#f7f6f3' : '#fff', fontSize: '12px', cursor: pagina === 1 ? 'default' : 'pointer', color: pagina === 1 ? '#ccc' : '#555' }}>
                   â† Anterior
                 </button>
-                <span style={{ fontSize: '12px', color: '#888' }}>PÃ¡gina {pagina} de {totalPaginas}</span>
+                <span style={{ fontSize: '12px', color: '#888' }}>Página {pagina} de {totalPaginas}</span>
                 <button onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas}
                   style={{ padding: '5px 12px', borderRadius: '6px', border: '0.5px solid #e8e7e3', background: pagina === totalPaginas ? '#f7f6f3' : '#fff', fontSize: '12px', cursor: pagina === totalPaginas ? 'default' : 'pointer', color: pagina === totalPaginas ? '#ccc' : '#555' }}>
-                  PrÃ³xima â†’
+                  Próxima →
                 </button>
               </div>
             )}
@@ -218,13 +218,13 @@ export default function Clientes() {
               </div>
               {endereco && (
                 <div style={{ borderTop: '0.5px solid #f0efe9', paddingTop: '16px', marginTop: '8px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>EndereÃ§o</div>
-                  {linha('EndereÃ§o completo', endereco)}
+                  <div style={{ fontSize: '11px', fontWeight: '600', color: '#1a1a2e', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>Endereço</div>
+                  {linha('Endereço completo', endereco)}
                 </div>
               )}
               {(c as any).observacoes && (
                 <div style={{ borderTop: '0.5px solid #f0efe9', paddingTop: '16px', marginTop: '8px' }}>
-                  {linha('ObservaÃ§Ãµes', (c as any).observacoes)}
+                  {linha('Observações', (c as any).observacoes)}
                 </div>
               )}
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '20px' }}>
@@ -242,7 +242,7 @@ export default function Clientes() {
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
             <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', width: '380px' }}>
               <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e', marginBottom: '8px' }}>Excluir {c?.nome}?</div>
-              <div style={{ fontSize: '13px', color: '#888', marginBottom: '24px' }}>Esta aÃ§Ã£o nÃ£o pode ser desfeita.</div>
+              <div style={{ fontSize: '13px', color: '#888', marginBottom: '24px' }}>Esta ação não pode ser desfeita.</div>
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                 <button onClick={() => setExcluindoId(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
                 <button onClick={() => excluirCliente(excluindoId, c?.nome)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#FCEBEB', color: '#791F1F', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>Excluir</button>
@@ -265,8 +265,8 @@ export default function Clientes() {
               { label: 'Telefone', field: 'telefone' },
               { label: 'WhatsApp', field: 'whatsapp' },
               { label: 'E-mail', field: 'email' },
-              { label: 'EndereÃ§o', field: 'endereco' },
-              { label: 'NÃºmero', field: 'numero' },
+              { label: 'Endereço', field: 'endereco' },
+              { label: 'Número', field: 'numero' },
               { label: 'Complemento', field: 'complemento' },
               { label: 'Bairro', field: 'bairro' },
               { label: 'Cidade', field: 'cidade' },
@@ -284,7 +284,7 @@ export default function Clientes() {
             ))}
 
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>ObservaÃ§Ãµes</div>
+              <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Observações</div>
               <textarea
                 value={form.observacoes}
                 onChange={e => setForm({ ...form, observacoes: e.target.value })}
@@ -296,7 +296,7 @@ export default function Clientes() {
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button onClick={() => setShowForm(false)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
               <button onClick={salvarCliente} disabled={salvando} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer', opacity: salvando ? 0.7 : 1 }}>
-                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alteraÃ§Ãµes' : 'Salvar cliente')}
+                {salvando ? 'Salvando...' : (editandoId ? 'Salvar alterações' : 'Salvar cliente')}
               </button>
             </div>
           </div>
