@@ -31,7 +31,7 @@ const SECOES: Secao[] = [
   },
   {
     id: 'pedidos',
-    icone: 'ðŸ“‹',
+    icone: '📋',
     titulo: 'Pedidos',
     descricao: 'Cadastro e acompanhamento de todos os pedidos de venda.',
     passos: [
@@ -56,7 +56,7 @@ const SECOES: Secao[] = [
   },
   {
     id: 'pedido-detalhe',
-    icone: 'ðŸ“„',
+    icone: '📄',
     titulo: 'Detalhes do Pedido',
     descricao: 'Dentro de cada pedido você gerencia itens, semáforo, pagamento, ATs e imprime o resumo.',
     passos: [
@@ -70,11 +70,11 @@ const SECOES: Secao[] = [
       { titulo: 'Status dos itens', texto: 'Cada item tem seu próprio status independente: Criado → Aguard. compra → Em produção → Em transporte → Recebido → Conferido OK → Apto entrega → Entregue. Atualize conforme a produção avança.' },
       { titulo: 'Status automático: Apto p/ agendamento', texto: 'Quando todos os itens do pedido são marcados como "Apto entrega", o status do pedido muda automaticamente para "Apto p/ agendamento". Isso sinaliza que o pedido pode ser incluído na programação de entregas sem intervenção manual.' },
       { titulo: 'NF / Romaneio de entrega', texto: 'No cabeçalho do pedido há um campo para registrar o documento fiscal. Escolha o tipo (NF para Nota Fiscal ou Romaneio para entregas sem NF) e informe o número. Esse número aparece no resumo impresso do pedido.' },
-      { titulo: 'Ícones de alerta nos itens', texto: 'O ícone âš ï¸ em um item indica que há uma ocorrência aberta vinculada a ele. O ícone ðŸ”§ indica que o item tem uma AT ativa. Ambos são links — clique para navegar diretamente.' },
-      { titulo: 'Semáforo de prioridade', texto: 'O semáforo fica no topo da página. Clique em uma cor para alterar manualmente: ðŸŸ¢ Verde = no prazo · ðŸŸ¡ Amarelo = atenção (prazo próximo) · ðŸ”´ Vermelho = atrasado · ðŸ”µ Azul = aguardando retorno do cliente · ðŸŸ£ Roxo = aguardando fornecedor · ðŸŸ© Verde limão = pronto p/ entrega. O semáforo também é atualizado automaticamente ao abrir o pedido: vermelho quando o prazo venceu, amarelo quando faltam 7 dias ou menos, verde quando o prazo está ok. O verde limão (Pronto p/ entrega) é definido automaticamente quando todos os itens ficam aptos para entrega e não é sobrescrito pela atualização automática.' },
+      { titulo: 'Ícones de alerta nos itens', texto: 'O ícone âš ️ em um item indica que há uma ocorrência aberta vinculada a ele. O ícone 🔧 indica que o item tem uma AT ativa. Ambos são links — clique para navegar diretamente.' },
+      { titulo: 'Semáforo de prioridade', texto: 'O semáforo fica no topo da página. Clique em uma cor para alterar manualmente: 🟢 Verde = no prazo · 🟡 Amarelo = atenção (prazo próximo) · 🔴 Vermelho = atrasado · 🔵 Azul = aguardando retorno do cliente · 🟣 Roxo = aguardando fornecedor · 🟩 Verde limão = pronto p/ entrega. O semáforo também é atualizado automaticamente ao abrir o pedido: vermelho quando o prazo venceu, amarelo quando faltam 7 dias ou menos, verde quando o prazo está ok. O verde limão (Pronto p/ entrega) é definido automaticamente quando todos os itens ficam aptos para entrega e não é sobrescrito pela atualização automática.' },
       { titulo: 'Pagamento', texto: 'No bloco de pagamento selecione o status: Pendente, Pendente Boleto (boleto emitido mas ainda não compensado), Parcial ou Pago. Use o campo de observações para registrar detalhes como número de parcelas, data de vencimento ou código de cheque. O bloco é colapsável — clique no cabeçalho para expandir ou recolher.' },
       { titulo: 'Histórico de alterações', texto: 'Toda mudança no pedido e nos itens é registrada automaticamente: status alterado, item adicionado, semáforo modificado. O histórico fica na parte inferior da página e é colapsável — clique no cabeçalho para expandir. Mostra todos os registros sem limite de quantidade.' },
-      { titulo: 'Imprimir resumo', texto: 'Clique em "ðŸ–¨ï¸ Imprimir" para gerar o documento completo do pedido — inclui dados do cliente, todos os itens, prazo prometido, semáforo, status de pagamento e observações.' },
+      { titulo: 'Imprimir resumo', texto: 'Clique em "🖨️ Imprimir" para gerar o documento completo do pedido — inclui dados do cliente, todos os itens, prazo prometido, semáforo, status de pagamento e observações.' },
     ],
     dicas: [
       'O contador de ATs ativas aparece no topo da página. Clique nele para ver as ATs do pedido.',
@@ -84,7 +84,7 @@ const SECOES: Secao[] = [
   },
   {
     id: 'clientes',
-    icone: 'ðŸ‘¤',
+    icone: '👤',
     titulo: 'Clientes',
     descricao: 'Cadastro completo de clientes com endereço e contato.',
     passos: [
@@ -100,7 +100,7 @@ const SECOES: Secao[] = [
   },
   {
     id: 'fornecedores',
-    icone: 'ðŸ­',
+    icone: '🏭',
     titulo: 'Fornecedores',
     descricao: 'Cadastro de fornecedores vinculados a itens de pedido e assistências técnicas.',
     passos: [
@@ -116,7 +116,7 @@ const SECOES: Secao[] = [
   },
   {
     id: 'profissionais',
-    icone: 'ðŸ› ï¸',
+    icone: '🛠️',
     titulo: 'Profissionais',
     descricao: 'Cadastro de arquitetos, designers e outros profissionais parceiros.',
     passos: [
@@ -126,7 +126,7 @@ const SECOES: Secao[] = [
       { titulo: 'Filtrar por situação', texto: 'Use os botões "Ativos / Inativos / Todos" para filtrar a lista. "Inativos" mostra profissionais que foram desativados mas mantêm o histórico de pedidos preservado.' },
       { titulo: 'Ativar / Desativar', texto: 'Profissionais inativos não aparecem nas opções de seleção de novos pedidos, mas os pedidos já vinculados a eles não são afetados.' },
       { titulo: 'Filtrar pedidos por profissional', texto: 'Na listagem de Pedidos, use o select "Todos os profissionais" para filtrar e ver apenas os pedidos de um parceiro específico — útil para calcular comissões ou preparar relatórios por parceiro.' },
-      { titulo: 'Lembrete de aniversário', texto: 'Ao acessar a aba de Profissionais, se houver algum profissional fazendo aniversário no dia, um banner amarelo é exibido no topo da lista com os nomes dos aniversariantes — por exemplo: "ðŸŽ‚ Aniversariante de hoje: João Silva". Use para enviar uma lembrança ou mensagem ao colaborador.' },
+      { titulo: 'Lembrete de aniversário', texto: 'Ao acessar a aba de Profissionais, se houver algum profissional fazendo aniversário no dia, um banner amarelo é exibido no topo da lista com os nomes dos aniversariantes — por exemplo: "🎂 Aniversariante de hoje: João Silva". Use para enviar uma lembrança ou mensagem ao colaborador.' },
     ],
     dicas: [
       'Desative profissionais que não trabalham mais com a empresa em vez de excluí-los — assim o histórico dos pedidos antigos fica preservado.',
@@ -136,7 +136,7 @@ const SECOES: Secao[] = [
   },
   {
     id: 'assistencia',
-    icone: 'ðŸ”§',
+    icone: '🔧',
     titulo: 'Assistência Técnica (AT)',
     descricao: 'Controle completo de assistências técnicas abertas para clientes.',
     passos: [
@@ -146,7 +146,7 @@ const SECOES: Secao[] = [
       { titulo: 'Registrar informações da AT', texto: 'Dentro da AT registre: observações gerais do processo, laudo/observações do fornecedor, número da NF de envio ao fornecedor, transportadora usada e datas de cada etapa (retirada, envio, previsão de retorno, retorno efetivo, previsão de entrega).' },
       { titulo: 'Garantia', texto: 'Marque "Dentro da garantia" para sinalizar que o produto está coberto. Quando marcado, aparece um campo para registrar a data de vencimento da garantia. Essa informação é exibida no documento impresso da AT.' },
       { titulo: 'Observações cumulativas', texto: 'As observações gerais da AT são acumulativas: ao executar uma ação (iniciar processo, registrar retorno, resolver, cancelar) e informar uma observação, ela é adicionada ao campo "Observações gerais" sem apagar o que já estava registrado.' },
-      { titulo: 'Imprimir AT', texto: 'Clique em "ðŸ–¨ï¸ Imprimir AT" para gerar o documento formal da assistência — inclui todos os dados, datas, descrição do problema, observações, situação de garantia e campos de assinatura do responsável técnico e do cliente.' },
+      { titulo: 'Imprimir AT', texto: 'Clique em "🖨️ Imprimir AT" para gerar o documento formal da assistência — inclui todos os dados, datas, descrição do problema, observações, situação de garantia e campos de assinatura do responsável técnico e do cliente.' },
       { titulo: 'Resolver ou cancelar', texto: 'Quando o problema for solucionado, clique em "Resolver AT" e informe uma observação de conclusão. Para cancelar sem resolução use "Cancelar AT". Ambas as ações removem a AT da lista de ativas.' },
     ],
     dicas: [
@@ -158,7 +158,7 @@ const SECOES: Secao[] = [
   },
   {
     id: 'ocorrencias',
-    icone: 'âš ï¸',
+    icone: 'âš ️',
     titulo: 'Ocorrências',
     descricao: 'Registro inicial de problemas relatados por clientes — etapa anterior à AT formal.',
     passos: [
@@ -169,35 +169,35 @@ const SECOES: Secao[] = [
     ],
     dicas: [
       'Ocorrências abertas há mais de 3 dias aparecem automaticamente como alerta no Dashboard.',
-      'Itens com ocorrência aberta mostram o ícone âš ï¸ na página de detalhes do pedido.',
+      'Itens com ocorrência aberta mostram o ícone âš ️ na página de detalhes do pedido.',
     ],
   },
   {
     id: 'entregas',
-    icone: 'ðŸšš',
+    icone: '🚚',
     titulo: 'Entregas',
     descricao: 'Programação e controle das entregas com rota no Maps e impressão para a equipe.',
     passos: [
-      { titulo: 'Agendar entrega de pedido', texto: 'Clique em "+ Agendar entrega" e selecione o tipo "ðŸšš Entrega". Use a caixa de busca para localizar o pedido pelo número ou nome do cliente. Selecione o pedido e a data. Se a entrega requer içamento, marque "Requer içamento" e descreva as condições — ex: "Apartamento 12º andar, içamento pela varanda".' },
-      { titulo: 'Agendar Assistência Técnica nas Entregas', texto: 'Clique em "+ Agendar entrega" e selecione o tipo "ðŸ”§ Assistência". Use a caixa de busca para localizar a AT pelo número ou descrição do problema. Isso permite centralizar na aba Entregas tanto as entregas de pedido quanto as ATs do mesmo dia, facilitando o planejamento da equipe.' },
-      { titulo: 'Observações visíveis na lista', texto: 'As observações de içamento aparecem em destaque laranja diretamente no cartão da entrega, sem precisar abrir o modal. Observações gerais aparecem logo abaixo com o ícone ðŸ“.' },
-      { titulo: 'Imprimir sequência', texto: 'Clique em "ðŸ–¨ï¸ Sequência" para imprimir a folha de rota em formato paisagem — inclui motorista, veículo, placa, rodízio, data e a ordem das entregas. Pedidos aparecem como "P.123 — NOME CLIENTE" e ATs aparecem como "ðŸ”§ AT.123 — NOME CLIENTE", com a cidade na coluna Região.' },
-      { titulo: 'Imprimir observações', texto: 'Clique em "ðŸ“‹ Observações" para imprimir a folha de observações da equipe — lista cada entrega e AT com endereço completo, içamento destacado em laranja, descrição do problema (para ATs) e todas as observações especiais. Ideal para a equipe em campo.' },
-      { titulo: 'Abrir rota no Maps', texto: 'Clique em "ðŸ“ Abrir rota no Maps" para abrir o Google Maps com a rota otimizada do dia, partindo do endereço de saída configurado em Configurações.' },
-      { titulo: 'Responsável / montador', texto: 'No formulário de agendamento há um campo "Responsável / montador" para registrar o nome de quem realizará a entrega ou montagem. Esse nome aparece no cartão da entrega (ícone ðŸ‘·) e é listado automaticamente na linha EQUIPE da folha de sequência do motorista.' },
+      { titulo: 'Agendar entrega de pedido', texto: 'Clique em "+ Agendar entrega" e selecione o tipo "🚚 Entrega". Use a caixa de busca para localizar o pedido pelo número ou nome do cliente. Selecione o pedido e a data. Se a entrega requer içamento, marque "Requer içamento" e descreva as condições — ex: "Apartamento 12º andar, içamento pela varanda".' },
+      { titulo: 'Agendar Assistência Técnica nas Entregas', texto: 'Clique em "+ Agendar entrega" e selecione o tipo "🔧 Assistência". Use a caixa de busca para localizar a AT pelo número ou descrição do problema. Isso permite centralizar na aba Entregas tanto as entregas de pedido quanto as ATs do mesmo dia, facilitando o planejamento da equipe.' },
+      { titulo: 'Observações visíveis na lista', texto: 'As observações de içamento aparecem em destaque laranja diretamente no cartão da entrega, sem precisar abrir o modal. Observações gerais aparecem logo abaixo com o ícone 📝.' },
+      { titulo: 'Imprimir sequência', texto: 'Clique em "🖨️ Sequência" para imprimir a folha de rota em formato paisagem — inclui motorista, veículo, placa, rodízio, data e a ordem das entregas. Pedidos aparecem como "P.123 — NOME CLIENTE" e ATs aparecem como "🔧 AT.123 — NOME CLIENTE", com a cidade na coluna Região.' },
+      { titulo: 'Imprimir observações', texto: 'Clique em "📋 Observações" para imprimir a folha de observações da equipe — lista cada entrega e AT com endereço completo, içamento destacado em laranja, descrição do problema (para ATs) e todas as observações especiais. Ideal para a equipe em campo.' },
+      { titulo: 'Abrir rota no Maps', texto: 'Clique em "📍 Abrir rota no Maps" para abrir o Google Maps com a rota otimizada do dia, partindo do endereço de saída configurado em Configurações.' },
+      { titulo: 'Responsável / montador', texto: 'No formulário de agendamento há um campo "Responsável / montador" para registrar o nome de quem realizará a entrega ou montagem. Esse nome aparece no cartão da entrega (ícone 👷) e é listado automaticamente na linha EQUIPE da folha de sequência do motorista.' },
       { titulo: 'Marcar como realizada', texto: 'Após a entrega, abra o registro e marque como "Realizada" informando a data de entrega efetiva. Quando não há outras entregas pendentes do mesmo pedido, o pedido é marcado automaticamente como "Entregue" e a data de entrega é registrada automaticamente.' },
       { titulo: 'Reagendar', texto: 'Se a entrega não for realizada, marque como "Reagendada" informando o motivo. O motivo aparece no cartão da lista para referência.' },
     ],
     dicas: [
       'Configure o endereço de saída em Configurações para que a rota no Maps parta do local correto.',
-      'Use "ðŸ“‹ Observações" para entregar à equipe que vai para a rua — ela tem tudo que precisa: endereço, telefone do cliente, içamento e instruções especiais.',
+      'Use "📋 Observações" para entregar à equipe que vai para a rua — ela tem tudo que precisa: endereço, telefone do cliente, içamento e instruções especiais.',
       'O filtro "Pendentes" mostra apenas entregas agendadas e reagendadas — use para ver o que ainda precisa ser feito.',
       'Pedidos com múltiplas entregas só são marcados como "Entregue" quando a última entrega pendente for realizada.',
     ],
   },
   {
     id: 'relatorios',
-    icone: 'ðŸ“Š',
+    icone: '📊',
     titulo: 'Relatórios',
     descricao: 'Análises do negócio organizadas em 8 abas — com exportação para CSV em todas.',
     passos: [
@@ -213,7 +213,7 @@ const SECOES: Secao[] = [
       { titulo: 'Ocorrências', texto: 'Distribuição das ocorrências abertas no período por tipo, com o total e quantas ainda estão em aberto para cada categoria.' },
       { titulo: 'Tratamentos', texto: 'Quantos itens requerem cada tratamento especial (Içamento, Tecido a enviar, Retirada na loja, Higienização, Impermeabilização) e quantos já estão marcados como "Apto entrega". Esta aba sempre reflete o estado atual de todos os itens, independente do período selecionado.' },
       { titulo: 'Exportar CSV', texto: 'Cada aba tem um botão "Exportar CSV" que baixa os dados filtrados em formato compatível com Excel.' },
-      { titulo: 'Exportar PDF', texto: 'O botão "ðŸ–¨ï¸ Exportar PDF" no topo exporta a aba atual como PDF. Ao clicar, abre uma janela de impressão formatada com os dados do período selecionado — escolha "Salvar como PDF" na impressora para salvar o arquivo.' },
+      { titulo: 'Exportar PDF', texto: 'O botão "🖨️ Exportar PDF" no topo exporta a aba atual como PDF. Ao clicar, abre uma janela de impressão formatada com os dados do período selecionado — escolha "Salvar como PDF" na impressora para salvar o arquivo.' },
     ],
     dicas: [
       'Clique em "Atualizar" no topo para recarregar os dados mais recentes sem precisar recarregar a página.',
@@ -224,7 +224,7 @@ const SECOES: Secao[] = [
   },
   {
     id: 'historico',
-    icone: 'ðŸ•',
+    icone: '🕐',
     titulo: 'Histórico',
     descricao: 'Log completo e automático de todas as alterações feitas no sistema.',
     passos: [
@@ -240,7 +240,7 @@ const SECOES: Secao[] = [
   },
   {
     id: 'usuarios',
-    icone: 'ðŸ‘¥',
+    icone: '👥',
     titulo: 'Usuários',
     descricao: 'Gerenciamento completo dos usuários com acesso ao sistema — sem precisar acessar o Supabase.',
     passos: [
@@ -257,13 +257,13 @@ const SECOES: Secao[] = [
   },
   {
     id: 'configuracoes',
-    icone: 'âš™ï¸',
+    icone: 'âš™️',
     titulo: 'Configurações',
     descricao: 'Personalizações do sistema para a operação da empresa.',
     passos: [
       { titulo: 'Endereço de saída', texto: 'Configure o endereço de onde a equipe parte para as entregas (endereço da loja, depósito ou galpão). Esse endereço é o ponto de partida da rota gerada no Google Maps pelo módulo de Entregas.' },
       { titulo: 'Monitor de banco de dados', texto: 'Exibe o uso atual do banco de dados Supabase em relação ao limite de 500 MB do plano gratuito. A barra de progresso fica verde até 70%, amarela entre 70% e 90%, e vermelha acima de 90%. Um aviso automático aparece quando o uso está elevado.' },
-      { titulo: 'Backup de dados', texto: 'Clique em "â¬‡ Exportar backup" para baixar um arquivo JSON com todos os dados do sistema: pedidos, itens, clientes, fornecedores, profissionais, ATs, ocorrências e entregas. Clique em "ðŸ“‚ Visualizar backup" para abrir o arquivo baixado diretamente no sistema — você pode navegar entre as tabelas e buscar qualquer registro em tempo real sem precisar do Excel.' },
+      { titulo: 'Backup de dados', texto: 'Clique em "â¬‡ Exportar backup" para baixar um arquivo JSON com todos os dados do sistema: pedidos, itens, clientes, fornecedores, profissionais, ATs, ocorrências e entregas. Clique em "📂 Visualizar backup" para abrir o arquivo baixado diretamente no sistema — você pode navegar entre as tabelas e buscar qualquer registro em tempo real sem precisar do Excel.' },
       { titulo: 'Limpeza de dados', texto: 'Permite excluir permanentemente pedidos entregues ou cancelados de um ano específico para liberar espaço no banco. Selecione o ano e clique em "Ver o que será excluído" — o sistema mostra um resumo com a quantidade exata de pedidos, itens, ATs, ocorrências, entregas e histórico que serão removidos. Para confirmar, é obrigatório digitar a palavra CONFIRMAR no campo antes de o botão de exclusão ficar disponível. Recomendado: exporte o backup antes de executar a limpeza.' },
       { titulo: 'Perfil do usuário logado', texto: 'Atualize seu próprio nome e cargo que aparecem no rodapé do menu lateral. Cada usuário pode editar seu próprio perfil.' },
     ],
@@ -293,14 +293,14 @@ export default function Ajuda() {
 
           {/* Intro */}
           <div style={{ background: '#1a1a2e', borderRadius: '14px', padding: '24px 28px', marginBottom: '28px', display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-            <div style={{ fontSize: '32px', flexShrink: 0 }}>ðŸŽ­</div>
+            <div style={{ fontSize: '32px', flexShrink: 0 }}>🎭</div>
             <div>
               <div style={{ fontSize: '18px', fontWeight: '600', color: '#C9A84C', marginBottom: '6px' }}>Bem-vindo ao Opera House ERP</div>
               <div style={{ fontSize: '13px', color: '#a0a0c0', lineHeight: '1.7' }}>
                 Este sistema foi desenvolvido para a <strong style={{ color: '#c8c8e0' }}>Opera House</strong> gerenciar pedidos, assistências técnicas, entregas e o relacionamento com clientes e parceiros. Cada membro da equipe acessa com seu próprio login — as ações de cada usuário ficam registradas no histórico do sistema. Use o menu abaixo para navegar pelo guia de cada módulo.
               </div>
               <div style={{ marginTop: '12px', padding: '10px 14px', background: 'rgba(201,168,76,0.12)', borderRadius: '8px', fontSize: '12px', color: '#c8b87a', lineHeight: '1.6' }}>
-                ðŸ”’ <strong>Sessão expirada:</strong> se o sistema ficar sem uso por um longo período, a sessão pode expirar. Quando isso acontecer, um aviso aparecerá na tela — basta clicar em <em>"Recarregar página"</em> para voltar a usar normalmente.
+                🔒 <strong>Sessão expirada:</strong> se o sistema ficar sem uso por um longo período, a sessão pode expirar. Quando isso acontecer, um aviso aparecerá na tela — basta clicar em <em>"Recarregar página"</em> para voltar a usar normalmente.
               </div>
             </div>
           </div>
@@ -392,7 +392,7 @@ export default function Ajuda() {
 
                         {secao.dicas && secao.dicas.length > 0 && (
                           <div style={{ background: '#fffbf0', border: '0.5px solid #f0d88a', borderRadius: '8px', padding: '12px 14px', marginTop: '4px' }}>
-                            <div style={{ fontSize: '11px', fontWeight: '600', color: '#7a5c00', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '8px' }}>ðŸ’¡ Dicas</div>
+                            <div style={{ fontSize: '11px', fontWeight: '600', color: '#7a5c00', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '8px' }}>💡 Dicas</div>
                             {secao.dicas.map((dica, i) => (
                               <div key={i} style={{ fontSize: '12px', color: '#665000', lineHeight: '1.6', marginBottom: i < secao.dicas!.length - 1 ? '6px' : '0' }}>
                                 • {dica}
@@ -410,7 +410,7 @@ export default function Ajuda() {
 
           {/* Rodapé */}
           <div style={{ marginTop: '28px', padding: '16px 20px', background: '#fff', borderRadius: '12px', border: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '20px' }}>ðŸ’¬</span>
+            <span style={{ fontSize: '20px' }}>💬</span>
             <div>
               <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e', marginBottom: '2px' }}>Dúvidas ou sugestões?</div>
               <div style={{ fontSize: '12px', color: '#888' }}>Entre em contato com o administrador do sistema para reportar problemas ou solicitar novas funcionalidades.</div>

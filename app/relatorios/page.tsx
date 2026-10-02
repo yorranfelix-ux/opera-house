@@ -378,7 +378,7 @@ export default function Relatorios() {
             </button>
             {!loading && (
               <button onClick={gerarPDF} style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '12px', cursor: 'pointer', fontWeight: '500' }}>
-                ðŸ–¨ï¸ Exportar PDF
+                🖨️ Exportar PDF
               </button>
             )}
           </div>

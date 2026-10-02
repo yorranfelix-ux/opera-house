@@ -217,7 +217,7 @@ export default function Dashboard() {
           const label = d === 0 ? 'Hoje' : d === 1 ? 'Amanhã' : `Em ${d} dias`
           lista.push({
             id: p.id, href: '/profissionais', tipo: d === 0 ? 'atencao' : 'info',
-            titulo: `ðŸŽ‚ Aniversário de ${p.nome}`,
+            titulo: `🎂 Aniversário de ${p.nome}`,
             detalhe: `${label} — não esqueça de parabenizar!`,
             tag: label, tagColor: d === 0 ? '#633806' : '#0C447C', tagBg: d === 0 ? '#FAEEDA' : '#E6F1FB',
           })

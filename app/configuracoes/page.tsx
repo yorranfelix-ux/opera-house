@@ -25,14 +25,14 @@ interface BackupJson {
 type TabelaKey = keyof BackupDados
 
 const TABELAS: { key: TabelaKey; label: string; icon: string }[] = [
-  { key: 'pedidos',      label: 'Pedidos',       icon: 'ðŸ“‹' },
-  { key: 'itens',        label: 'Itens',          icon: 'ðŸ“¦' },
-  { key: 'clientes',     label: 'Clientes',       icon: 'ðŸ‘¤' },
-  { key: 'fornecedores', label: 'Fornecedores',   icon: 'ðŸ­' },
-  { key: 'profissionais',label: 'Profissionais',  icon: 'ðŸ› ï¸' },
-  { key: 'ats',          label: 'Assistências',   icon: 'ðŸ”§' },
-  { key: 'ocorrencias',  label: 'Ocorrências',    icon: 'âš ï¸' },
-  { key: 'entregas',     label: 'Entregas',       icon: 'ðŸšš' },
+  { key: 'pedidos',      label: 'Pedidos',       icon: '📋' },
+  { key: 'itens',        label: 'Itens',          icon: '📦' },
+  { key: 'clientes',     label: 'Clientes',       icon: '👤' },
+  { key: 'fornecedores', label: 'Fornecedores',   icon: '🏭' },
+  { key: 'profissionais',label: 'Profissionais',  icon: '🛠️' },
+  { key: 'ats',          label: 'Assistências',   icon: '🔧' },
+  { key: 'ocorrencias',  label: 'Ocorrências',    icon: 'âš ️' },
+  { key: 'entregas',     label: 'Entregas',       icon: '🚚' },
 ]
 
 const STATUS_COLORS: Record<string, string> = {
@@ -139,7 +139,7 @@ function VisualizadorBackup({ onFechar }: { onFechar: () => void }) {
 
         {/* Topbar do modal */}
         <div style={{ height: '52px', background: '#fff', borderBottom: '0.5px solid #e8e7e3', display: 'flex', alignItems: 'center', padding: '0 20px', gap: '14px', flexShrink: 0, borderRadius: '16px 16px 0 0' }}>
-          <span style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a2e', flex: 1 }}>ðŸ“¦ Visualizador de Backup</span>
+          <span style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a2e', flex: 1 }}>📦 Visualizador de Backup</span>
           {backup && (
             <span style={{ fontSize: '11px', color: '#888' }}>
               Exportado em <strong style={{ color: '#555' }}>{new Date(backup.exportadoEm).toLocaleDateString('pt-BR')} {new Date(backup.exportadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</strong>
@@ -147,7 +147,7 @@ function VisualizadorBackup({ onFechar }: { onFechar: () => void }) {
           )}
           {backup && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f7f6f3', border: '0.5px solid #e8e7e3', borderRadius: '8px', padding: '0 12px', height: '34px', width: '220px' }}>
-              <span style={{ color: '#aaa', fontSize: '13px' }}>ðŸ”</span>
+              <span style={{ color: '#aaa', fontSize: '13px' }}>🔍</span>
               <input
                 type="text"
                 placeholder="Buscar em qualquer campo..."
@@ -175,7 +175,7 @@ function VisualizadorBackup({ onFechar }: { onFechar: () => void }) {
               onClick={() => fileRef.current?.click()}
               style={{ background: '#fff', border: '1.5px dashed #e8e7e3', borderRadius: '16px', padding: '52px 72px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', cursor: 'pointer', textAlign: 'center' }}
             >
-              <div style={{ fontSize: '40px', opacity: 0.5 }}>ðŸ“‚</div>
+              <div style={{ fontSize: '40px', opacity: 0.5 }}>📂</div>
               <div style={{ fontSize: '15px', fontWeight: '500', color: '#1a1a2e' }}>Carregar arquivo de backup</div>
               <div style={{ fontSize: '12px', color: '#888', lineHeight: 1.7 }}>
                 Selecione o arquivo <strong>backup-operahouse-YYYY-MM-DD.json</strong><br />
@@ -374,7 +374,7 @@ function LimpezaCard() {
         {resumo && resumo.totalPedidos > 0 && (
           <div style={{ border: '0.5px solid #e8e7e3', borderRadius: '10px', overflow: 'hidden' }}>
             <div style={{ padding: '12px 16px', background: '#fff8e1', borderBottom: '0.5px solid #f0d88a', fontSize: '12px', fontWeight: '600', color: '#7a5800' }}>
-              âš ï¸ Resumo do que será excluído permanentemente — ano {anoSelecionado}
+              âš ️ Resumo do que será excluído permanentemente — ano {anoSelecionado}
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
               {[
@@ -408,7 +408,7 @@ function LimpezaCard() {
                 disabled={!podeExcluir || excluindo}
                 style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: podeExcluir ? '#A32D2D' : '#e8e7e3', color: podeExcluir ? '#fff' : '#aaa', fontSize: '13px', fontWeight: '500', cursor: podeExcluir && !excluindo ? 'pointer' : 'not-allowed', transition: 'background 0.2s' }}
               >
-                {excluindo ? 'Excluindo...' : `ðŸ—‘ Excluir ${resumo.totalPedidos} pedidos e todos os registros vinculados`}
+                {excluindo ? 'Excluindo...' : `🗑 Excluir ${resumo.totalPedidos} pedidos e todos os registros vinculados`}
               </button>
             </div>
           </div>
@@ -574,7 +574,7 @@ export default function Configuracoes() {
                     <div style={{ fontSize: '12px', color: '#888' }}>{dbSize.mb.toFixed(1)} MB utilizados de 500 MB</div>
                     {dbSize.pct >= 70 && (
                       <div style={{ marginTop: '10px', padding: '8px 12px', borderRadius: '8px', background: dbSize.pct >= 90 ? '#FCEBEB' : '#FFF3CD', fontSize: '12px', color: dbSize.pct >= 90 ? '#791F1F' : '#7A5800' }}>
-                        {dbSize.pct >= 90 ? 'âš ï¸ Banco próximo do limite. Considere limpar dados ou migrar para o plano pago.' : 'âš ï¸ Uso elevado. Fique atento ao limite.'}
+                        {dbSize.pct >= 90 ? 'âš ️ Banco próximo do limite. Considere limpar dados ou migrar para o plano pago.' : 'âš ️ Uso elevado. Fique atento ao limite.'}
                       </div>
                     )}
                   </>
@@ -602,7 +602,7 @@ export default function Configuracoes() {
                     {exportando ? 'Exportando...' : 'â¬‡ Exportar backup'}
                   </button>
                   <button onClick={() => setVisualizadorAberto(true)} style={{ padding: '8px 20px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#f7f6f3', color: '#555', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-                    ðŸ“‚ Visualizar backup
+                    📂 Visualizar backup
                   </button>
                 </div>
               </div>

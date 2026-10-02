@@ -168,7 +168,7 @@ export default function Profissionais() {
 
         {aniversariantes.length > 0 && (
           <div style={{ margin: '16px 24px 0', padding: '12px 16px', background: '#FFF9E6', border: '1px solid #F0D060', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: '#7A5800' }}>
-            <span style={{ fontSize: '18px' }}>ðŸŽ‚</span>
+            <span style={{ fontSize: '18px' }}>🎂</span>
             <span><strong>Aniversariante{aniversariantes.length > 1 ? 's' : ''} de hoje:</strong> {aniversariantes.join(' e ')}</span>
           </div>
         )}

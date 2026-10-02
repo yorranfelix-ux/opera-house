@@ -321,7 +321,7 @@ export default function Entregas() {
         const at = e.assistencias_tecnicas
         const c = at?.pedidos?.clientes
         const nomeAbrev = (c?.nome || '').substring(0, 20).toUpperCase()
-        label = `ðŸ”§ AT.${at?.numero_at} — ${nomeAbrev}`
+        label = `🔧 AT.${at?.numero_at} — ${nomeAbrev}`
         regiao = (c?.cidade || '').toUpperCase()
       } else {
         const c = e.pedidos?.clientes
@@ -499,14 +499,14 @@ export default function Entregas() {
     const rowsHtml = entregasDia.map((e, i) => {
       const isAT = !!e.assistencia_tecnica_id
       const c = isAT ? e.assistencias_tecnicas?.pedidos?.clientes : e.pedidos?.clientes
-      const numero = isAT ? `ðŸ”§ AT. ${e.assistencias_tecnicas?.numero_at || '—'}` : `P. ${e.pedidos?.numero_pedido || '—'}`
+      const numero = isAT ? `🔧 AT. ${e.assistencias_tecnicas?.numero_at || '—'}` : `P. ${e.pedidos?.numero_pedido || '—'}`
       const descricaoAT = isAT && e.assistencias_tecnicas?.descricao_problema
         ? `<div style="margin-top:4px;font-size:10px;color:#555;font-style:italic;">Problema: ${e.assistencias_tecnicas.descricao_problema}</div>`
         : ''
       const endereco = c ? montarEnderecoCliente(c) : '—'
       const icamentoHtml = e.requer_icamento
         ? `<div style="margin-top:4px;padding:4px 8px;background:#FFF3E0;border-left:3px solid #E65100;font-size:10px;">
-            <strong>ðŸ—ï¸ REQUER IÇAMENTO</strong>${e.observacoes_icamento ? ': ' + e.observacoes_icamento : ''}
+            <strong>🏗️ REQUER IÇAMENTO</strong>${e.observacoes_icamento ? ': ' + e.observacoes_icamento : ''}
            </div>`
         : ''
       const obsHtml = e.observacoes
@@ -546,7 +546,7 @@ export default function Entregas() {
 
     const alertaHtml = comObs.length > 0
       ? `<div style="margin-bottom:12px;padding:8px 12px;background:#FFF3E0;border:1px solid #E65100;border-radius:6px;font-size:11px;">
-          <strong>âš ï¸ Atenção:</strong> ${comObs.length} entrega${comObs.length !== 1 ? 's' : ''} com observação especial neste dia.
+          <strong>âš ️ Atenção:</strong> ${comObs.length} entrega${comObs.length !== 1 ? 's' : ''} com observação especial neste dia.
          </div>`
       : ''
 
@@ -704,20 +704,20 @@ ${alertaHtml}
                       onClick={() => abrirImpressao(dia, entregasDia)}
                       style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: '0.5px solid #e8e7e3', background: '#fff', color: '#555', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}
                     >
-                      ðŸ–¨ï¸ Sequência
+                      🖨️ Sequência
                     </button>
                     <button
                       onClick={() => imprimirObservacoes(dia, entregasDia)}
                       style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: '0.5px solid #e8e7e3', background: '#fff', color: '#555', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}
                     >
-                      ðŸ“‹ Observações
+                      📋 Observações
                     </button>
                     <button
                       onClick={() => abrirRotaMaps(entregasDia)}
                       title={temEndereco ? 'Abrir rota no Google Maps' : 'Cadastre os endereços dos clientes para usar esta função'}
                       style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '7px', border: '0.5px solid #C9A84C', background: '#fff', color: '#C9A84C', fontSize: '12px', fontWeight: '500', cursor: 'pointer' }}
                     >
-                      ðŸ“ Abrir rota no Maps
+                      📍 Abrir rota no Maps
                     </button>
                   </div>
                 </div>
@@ -738,17 +738,17 @@ ${alertaHtml}
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                            {isAT && <span style={{ fontSize: '10px', background: '#EEEDFE', color: '#3C3489', padding: '1px 6px', borderRadius: '6px', fontWeight: '600' }}>ðŸ”§ AT</span>}
+                            {isAT && <span style={{ fontSize: '10px', background: '#EEEDFE', color: '#3C3489', padding: '1px 6px', borderRadius: '6px', fontWeight: '600' }}>🔧 AT</span>}
                             <span style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a2e' }}>{titulo}</span>
                             <span style={{ fontSize: '11px', padding: '1px 7px', borderRadius: '6px', fontWeight: '500', background: STATUS_COR[e.status]?.bg || '#f0efe9', color: STATUS_COR[e.status]?.color || '#555' }}>
                               {STATUS_COR[e.status]?.label || e.status}
                             </span>
                             {e.requer_icamento && (
-                              <span style={{ fontSize: '10px', background: '#FAEEDA', color: '#633806', padding: '1px 6px', borderRadius: '6px', fontWeight: '500' }}>ðŸ—ï¸ Içamento</span>
+                              <span style={{ fontSize: '10px', background: '#FAEEDA', color: '#633806', padding: '1px 6px', borderRadius: '6px', fontWeight: '500' }}>🏗️ Içamento</span>
                             )}
                           </div>
                           {isAT && e.assistencias_tecnicas?.descricao_problema && (
-                            <div style={{ fontSize: '11px', color: '#3C3489', marginBottom: '2px', fontStyle: 'italic' }}>ðŸ“‹ {e.assistencias_tecnicas.descricao_problema}</div>
+                            <div style={{ fontSize: '11px', color: '#3C3489', marginBottom: '2px', fontStyle: 'italic' }}>📋 {e.assistencias_tecnicas.descricao_problema}</div>
                           )}
                           <div style={{ fontSize: '12px', color: '#555' }}>{nomeCliente}</div>
                           {enderecoCompleto ? (
@@ -758,14 +758,14 @@ ${alertaHtml}
                           )}
                           {e.requer_icamento && e.observacoes_icamento && (
                             <div style={{ fontSize: '11px', color: '#633806', marginTop: '3px', background: '#FAEEDA', padding: '3px 8px', borderRadius: '5px', display: 'inline-block' }}>
-                              ðŸ—ï¸ {e.observacoes_icamento}
+                              🏗️ {e.observacoes_icamento}
                             </div>
                           )}
                           {e.observacoes && (
-                            <div style={{ fontSize: '11px', color: '#555', marginTop: '3px', fontStyle: 'italic' }}>ðŸ“ {e.observacoes}</div>
+                            <div style={{ fontSize: '11px', color: '#555', marginTop: '3px', fontStyle: 'italic' }}>📝 {e.observacoes}</div>
                           )}
                           {e.responsavel_campo && (
-                            <div style={{ fontSize: '11px', color: '#555', marginTop: '2px' }}>ðŸ‘· {e.responsavel_campo}</div>
+                            <div style={{ fontSize: '11px', color: '#555', marginTop: '2px' }}>👷 {e.responsavel_campo}</div>
                           )}
                           {e.motivo_reagendamento && (
                             <div style={{ fontSize: '10px', color: '#888', marginTop: '2px', fontStyle: 'italic' }}>
@@ -846,7 +846,7 @@ ${alertaHtml}
                   {impressao.entregas.map((e, i) => {
                     const isAT = !!e.assistencia_tecnica_id
                     const c = isAT ? e.assistencias_tecnicas?.pedidos?.clientes : e.pedidos?.clientes
-                    const numero = isAT ? `ðŸ”§ AT.${e.assistencias_tecnicas?.numero_at}` : `P.${e.pedidos?.numero_pedido}`
+                    const numero = isAT ? `🔧 AT.${e.assistencias_tecnicas?.numero_at}` : `P.${e.pedidos?.numero_pedido}`
                     return (
                       <div key={e.id} style={{ display: 'flex', gap: '8px', fontSize: '12px', color: '#555', padding: '3px 0', borderTop: i > 0 ? '0.5px solid #e8e7e3' : 'none' }}>
                         <span style={{ color: '#C9A84C', fontWeight: '600', minWidth: '16px' }}>{i + 1}.</span>
@@ -863,7 +863,7 @@ ${alertaHtml}
               {/* Botões */}
               <div style={{ padding: '16px 24px', borderTop: '0.5px solid #e8e7e3', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                 <button onClick={() => setImpressao(null)} style={{ padding: '8px 16px', borderRadius: '8px', border: '0.5px solid #e8e7e3', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#555' }}>Cancelar</button>
-                <button onClick={() => imprimir(impressao, infoMotorista)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>ðŸ–¨ï¸ Abrir folha para imprimir</button>
+                <button onClick={() => imprimir(impressao, infoMotorista)} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: '#1a1a2e', color: '#C9A84C', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>🖨️ Abrir folha para imprimir</button>
               </div>
             </div>
           </div>
@@ -909,11 +909,11 @@ ${alertaHtml}
               <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
                 <button onClick={() => setForm({ ...form, tipo: 'pedido', assistencia_tecnica_id: '' })}
                   style={{ flex: 1, padding: '8px', borderRadius: '8px', border: `0.5px solid ${form.tipo === 'pedido' ? '#1a1a2e' : '#e8e7e3'}`, background: form.tipo === 'pedido' ? '#1a1a2e' : '#fff', color: form.tipo === 'pedido' ? '#C9A84C' : '#888', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-                  ðŸšš Entrega
+                  🚚 Entrega
                 </button>
                 <button onClick={() => setForm({ ...form, tipo: 'at', pedido_id: '' })}
                   style={{ flex: 1, padding: '8px', borderRadius: '8px', border: `0.5px solid ${form.tipo === 'at' ? '#3C3489' : '#e8e7e3'}`, background: form.tipo === 'at' ? '#3C3489' : '#fff', color: form.tipo === 'at' ? '#fff' : '#888', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}>
-                  ðŸ”§ Assistência
+                  🔧 Assistência
                 </button>
               </div>
             </div>
