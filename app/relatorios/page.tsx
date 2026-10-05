@@ -324,6 +324,8 @@ export default function Relatorios() {
     rawPendencias.forEach((item: any) => {
       const pedidoStatus = item.pedidos?.status || ''
       if (['entregue', 'cancelado'].includes(pedidoStatus)) return
+      const itemStatus = item.status || ''
+      if (['recebido', 'conferido_ok', 'conferido_com_problema', 'apto_entrega', 'entregue', 'em_at'].includes(itemStatus)) return
       const nomeForn = item.fornecedores?.nome_fantasia || item.fornecedores?.razao_social || 'Sem nome'
       if (!mapa[nomeForn]) mapa[nomeForn] = { nome: nomeForn, pedidos: new Set(), itens: [] }
       mapa[nomeForn].pedidos.add(item.pedido_id)
